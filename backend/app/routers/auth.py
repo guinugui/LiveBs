@@ -1,0 +1,92 @@
+from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from datetime import timedelta
+from app.schemas import UserRegister, UserLogin, Token, UserResponse
+from app.database import db
+from app.auth import verify_password, get_password_hash, create_access_token, decode_access_token
+from app.config import settings
+from uuid import UUID
+
+router = APIRouter(prefix="/auth", tags=["Authentication"])
+security = HTTPBearer()
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Dependency para obter usuário autenticado"""
+    token = credentials.credentials
+    payload = decode_access_token(token)
+    
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido ou expirado"
+        )
+    
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido"
+        )
+    
+    with db.get_db_cursor() as cursor:
+        cursor.execute("SELECT id, email, name, created_at FROM users WHERE id = %s", (user_id,))
+        user = cursor.fetchone()
+        
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Usuário não encontrado"
+            )
+    
+    return user
+
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def register(user: UserRegister):
+    """Registra novo usuário"""
+    with db.get_db_cursor() as cursor:
+        # Verifica se email já existe
+        cursor.execute("SELECT id FROM users WHERE email = %s", (user.email,))
+        if cursor.fetchone():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email já cadastrado"
+            )
+        
+        # Cria usuário
+        password_hash = get_password_hash(user.password)
+        cursor.execute(
+            """INSERT INTO users (email, password_hash, name) 
+               VALUES (%s, %s, %s) RETURNING id, email, name, created_at""",
+            (user.email, password_hash, user.name)
+        )
+        new_user = cursor.fetchone()
+    
+    return new_user
+
+@router.post("/login", response_model=Token)
+def login(credentials: UserLogin):
+    """Faz login e retorna token JWT"""
+    with db.get_db_cursor() as cursor:
+        cursor.execute(
+            "SELECT id, email, password_hash FROM users WHERE email = %s",
+            (credentials.email,)
+        )
+        user = cursor.fetchone()
+        
+        if not user or not verify_password(credentials.password, user['password_hash']):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Email ou senha incorretos"
+            )
+    
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+    access_token = create_access_token(
+        data={"sub": str(user['id'])}, expires_delta=access_token_expires
+    )
+    
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.get("/me", response_model=UserResponse)
+def get_me(current_user = Depends(get_current_user)):
+    """Retorna dados do usuário autenticado"""
+    return current_user

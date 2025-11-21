@@ -1,0 +1,96 @@
+App de Emagrecimento com Nutricionista IA
+1. VISÃO GERAL
+Aplicativo mobile que oferece acompanhamento nutricional personalizado através de um agente de IA, funcionando como um nutricionista virtual para auxiliar usuários em sua jornada de emagrecimento.
+
+2. FUNCIONALIDADES PRINCIPAIS
+2.1 Onboarding & Perfil do Usuário
+Cadastro com dados básicos (nome, email, senha)
+Questionário inicial
+Peso atual, altura, idade, sexo
+Peso objetivo
+Nível de atividade física
+Restrições alimentaresalergias
+Condições de saúde relevantes
+Preferências alimentares
+Cálculo automático de IMC e TMB (Taxa Metabólica Basal)
+2.2 Nutricionista IA (Chat Inteligente)
+Chat conversacional com IA treinada em nutrição
+Respostas personalizadas baseadas no perfil
+Sugestões de refeições e substituições
+Esclarecimento de dúvidas nutricionais
+Motivação e suporte emocional
+Histórico de conversas
+2.3 Plano Alimentar Personalizado
+Geração automática de cardápio semanal pela IA
+Adaptação às preferências e restrições
+Cálculo de macronutrientes (proteínas, carboidratos, gorduras)
+Receitas detalhadas com ingredientes e modo de preparo
+Lista de compras automática
+2.4 Registro Diário
+Diário alimentar com busca de alimentos
+Registro de água consumida
+Foto das refeições (opcional)
+Registro de peso diáriosemanal
+Anotações de como se sente
+2.5 Acompanhamento & Progresso
+Gráficos de evolução de peso
+Dashboard com métricas (calorias, macros)
+Comparativo meta vs realizado
+Histórico de medidas
+Sistema de conquistasbadges
+2.6 Lembretes & Notificações
+Horários de refeições
+Hidratação
+Registro de peso
+Mensagens motivacionais
+3. REQUISITOS TÉCNICOS
+3.1 Frontend (Flutter)
+Linguagem Dart
+Arquitetura Clean Architecture ou MVVM
+Estado Provider, Riverpod ou Bloc
+Navegação GoRouter
+UIUX Material Design 3
+Animações Transições suaves e feedback visual
+3.2 Backend & IA
+API IA OpenAI GPT-4Claude (para o nutricionista virtual)
+Backend Firebase ou Supabase
+Authentication
+FirestoreDatabase (dados do usuário)
+Storage (fotos de refeições)
+API de Alimentos Integração com base nutricional (TACO, USDA)
+3.3 Pacotes Principais
+4. REQUISITOS FUNCIONAIS
+RF01 Sistema deve permitir cadastro e login de usuários
+RF02 Sistema deve coletar dados antropométricos e preferências
+RF03 IA deve gerar plano alimentar personalizado
+RF04 Chat deve responder dúvidas em tempo real
+RF05 Usuário deve registrar refeições e peso
+RF06 Sistema deve calcular e exibir progresso
+RF07 Sistema deve enviar notificações programadas
+RF08 IA deve adaptar plano conforme evolução do usuário
+
+5. REQUISITOS NÃO FUNCIONAIS
+RNF01 Performance - Resposta do chat em até 3 segundos
+RNF02 Segurança - Dados sensíveis criptografados
+RNF03 Usabilidade - Interface intuitiva e acessível
+RNF04 Disponibilidade - App offline para funcionalidades básicas
+RNF05 Escalabilidade - Suportar crescimento de usuários
+RNF06 Compliance - LGPDGDPR para dados de saúde
+
+6. TELAS PRINCIPAIS
+SplashOnboarding
+LoginCadastro
+Questionário Inicial
+HomeDashboard (resumo diário)
+Chat com Nutricionista IA
+Plano Alimentar (cardápio semanal)
+Registro de Refeição
+Progresso (gráficos e métricas)
+PerfilConfigurações
+Receitas Detalhadas
+7. DIFERENCIAL COMPETITIVO
+✅ IA conversacional humanizada
+✅ Personalização extrema baseada em preferências
+✅ Gamificação para engajamento
+✅ Sem necessidade de contar calorias manualmente
+✅ Educação nutricional contínua via chat

@@ -1,0 +1,32 @@
+# Backend
+backend/.env
+backend/__pycache__/
+backend/*.pyc
+backend/venv/
+backend/.venv/
+
+# Flutter
+nutri_ai_app/.dart_tool/
+nutri_ai_app/.flutter-plugins
+nutri_ai_app/.flutter-plugins-dependencies
+nutri_ai_app/.packages
+nutri_ai_app/build/
+nutri_ai_app/.env
+nutri_ai_app/ios/Flutter/Flutter.framework
+nutri_ai_app/ios/Flutter/Flutter.podspec
+nutri_ai_app/ios/Pods/
+nutri_ai_app/.flutter-plugins-dependencies
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

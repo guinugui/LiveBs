@@ -1,0 +1,233 @@
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/api_constants.dart';
+
+class ApiService {
+  static final ApiService _instance = ApiService._internal();
+  factory ApiService() => _instance;
+  ApiService._internal();
+
+  late final Dio _dio;
+  String? _token;
+
+  void initialize() {
+    _dio = Dio(BaseOptions(
+      baseUrl: kApiBaseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    ));
+
+    // Interceptor para adicionar token
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        if (_token != null) {
+          options.headers['Authorization'] = 'Bearer $_token';
+        }
+        return handler.next(options);
+      },
+      onError: (error, handler) {
+        print('API Error: ${error.message}');
+        return handler.next(error);
+      },
+    ));
+
+    _loadToken();
+  }
+
+  Future<void> _loadToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    _token = prefs.getString('auth_token');
+  }
+
+  Future<void> setToken(String token) async {
+    _token = token;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
+  }
+
+  Future<void> clearToken() async {
+    _token = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+  }
+
+  // ==================== AUTH ====================
+  
+  Future<Map<String, dynamic>> register({
+    required String email,
+    required String password,
+    required String name,
+  }) async {
+    final response = await _dio.post(
+      kAuthRegisterEndpoint,
+      data: {
+        'email': email,
+        'password': password,
+        'name': name,
+      },
+    );
+    return response.data;
+  }
+
+  Future<String> login({
+    required String email,
+    required String password,
+  }) async {
+    final response = await _dio.post(
+      kAuthLoginEndpoint,
+      data: {
+        'email': email,
+        'password': password,
+      },
+    );
+    final token = response.data['access_token'];
+    await setToken(token);
+    return token;
+  }
+
+  Future<Map<String, dynamic>> getMe() async {
+    final response = await _dio.get(kAuthMeEndpoint);
+    return response.data;
+  }
+
+  // ==================== PROFILE ====================
+
+  Future<Map<String, dynamic>> createProfile({
+    required double weight,
+    required double height,
+    required int age,
+    required String gender,
+    required double targetWeight,
+    required String activityLevel,
+    List<String> dietaryRestrictions = const [],
+    List<String> dietaryPreferences = const [],
+  }) async {
+    final response = await _dio.post(
+      kProfileEndpoint,
+      data: {
+        'weight': weight,
+        'height': height,
+        'age': age,
+        'gender': gender,
+        'target_weight': targetWeight,
+        'activity_level': activityLevel,
+        'dietary_restrictions': dietaryRestrictions,
+        'dietary_preferences': dietaryPreferences,
+      },
+    );
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> getProfile() async {
+    final response = await _dio.get(kProfileEndpoint);
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> updateProfile({
+    double? weight,
+    double? height,
+    int? age,
+    double? targetWeight,
+    String? activityLevel,
+  }) async {
+    final data = <String, dynamic>{};
+    if (weight != null) data['weight'] = weight;
+    if (height != null) data['height'] = height;
+    if (age != null) data['age'] = age;
+    if (targetWeight != null) data['target_weight'] = targetWeight;
+    if (activityLevel != null) data['activity_level'] = activityLevel;
+
+    final response = await _dio.put(kProfileEndpoint, data: data);
+    return response.data;
+  }
+
+  // ==================== CHAT ====================
+
+  Future<Map<String, dynamic>> sendChatMessage(String message) async {
+    final response = await _dio.post(
+      kChatEndpoint,
+      data: {'message': message},
+    );
+    return response.data;
+  }
+
+  Future<List<dynamic>> getChatHistory({int limit = 50}) async {
+    final response = await _dio.get(
+      kChatHistoryEndpoint,
+      queryParameters: {'limit': limit},
+    );
+    return response.data;
+  }
+
+  // ==================== MEAL PLAN ====================
+
+  Future<Map<String, dynamic>> generateMealPlan() async {
+    final response = await _dio.post(kMealPlanEndpoint);
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> getMealPlan() async {
+    final response = await _dio.get(kMealPlanEndpoint);
+    return response.data;
+  }
+
+  // ==================== LOGS ====================
+
+  Future<Map<String, dynamic>> logWeight(double weight, {String? notes}) async {
+    final response = await _dio.post(
+      kWeightLogsEndpoint,
+      data: {
+        'weight': weight,
+        if (notes != null) 'notes': notes,
+      },
+    );
+    return response.data;
+  }
+
+  Future<List<dynamic>> getWeightHistory({int limit = 30}) async {
+    final response = await _dio.get(
+      kWeightLogsEndpoint,
+      queryParameters: {'limit': limit},
+    );
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> logWater(double amount) async {
+    final response = await _dio.post(
+      kWaterLogsEndpoint,
+      data: {'amount': amount},
+    );
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> getWaterToday() async {
+    final response = await _dio.get(kWaterTodayEndpoint);
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> logMeal({
+    required String mealName,
+    int? calories,
+    String? photoUrl,
+    String? notes,
+  }) async {
+    final response = await _dio.post(
+      kMealLogsEndpoint,
+      data: {
+        'meal_name': mealName,
+        if (calories != null) 'calories': calories,
+        if (photoUrl != null) 'photo_url': photoUrl,
+        if (notes != null) 'notes': notes,
+      },
+    );
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> getCaloriesToday() async {
+    final response = await _dio.get(kMealTodayEndpoint);
+    return response.data;
+  }
+}
