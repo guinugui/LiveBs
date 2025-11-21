@@ -6,8 +6,8 @@ from uuid import UUID
 # Auth schemas
 class UserRegister(BaseModel):
     email: EmailStr
-    password: str
-    name: str
+    password: str  # Min 6 caracteres validado no frontend
+    name: str  # Obrigatório
 
 class UserLogin(BaseModel):
     email: EmailStr

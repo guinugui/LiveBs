@@ -1,11 +1,117 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/network/api_service.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  bool _isLoading = true;
+  String _userName = '';
+  double _currentWeight = 0.0;
+  double _targetWeight = 0.0;
+  double _height = 0.0;
+  double _waterConsumed = 0.0;
+  double _waterGoal = 2.0;
+  bool _needsUpdate = false;
+  String _updateMessage = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  double _calculateWaterGoal(double weight, double height) {
+    // Fórmula: 35ml por kg de peso corporal
+    // Mínimo 2L, máximo 5L
+    double liters = (weight * 35) / 1000;
+    
+    // Ajusta baseado na altura
+    if (height > 180) {
+      liters += 0.5;
+    }
+    
+    // Limita entre 2L e 5L
+    if (liters < 2.0) liters = 2.0;
+    if (liters > 5.0) liters = 5.0;
+    
+    return double.parse(liters.toStringAsFixed(1));
+  }
+
+  Future<void> _loadData() async {
+    try {
+      // Buscar perfil do usuário
+      final profile = await ApiService().getProfile();
+      
+      // Buscar água consumida hoje
+      final waterData = await ApiService().getWaterToday();
+
+      // Verificar se precisa atualizar dados
+      final updateCheck = await ApiService().checkUpdateNeeded();
+
+      final weight = profile['weight'] ?? 0.0;
+      final height = profile['height'] ?? 0.0;
+      final calculatedWaterGoal = _calculateWaterGoal(weight, height);
+
+      setState(() {
+        _currentWeight = weight;
+        _targetWeight = profile['target_weight'] ?? 0.0;
+        _height = height;
+        _waterConsumed = waterData['total_liters'] ?? 0.0;
+        _waterGoal = calculatedWaterGoal;
+        _needsUpdate = updateCheck['needs_update'] ?? false;
+        _updateMessage = updateCheck['message'] ?? '';
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar dados: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _addWater() async {
+    try {
+      // Adiciona 500ml (0.5L)
+      await ApiService().logWater(0.5);
+      
+      setState(() {
+        _waterConsumed += 0.5;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('+ 500ml de água registrado!'),
+            backgroundColor: Colors.blue,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao registrar água: $e')),
+        );
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text('LiveBs'),
@@ -43,6 +149,67 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
+            // Banner de atualização semanal
+            if (_needsUpdate)
+              Card(
+                color: Colors.orange.shade50,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.update,
+                            color: Colors.orange.shade700,
+                            size: 32,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Atualização Semanal',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange.shade900,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _updateMessage,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.orange.shade800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => context.push('/profile'),
+                          icon: const Icon(Icons.edit),
+                          label: const Text('Atualizar Dados'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange.shade600,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            if (_needsUpdate) const SizedBox(height: 16),
+
             // Quick Stats
             Row(
               children: [
@@ -50,7 +217,7 @@ class HomePage extends StatelessWidget {
                   child: _buildStatCard(
                     context,
                     'Peso Atual',
-                    '75.5 kg',
+                    '${_currentWeight.toStringAsFixed(1)} kg',
                     Icons.monitor_weight_outlined,
                     const Color(0xFF4CAF50),
                   ),
@@ -60,7 +227,7 @@ class HomePage extends StatelessWidget {
                   child: _buildStatCard(
                     context,
                     'Meta',
-                    '70.0 kg',
+                    '${_targetWeight.toStringAsFixed(1)} kg',
                     Icons.flag_outlined,
                     const Color(0xFF81C784),
                   ),
@@ -69,28 +236,79 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Calorias',
-                    '1450/1800',
-                    Icons.local_fire_department_outlined,
-                    Colors.orange,
-                  ),
+            // Seção de Hidratação
+            Card(
+              color: Colors.blue.shade50,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.water_drop, color: Colors.blue.shade700, size: 28),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Hidratação',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue.shade900,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          '${_waterConsumed.toStringAsFixed(1)}L / ${_waterGoal.toStringAsFixed(1)}L',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Barra de progresso
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: _waterConsumed / _waterGoal,
+                        minHeight: 12,
+                        backgroundColor: Colors.blue.shade100,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade600),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Blocos de 500ml
+                    _buildWaterBlocks(),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Botão adicionar água
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _waterConsumed < _waterGoal ? _addWater : null,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Adicionar 500ml'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade600,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          disabledBackgroundColor: Colors.grey.shade300,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Água',
-                    '1.5/2.0 L',
-                    Icons.water_drop_outlined,
-                    Colors.cyan,
-                  ),
-                ),
-              ],
+              ),
             ),
             const SizedBox(height: 24),
 
@@ -113,21 +331,6 @@ class HomePage extends StatelessWidget {
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Continue seguindo seu plano alimentar e mantendo sua hidratação.',
-                    ),
-                    const SizedBox(height: 16),
-                    LinearProgressIndicator(
-                      value: 0.7,
-                      backgroundColor: Colors.grey.shade200,
-                      color: const Color(0xFF4CAF50),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      '70% do objetivo diário alcançado',
-                      style: TextStyle(fontSize: 12),
                     ),
                   ],
                 ),
@@ -180,6 +383,52 @@ class HomePage extends StatelessWidget {
           }
         },
       ),
+    );
+  }
+
+  Widget _buildWaterBlocks() {
+    // Calcula quantos blocos de 500ml cabem na meta
+    int totalBlocks = (_waterGoal / 0.5).ceil();
+    int consumedBlocks = (_waterConsumed / 0.5).floor();
+    
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: List.generate(totalBlocks, (index) {
+        bool isFilled = index < consumedBlocks;
+        
+        return Container(
+          width: 60,
+          height: 70,
+          decoration: BoxDecoration(
+            color: isFilled ? Colors.blue.shade600 : Colors.blue.shade100,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: Colors.blue.shade300,
+              width: 2,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.water_drop,
+                color: isFilled ? Colors.white : Colors.blue.shade300,
+                size: 28,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '500ml',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: isFilled ? Colors.white : Colors.blue.shade700,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
     );
   }
 

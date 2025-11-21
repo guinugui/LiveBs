@@ -1,33 +1,132 @@
 import 'package:flutter/material.dart';
+import '../../../../core/network/api_service.dart';
 
-class MealPlanPage extends StatelessWidget {
+class MealPlanPage extends StatefulWidget {
   const MealPlanPage({super.key});
 
   @override
+  State<MealPlanPage> createState() => _MealPlanPageState();
+}
+
+class _MealPlanPageState extends State<MealPlanPage> {
+  bool _isLoading = true;
+  bool _isGenerating = false;
+  Map<String, dynamic>? _mealPlan;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMealPlan();
+  }
+
+  Future<void> _loadMealPlan() async {
+    try {
+      final plan = await ApiService().getMealPlan();
+      
+      if (mounted) {
+        setState(() {
+          _mealPlan = plan;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _generateMealPlan() async {
+    setState(() => _isGenerating = true);
+
+    try {
+      final plan = await ApiService().generateMealPlan();
+      
+      if (mounted) {
+        setState(() {
+          _mealPlan = plan;
+          _isGenerating = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Plano alimentar gerado com sucesso!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isGenerating = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao gerar plano: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_mealPlan == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Plano Alimentar')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.restaurant_menu, size: 80, color: Colors.grey),
+              const SizedBox(height: 16),
+              const Text('Nenhum plano alimentar encontrado'),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _isGenerating ? null : _generateMealPlan,
+                icon: _isGenerating
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.add),
+                label: const Text('Gerar Plano Alimentar'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final meals = _mealPlan!['meals'] as List? ?? [];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Plano Alimentar'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () {
-              // TODO: Regenerar plano
-            },
+            onPressed: _isGenerating ? null : _generateMealPlan,
           ),
         ],
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: 7,
-        itemBuilder: (context, index) {
-          return _buildDayCard(context, index + 1);
+        itemBuilder: (context, dayIndex) {
+          final dayMeals = meals.where((m) => m['day_number'] == dayIndex + 1).toList();
+          return _buildDayCard(context, dayIndex + 1, dayMeals);
         },
       ),
     );
   }
 
-  Widget _buildDayCard(BuildContext context, int day) {
+  Widget _buildDayCard(BuildContext context, int day, List<dynamic> meals) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: ExpansionTile(
@@ -35,46 +134,48 @@ class MealPlanPage extends StatelessWidget {
           'Dia $day',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: const Text('Toque para ver as refeições'),
-        children: [
-          _buildMealItem(
-            context,
-            'Café da Manhã',
-            'Omelete com legumes',
-            '350 kcal',
-            Icons.breakfast_dining_outlined,
-          ),
-          _buildMealItem(
-            context,
-            'Lanche da Manhã',
-            'Iogurte natural com frutas',
-            '150 kcal',
-            Icons.fastfood_outlined,
-          ),
-          _buildMealItem(
-            context,
-            'Almoço',
-            'Frango grelhado com arroz integral',
-            '500 kcal',
-            Icons.lunch_dining_outlined,
-          ),
-          _buildMealItem(
-            context,
-            'Lanche da Tarde',
-            'Mix de castanhas',
-            '200 kcal',
-            Icons.cookie_outlined,
-          ),
-          _buildMealItem(
-            context,
-            'Jantar',
-            'Salmão ao forno com vegetais',
-            '450 kcal',
-            Icons.dinner_dining_outlined,
-          ),
-        ],
+        subtitle: Text('${meals.length} refeições'),
+        children: meals.isNotEmpty
+            ? meals.map((meal) {
+                return _buildMealItem(
+                  context,
+                  meal['meal_type'] ?? '',
+                  meal['name'] ?? '',
+                  '${meal['calories'] ?? 0} kcal',
+                  _getMealIcon(meal['meal_type'] ?? ''),
+                  meal,
+                );
+              }).toList()
+            : [
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text('Nenhuma refeição planejada'),
+                ),
+              ],
       ),
     );
+  }
+
+  IconData _getMealIcon(String mealType) {
+    switch (mealType.toLowerCase()) {
+      case 'café da manhã':
+      case 'breakfast':
+        return Icons.breakfast_dining_outlined;
+      case 'lanche da manhã':
+      case 'morning snack':
+        return Icons.fastfood_outlined;
+      case 'almoço':
+      case 'lunch':
+        return Icons.lunch_dining_outlined;
+      case 'lanche da tarde':
+      case 'afternoon snack':
+        return Icons.cookie_outlined;
+      case 'jantar':
+      case 'dinner':
+        return Icons.dinner_dining_outlined;
+      default:
+        return Icons.restaurant_outlined;
+    }
   }
 
   Widget _buildMealItem(
@@ -83,6 +184,7 @@ class MealPlanPage extends StatelessWidget {
     String mealName,
     String calories,
     IconData icon,
+    Map<String, dynamic> meal,
   ) {
     return ListTile(
       leading: CircleAvatar(
@@ -99,13 +201,12 @@ class MealPlanPage extends StatelessWidget {
         ),
       ),
       onTap: () {
-        // TODO: Mostrar detalhes da refeição
-        _showMealDetails(context, mealType, mealName);
+        _showMealDetails(context, meal);
       },
     );
   }
 
-  void _showMealDetails(BuildContext context, String type, String name) {
+  void _showMealDetails(BuildContext context, Map<String, dynamic> meal) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -133,12 +234,12 @@ class MealPlanPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    type,
+                    meal['meal_type'] ?? '',
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    name,
+                    meal['name'] ?? '',
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   const SizedBox(height: 24),
@@ -147,22 +248,23 @@ class MealPlanPage extends StatelessWidget {
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-                  _buildMacroRow('Proteínas', '25g', Colors.red),
-                  _buildMacroRow('Carboidratos', '40g', Colors.orange),
-                  _buildMacroRow('Gorduras', '15g', Colors.blue),
+                  _buildMacroRow('Proteínas', '${meal['protein'] ?? 0}g', Colors.red),
+                  _buildMacroRow('Carboidratos', '${meal['carbs'] ?? 0}g', Colors.orange),
+                  _buildMacroRow('Gorduras', '${meal['fats'] ?? 0}g', Colors.blue),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Ingredientes',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(meal['ingredients'] ?? 'Não informado'),
                   const SizedBox(height: 24),
                   const Text(
                     'Modo de Preparo',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    '1. Em uma tigela, bata os ovos\n'
-                    '2. Adicione os legumes picados\n'
-                    '3. Tempere a gosto\n'
-                    '4. Leve à frigideira antiaderente\n'
-                    '5. Deixe dourar dos dois lados',
-                  ),
+                  Text(meal['instructions'] ?? 'Não informado'),
                 ],
               ),
             ),

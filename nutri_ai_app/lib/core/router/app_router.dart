@@ -8,6 +8,7 @@ import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
 import '../../features/meal_plan/presentation/pages/meal_plan_page.dart';
 import '../../features/progress/presentation/pages/progress_page.dart';
+import '../../features/profile/presentation/pages/quick_update_page.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -52,6 +53,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/profile',
         name: 'profile',
         builder: (context, state) => const ProfilePage(),
+      ),
+      GoRoute(
+        path: '/quick-update',
+        name: 'quick-update',
+        builder: (context, state) => const QuickUpdatePage(),
       ),
     ],
   );

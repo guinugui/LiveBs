@@ -47,16 +47,24 @@ def create_meal_plan(current_user = Depends(get_current_user)):
             )
             plan_id = cursor.fetchone()['id']
             
-            # Cria refeições do dia
+            # Cria refeições do dia (com 2 opções cada)
             for meal_data in day_data['meals']:
-                cursor.execute(
-                    """INSERT INTO meals (meal_plan_id, meal_type, name, calories, 
-                                          protein, carbs, fat, recipe)
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
-                    (plan_id, meal_data['type'], meal_data['name'], 
-                     meal_data['calories'], meal_data['protein'], 
-                     meal_data['carbs'], meal_data['fat'], meal_data['recipe'])
-                )
+                meal_type = meal_data['type']
+                
+                # Salva cada opção
+                for option in meal_data.get('options', []):
+                    ingredients = option.get('ingredients', '')
+                    recipe = option.get('recipe', '')
+                    full_recipe = f"Ingredientes:\n{ingredients}\n\nModo de Preparo:\n{recipe}"
+                    
+                    cursor.execute(
+                        """INSERT INTO meals (meal_plan_id, meal_type, name, calories, 
+                                              protein, carbs, fat, recipe)
+                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                        (plan_id, meal_type, option['name'], 
+                         option['calories'], option['protein'], 
+                         option['carbs'], option['fat'], full_recipe)
+                    )
     
     return get_active_meal_plan(current_user)
 

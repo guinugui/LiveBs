@@ -43,10 +43,24 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register(user: UserRegister):
     """Registra novo usuário"""
+    # Validações básicas
+    if not user.name or len(user.name.strip()) < 2:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nome deve ter pelo menos 2 caracteres"
+        )
+    
+    if not user.password or len(user.password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Senha deve ter pelo menos 6 caracteres"
+        )
+    
     with db.get_db_cursor() as cursor:
         # Verifica se email já existe
-        cursor.execute("SELECT id FROM users WHERE email = %s", (user.email,))
-        if cursor.fetchone():
+        cursor.execute("SELECT id FROM users WHERE LOWER(email) = LOWER(%s)", (user.email.strip(),))
+        existing_user = cursor.fetchone()
+        if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email já cadastrado"
@@ -57,7 +71,7 @@ def register(user: UserRegister):
         cursor.execute(
             """INSERT INTO users (email, password_hash, name) 
                VALUES (%s, %s, %s) RETURNING id, email, name, created_at""",
-            (user.email, password_hash, user.name)
+            (user.email.lower().strip(), password_hash, user.name.strip())
         )
         new_user = cursor.fetchone()
     

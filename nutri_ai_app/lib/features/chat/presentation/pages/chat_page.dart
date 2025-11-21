@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/network/api_service.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -9,13 +10,15 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
-  final List<ChatBubble> _messages = [
-    ChatBubble(
-      message: 'Olá! Sou o Dr. Nutri, seu nutricionista virtual. Como posso ajudá-lo hoje?',
-      isUser: false,
-      time: DateTime.now(),
-    ),
-  ];
+  final List<ChatBubble> _messages = [];
+  bool _isLoading = true;
+  bool _isSending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadChatHistory();
+  }
 
   @override
   void dispose() {
@@ -23,37 +26,109 @@ class _ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
-  void _sendMessage() {
-    if (_messageController.text.trim().isEmpty) return;
+  Future<void> _loadChatHistory() async {
+    try {
+      final history = await ApiService().getChatHistory();
+      
+      if (mounted) {
+        setState(() {
+          _messages.clear();
+          _messages.add(
+            ChatBubble(
+              message: 'Olá! Sou o Dr. Nutri, seu nutricionista virtual. Como posso ajudá-lo hoje?',
+              isUser: false,
+              time: DateTime.now(),
+            ),
+          );
+          
+          for (final msg in history) {
+            _messages.add(
+              ChatBubble(
+                message: msg['message'],
+                isUser: msg['is_user'],
+                time: DateTime.parse(msg['created_at']),
+              ),
+            );
+          }
+          
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _messages.add(
+            ChatBubble(
+              message: 'Olá! Sou o Dr. Nutri, seu nutricionista virtual. Como posso ajudá-lo hoje?',
+              isUser: false,
+              time: DateTime.now(),
+            ),
+          );
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _sendMessage() async {
+    if (_messageController.text.trim().isEmpty || _isSending) return;
+
+    final userMessage = _messageController.text;
+    _messageController.clear();
 
     setState(() {
       _messages.add(
         ChatBubble(
-          message: _messageController.text,
+          message: userMessage,
           isUser: true,
           time: DateTime.now(),
         ),
       );
+      _isSending = true;
     });
 
-    // TODO: Enviar para IA e receber resposta
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        _messages.add(
-          ChatBubble(
-            message: 'Esta é uma resposta simulada. Em breve conectaremos com a IA real!',
-            isUser: false,
-            time: DateTime.now(),
-          ),
+    try {
+      final response = await ApiService().sendChatMessage(userMessage);
+      
+      if (mounted) {
+        setState(() {
+          _messages.add(
+            ChatBubble(
+              message: response['response'],
+              isUser: false,
+              time: DateTime.parse(response['created_at']),
+            ),
+          );
+          _isSending = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _messages.add(
+            ChatBubble(
+              message: 'Desculpe, houve um erro ao processar sua mensagem. Tente novamente.',
+              isUser: false,
+              time: DateTime.now(),
+            ),
+          );
+          _isSending = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro: $e')),
         );
-      });
-    });
-
-    _messageController.clear();
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Column(

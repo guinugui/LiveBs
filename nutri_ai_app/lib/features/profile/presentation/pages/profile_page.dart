@@ -1,11 +1,92 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/network/api_service.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
   @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  bool _isLoading = true;
+  Map<String, dynamic>? _profile;
+  String _email = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _email = prefs.getString('email') ?? '';
+      
+      final profile = await ApiService().getProfile();
+      
+      if (mounted) {
+        setState(() {
+          _profile = profile;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar perfil: $e')),
+        );
+      }
+    }
+  }
+
+  String _getActivityLevelText(String level) {
+    switch (level) {
+      case 'sedentary': return 'Sedentário';
+      case 'lightly_active': return 'Levemente Ativo';
+      case 'moderately_active': return 'Moderadamente Ativo';
+      case 'very_active': return 'Muito Ativo';
+      case 'extremely_active': return 'Extremamente Ativo';
+      default: return level;
+    }
+  }
+
+  String _getGenderText(String gender) {
+    switch (gender) {
+      case 'male': return 'Masculino';
+      case 'female': return 'Feminino';
+      case 'other': return 'Outro';
+      default: return gender;
+    }
+  }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    if (mounted) {
+      context.go('/login');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_profile == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Perfil')),
+        body: const Center(child: Text('Erro ao carregar perfil')),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Perfil'),
@@ -13,7 +94,8 @@ class ProfilePage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
-              // TODO: Editar perfil
+              // Navega para a tela de atualização rápida (peso, altura, idade)
+              context.push('/quick-update');
             },
           ),
         ],
@@ -36,12 +118,12 @@ class ProfilePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'João Silva',
+                  _email.split('@')[0],
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'joao@email.com',
+                  _email,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
@@ -57,10 +139,11 @@ class ProfilePage extends StatelessWidget {
                 ),
           ),
           const SizedBox(height: 16),
-          _buildInfoCard('Peso Atual', '75.5 kg', Icons.monitor_weight_outlined),
-          _buildInfoCard('Altura', '175 cm', Icons.height),
-          _buildInfoCard('Idade', '28 anos', Icons.cake_outlined),
-          _buildInfoCard('Sexo', 'Masculino', Icons.wc),
+          _buildInfoCard('Peso Atual', '${_profile!['weight'].toStringAsFixed(1)} kg', Icons.monitor_weight_outlined),
+          _buildInfoCard('Altura', '${_profile!['height']} cm', Icons.height),
+          _buildInfoCard('Idade', '${_profile!['age']} anos', Icons.cake_outlined),
+          _buildInfoCard('Sexo', _getGenderText(_profile!['gender']), Icons.wc),
+          _buildInfoCard('IMC', _profile!['bmi'].toStringAsFixed(1), Icons.analytics_outlined),
           const SizedBox(height: 24),
 
           // Goals Section
@@ -71,9 +154,9 @@ class ProfilePage extends StatelessWidget {
                 ),
           ),
           const SizedBox(height: 16),
-          _buildInfoCard('Peso Meta', '70.0 kg', Icons.flag_outlined),
-          _buildInfoCard('Atividade', 'Moderadamente Ativo', Icons.fitness_center_outlined),
-          _buildInfoCard('Calorias Diárias', '1800 kcal', Icons.local_fire_department_outlined),
+          _buildInfoCard('Peso Meta', '${_profile!['target_weight'].toStringAsFixed(1)} kg', Icons.flag_outlined),
+          _buildInfoCard('Atividade', _getActivityLevelText(_profile!['activity_level']), Icons.fitness_center_outlined),
+          _buildInfoCard('Calorias Diárias', '${_profile!['daily_calories']} kcal', Icons.local_fire_department_outlined),
           const SizedBox(height: 24),
 
           // Preferences Section
@@ -95,25 +178,32 @@ class ProfilePage extends StatelessWidget {
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      Chip(label: const Text('Sem Lactose')),
-                    ],
-                  ),
+                  if (_profile!['dietary_restrictions'] != null && 
+                      (_profile!['dietary_restrictions'] as List).isNotEmpty)
+                    Wrap(
+                      spacing: 8,
+                      children: (_profile!['dietary_restrictions'] as List)
+                          .map((r) => Chip(label: Text(r)))
+                          .toList(),
+                    )
+                  else
+                    const Text('Nenhuma restrição', style: TextStyle(color: Colors.grey)),
                   const SizedBox(height: 16),
                   const Text(
                     'Preferências:',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      Chip(label: const Text('Low Carb')),
-                      Chip(label: const Text('Alto Proteína')),
-                    ],
-                  ),
+                  if (_profile!['dietary_preferences'] != null && 
+                      (_profile!['dietary_preferences'] as List).isNotEmpty)
+                    Wrap(
+                      spacing: 8,
+                      children: (_profile!['dietary_preferences'] as List)
+                          .map((p) => Chip(label: Text(p)))
+                          .toList(),
+                    )
+                  else
+                    const Text('Nenhuma preferência', style: TextStyle(color: Colors.grey)),
                 ],
               ),
             ),
@@ -122,9 +212,7 @@ class ProfilePage extends StatelessWidget {
 
           // Logout Button
           OutlinedButton(
-            onPressed: () {
-              context.go('/login');
-            },
+            onPressed: _logout,
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.red,
               side: const BorderSide(color: Colors.red),

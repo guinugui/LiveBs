@@ -18,6 +18,9 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
+  String? _emailError;
+  String? _nameError;
+  String? _passwordError;
 
   @override
   void dispose() {
@@ -29,6 +32,13 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _register() async {
+    // Limpa erros anteriores
+    setState(() {
+      _emailError = null;
+      _nameError = null;
+      _passwordError = null;
+    });
+
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -51,12 +61,59 @@ class _RegisterPageState extends State<RegisterPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao criar conta: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        // Converte o erro para string
+        String errorMessage = e.toString();
+        
+        print('DEBUG - Erro completo: $errorMessage'); // Para debug
+        
+        // Remove prefixos técnicos do Dio
+        if (errorMessage.contains('DioException')) {
+          final parts = errorMessage.split(':');
+          if (parts.length > 1) {
+            errorMessage = parts.sublist(1).join(':').trim();
+          }
+        }
+        
+        // Limpa a mensagem
+        errorMessage = errorMessage.replaceAll('[bad response]', '').trim();
+        
+        print('DEBUG - Mensagem limpa: $errorMessage'); // Para debug
+        
+        // Define erro específico para cada campo
+        if (errorMessage.contains('Email já cadastrado') || 
+            errorMessage.contains('Email ja cadastrado')) {
+          setState(() {
+            _emailError = 'Este email já está cadastrado';
+          });
+        } else if (errorMessage.contains('Nome deve ter')) {
+          setState(() {
+            _nameError = 'Nome deve ter pelo menos 2 caracteres';
+          });
+        } else if (errorMessage.contains('Senha deve ter')) {
+          setState(() {
+            _passwordError = 'Senha deve ter pelo menos 6 caracteres';
+          });
+        } else {
+          // Erro genérico - mostra em SnackBar
+          String displayMessage = 'Erro ao criar conta';
+          
+          if (errorMessage.contains('400')) {
+            displayMessage = 'Dados inválidos. Verifique os campos.';
+          } else if (errorMessage.contains('Network') || errorMessage.contains('network')) {
+            displayMessage = 'Erro de conexão. Verifique sua internet.';
+          } else if (errorMessage.isNotEmpty && !errorMessage.contains('Exception')) {
+            // Se tiver uma mensagem limpa, usa ela
+            displayMessage = errorMessage;
+          }
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(displayMessage),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
       }
     } finally {
       if (mounted) {
@@ -96,13 +153,18 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Nome',
-                      prefixIcon: Icon(Icons.person_outline),
+                      prefixIcon: const Icon(Icons.person_outline),
+                      helperText: 'Digite seu nome completo',
+                      errorText: _nameError,
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
+                      if (value == null || value.trim().isEmpty) {
                         return 'Por favor, insira seu nome';
+                      }
+                      if (value.trim().length < 2) {
+                        return 'Nome deve ter pelo menos 2 caracteres';
                       }
                       return null;
                     },
@@ -112,9 +174,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      errorText: _emailError,
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -134,6 +197,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     decoration: InputDecoration(
                       labelText: 'Senha',
                       prefixIcon: const Icon(Icons.lock_outline),
+                      errorText: _passwordError,
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword

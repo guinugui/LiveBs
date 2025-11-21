@@ -60,8 +60,8 @@ def create_profile(profile: ProfileCreate, current_user = Depends(get_current_us
         # Cria perfil
         cursor.execute(
             """INSERT INTO profiles (user_id, weight, height, age, gender, target_weight, 
-                                     activity_level, daily_calories)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                                     activity_level, daily_calories, last_profile_update)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
                RETURNING id, user_id, weight, height, age, gender, target_weight, 
                          activity_level, daily_calories, created_at""",
             (user_id, profile.weight, profile.height, profile.age, profile.gender,
@@ -164,9 +164,21 @@ def update_profile(profile_update: ProfileUpdate, current_user = Depends(get_cur
                 }
                 update_data['daily_calories'] = calculate_daily_calories(profile_for_calc)
             
+            # Adiciona timestamp de atualização
+            update_data['last_profile_update'] = 'CURRENT_TIMESTAMP'
+            
             # Monta query dinâmica
-            set_clause = ", ".join([f"{k} = %s" for k in update_data.keys()])
-            values = list(update_data.values()) + [user_id]
+            set_parts = []
+            values = []
+            for k, v in update_data.items():
+                if v == 'CURRENT_TIMESTAMP':
+                    set_parts.append(f"{k} = CURRENT_TIMESTAMP")
+                else:
+                    set_parts.append(f"{k} = %s")
+                    values.append(v)
+            
+            set_clause = ", ".join(set_parts)
+            values.append(user_id)
             
             cursor.execute(
                 f"UPDATE profiles SET {set_clause} WHERE user_id = %s",
@@ -174,3 +186,92 @@ def update_profile(profile_update: ProfileUpdate, current_user = Depends(get_cur
             )
     
     return get_profile(current_user)
+
+@router.get("/check-update-needed", response_model=dict)
+def check_update_needed(current_user = Depends(get_current_user)):
+    """Verifica se usuário precisa atualizar dados semanalmente"""
+    user_id = current_user['id']
+    
+    with db.get_db_cursor() as cursor:
+        # Busca data de criação do usuário e última atualização do perfil
+        cursor.execute(
+            """SELECT u.created_at, p.last_profile_update
+               FROM users u
+               LEFT JOIN profiles p ON p.user_id = u.id
+               WHERE u.id = %s""",
+            (user_id,)
+        )
+        result = cursor.fetchone()
+        
+        if not result or not result['created_at']:
+            return {
+                "needs_update": False,
+                "message": "Dados do usuário não encontrados"
+            }
+        
+        created_at = result['created_at']
+        last_update = result['last_profile_update']
+        
+        # Pega dia da semana que foi criado (0=domingo, 1=segunda, ..., 6=sábado)
+        cursor.execute("SELECT EXTRACT(DOW FROM %s) as day_of_week", (created_at,))
+        creation_day = int(cursor.fetchone()['day_of_week'])
+        
+        # Pega dia da semana atual
+        cursor.execute("SELECT EXTRACT(DOW FROM CURRENT_DATE) as day_of_week")
+        current_day = int(cursor.fetchone()['day_of_week'])
+        
+        # Nomes dos dias para exibir ao usuário
+        day_names = {
+            0: 'Domingo',
+            1: 'Segunda-feira',
+            2: 'Terça-feira',
+            3: 'Quarta-feira',
+            4: 'Quinta-feira',
+            5: 'Sexta-feira',
+            6: 'Sábado'
+        }
+        
+        # Verifica se é o dia da semana de atualização
+        if creation_day != current_day:
+            return {
+                "needs_update": False,
+                "message": f"Dia de atualização: {day_names[creation_day]}",
+                "update_day": creation_day,
+                "update_day_name": day_names[creation_day]
+            }
+        
+        # Se não tem última atualização, precisa atualizar
+        if not last_update:
+            return {
+                "needs_update": True,
+                "message": "Atualize seus dados por favor",
+                "update_day": creation_day,
+                "update_day_name": day_names[creation_day]
+            }
+        
+        # Verifica se já atualizou nesta semana
+        cursor.execute(
+            """SELECT EXTRACT(WEEK FROM %s) as last_week,
+                      EXTRACT(WEEK FROM CURRENT_DATE) as current_week,
+                      EXTRACT(YEAR FROM %s) as last_year,
+                      EXTRACT(YEAR FROM CURRENT_DATE) as current_year""",
+            (last_update, last_update)
+        )
+        week_data = cursor.fetchone()
+        
+        # Se atualizou na semana atual do ano atual, não precisa atualizar
+        if (week_data['current_year'] == week_data['last_year'] and 
+            week_data['current_week'] == week_data['last_week']):
+            return {
+                "needs_update": False,
+                "message": "Dados já atualizados esta semana",
+                "update_day": creation_day,
+                "update_day_name": day_names[creation_day]
+            }
+        
+        return {
+            "needs_update": True,
+            "message": "Atualize seus dados por favor",
+            "update_day": creation_day,
+            "update_day_name": day_names[creation_day]
+        }

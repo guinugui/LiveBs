@@ -29,7 +29,22 @@ class ApiService {
         return handler.next(options);
       },
       onError: (error, handler) {
-        print('API Error: ${error.message}');
+        // Extrai mensagem de erro do backend
+        if (error.response?.data != null) {
+          final data = error.response!.data;
+          if (data is Map && data.containsKey('detail')) {
+            // Lança exceção com a mensagem do backend
+            return handler.reject(
+              DioException(
+                requestOptions: error.requestOptions,
+                response: error.response,
+                type: error.type,
+                error: data['detail'],
+                message: data['detail'],
+              ),
+            );
+          }
+        }
         return handler.next(error);
       },
     ));
@@ -141,6 +156,11 @@ class ApiService {
     if (activityLevel != null) data['activity_level'] = activityLevel;
 
     final response = await _dio.put(kProfileEndpoint, data: data);
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> checkUpdateNeeded() async {
+    final response = await _dio.get('$kProfileEndpoint/check-update-needed');
     return response.data;
   }
 

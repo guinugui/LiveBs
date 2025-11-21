@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/network/api_service.dart';
 
 class LoginPage extends StatefulWidget {
@@ -15,6 +16,8 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
+  String? _emailError;
+  String? _passwordError;
 
   @override
   void dispose() {
@@ -24,25 +27,62 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _login() async {
+    // Limpa erros anteriores
+    setState(() {
+      _emailError = null;
+      _passwordError = null;
+    });
+
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      await ApiService().login(
+      final token = await ApiService().login(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
-      if (mounted) {
-        context.go('/home');
+      await ApiService().setToken(token);
+
+      // Salva email para uso posterior
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('email', _emailController.text.trim());
+
+      // Verifica se o usuário tem perfil
+      try {
+        await ApiService().getProfile();
+        // Se chegou aqui, tem perfil - vai para home
+        if (mounted) {
+          context.go('/home');
+        }
+      } catch (profileError) {
+        // Se deu erro ao buscar perfil, redireciona para onboarding
+        print('DEBUG - Perfil não encontrado, indo para onboarding');
+        if (mounted) {
+          context.go('/onboarding');
+        }
       }
     } catch (e) {
       if (mounted) {
+        String errorMessage = 'Erro ao fazer login';
+        
+        final errorStr = e.toString();
+        if (errorStr.contains('401') || errorStr.contains('Unauthorized')) {
+          errorMessage = 'Email ou senha incorretos';
+        } else if (errorStr.contains('404') || errorStr.contains('not found')) {
+          errorMessage = 'Usuário não encontrado';
+        } else if (errorStr.contains('Network')) {
+          errorMessage = 'Erro de conexão. Verifique sua internet.';
+        } else if (errorStr.contains('400')) {
+          errorMessage = 'Dados inválidos. Verifique os campos.';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao fazer login: ${e.toString()}'),
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -91,9 +131,10 @@ class _LoginPageState extends State<LoginPage> {
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      errorText: _emailError,
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -114,6 +155,7 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: InputDecoration(
                       labelText: 'Senha',
                       prefixIcon: const Icon(Icons.lock_outline),
+                      errorText: _passwordError,
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword

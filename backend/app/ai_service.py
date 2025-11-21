@@ -57,53 +57,111 @@ def generate_meal_plan(user_profile: dict) -> dict:
     Returns:
         Dicionário com plano de 7 dias
     """
-    prompt = f"""Crie um plano alimentar de 7 dias para:
     
-    Perfil:
-    - Peso: {user_profile.get('weight')} kg
-    - Altura: {user_profile.get('height')} cm
-    - Idade: {user_profile.get('age')} anos
-    - Meta: {user_profile.get('target_weight')} kg
-    - Atividade: {user_profile.get('activity_level')}
-    - Calorias/dia: {user_profile.get('daily_calories')} kcal
-    """
+    # Monta informações do perfil
+    peso_atual = user_profile.get('weight', 0)
+    peso_meta = user_profile.get('target_weight', 0)
+    diferenca_peso = peso_atual - peso_meta
+    altura = user_profile.get('height', 0)
+    idade = user_profile.get('age', 0)
+    calorias = user_profile.get('daily_calories', 0)
+    atividade = user_profile.get('activity_level', '')
+    
+    # Traduz nível de atividade
+    atividade_texto = {
+        'sedentary': 'sedentário',
+        'light': 'levemente ativo',
+        'moderate': 'moderadamente ativo',
+        'active': 'muito ativo',
+        'very_active': 'extremamente ativo'
+    }.get(atividade, atividade)
+    
+    prompt = f"""Você é Dr. Nutri, um nutricionista especialista em emagrecimento saudável e sustentável.
+
+Crie um plano alimentar completo de 7 dias para o seguinte paciente:
+
+📊 DADOS DO PACIENTE:
+• Peso atual: {peso_atual} kg
+• Peso meta: {peso_meta} kg
+• Objetivo: Perder {diferenca_peso:.1f} kg
+• Altura: {altura} cm
+• Idade: {idade} anos
+• Nível de atividade física: {atividade_texto}
+• Meta calórica diária: {calorias} kcal"""
     
     if user_profile.get('dietary_restrictions'):
-        prompt += f"\n- Restrições: {', '.join(user_profile['dietary_restrictions'])}"
+        restricoes = ', '.join(user_profile['dietary_restrictions'])
+        prompt += f"\n• Restrições alimentares: {restricoes}"
     
     if user_profile.get('dietary_preferences'):
-        prompt += f"\n- Preferências: {', '.join(user_profile['dietary_preferences'])}"
+        preferencias = ', '.join(user_profile['dietary_preferences'])
+        prompt += f"\n• Preferências alimentares: {preferencias}"
     
     prompt += """
-    
-    Retorne um JSON com este formato exato:
+
+🎯 DIRETRIZES PARA O PLANO:
+1. Crie um plano de 7 dias (segunda a domingo)
+2. Cada dia deve ter 5 refeições: Café da Manhã, Lanche da Manhã, Almoço, Lanche da Tarde, Jantar
+3. Para CADA refeição, forneça 2 OPÇÕES diferentes (Opção A e Opção B)
+4. Distribua as calorias de forma equilibrada ao longo do dia
+5. Priorize alimentos naturais, nutritivos e saudáveis
+6. Respeite todas as restrições e preferências alimentares do paciente
+7. Varie os alimentos ao longo da semana para evitar monotonia
+8. Inclua fontes de proteína de qualidade em todas as refeições principais
+9. Equilibre carboidratos complexos e gorduras saudáveis
+10. Sugira preparos práticos e viáveis
+
+📋 FORMATO DA RESPOSTA:
+Retorne APENAS um JSON válido (sem markdown, sem ```json) com esta estrutura EXATA:
+
+{
+  "days": [
     {
-        "days": [
+      "day": 1,
+      "day_name": "Segunda-feira",
+      "meals": [
+        {
+          "type": "Café da Manhã",
+          "options": [
             {
-                "day": 1,
-                "meals": [
-                    {
-                        "type": "breakfast",
-                        "name": "Nome da refeição",
-                        "calories": 400,
-                        "protein": 20,
-                        "carbs": 50,
-                        "fat": 10,
-                        "recipe": "Ingredientes e modo de preparo"
-                    }
-                ]
+              "name": "Opção A - Nome da refeição",
+              "calories": 350,
+              "protein": 15,
+              "carbs": 45,
+              "fat": 10,
+              "ingredients": "Lista de ingredientes com quantidades",
+              "recipe": "Modo de preparo passo a passo"
+            },
+            {
+              "name": "Opção B - Nome da refeição alternativa",
+              "calories": 350,
+              "protein": 15,
+              "carbs": 45,
+              "fat": 10,
+              "ingredients": "Lista de ingredientes com quantidades",
+              "recipe": "Modo de preparo passo a passo"
             }
-        ]
+          ]
+        }
+      ]
     }
-    
-    Inclua 5 refeições por dia: breakfast, morning_snack, lunch, afternoon_snack, dinner.
-    """
+  ]
+}
+
+IMPORTANTE: 
+- As calorias devem somar aproximadamente {calorias} kcal por dia
+- Cada tipo de refeição deve ter EXATAMENTE 2 opções
+- Use os tipos de refeição: "Café da Manhã", "Lanche da Manhã", "Almoço", "Lanche da Tarde", "Jantar"
+- Seja específico nas quantidades (gramas, unidades, colheres, etc)
+- Retorne APENAS o JSON, sem texto adicional antes ou depois
+"""
     
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
         response_format={"type": "json_object"},
-        temperature=0.8
+        temperature=0.8,
+        max_tokens=4000
     )
     
     import json
