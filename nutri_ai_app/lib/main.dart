@@ -13,7 +13,7 @@ void main() async {
   await dotenv.load(fileName: ".env");
   
   // Inicializar API Service
-  ApiService().initialize();
+  await ApiService().initialize();
   
   // Inicializar Supabase
   try {

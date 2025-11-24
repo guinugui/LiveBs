@@ -10,7 +10,7 @@ class ApiService {
   late final Dio _dio;
   String? _token;
 
-  void initialize() {
+  Future<void> initialize() async {
     _dio = Dio(BaseOptions(
       baseUrl: kApiBaseUrl,
       connectTimeout: const Duration(seconds: 10),
@@ -23,6 +23,10 @@ class ApiService {
     // Interceptor para adicionar token
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
+        // Carrega o token sempre antes da requisição se não estiver carregado
+        if (_token == null) {
+          await _loadToken();
+        }
         if (_token != null) {
           options.headers['Authorization'] = 'Bearer $_token';
         }
@@ -49,7 +53,7 @@ class ApiService {
       },
     ));
 
-    _loadToken();
+    await _loadToken();
   }
 
   Future<void> _loadToken() async {

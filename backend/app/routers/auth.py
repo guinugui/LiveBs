@@ -5,6 +5,7 @@ from app.schemas import UserRegister, UserLogin, Token, UserResponse
 from app.database import db
 from app.auth import verify_password, get_password_hash, create_access_token, decode_access_token
 from app.config import settings
+from app.email_service import email_service
 from uuid import UUID
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -104,3 +105,70 @@ def login(credentials: UserLogin):
 def get_me(current_user = Depends(get_current_user)):
     """Retorna dados do usuário autenticado"""
     return current_user
+
+@router.post("/forgot-password")
+def forgot_password(email: str):
+    """Envia código de recuperação de senha por email"""
+    with db.get_db_cursor() as cursor:
+        # Verifica se email existe
+        cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+        user = cursor.fetchone()
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Email não encontrado"
+            )
+    
+    # Gera código de verificação
+    verification_code = email_service.generate_verification_code()
+    
+    # Armazena código no banco
+    email_service.store_verification_code(email, verification_code)
+    
+    # Envia email
+    if email_service.send_password_reset_email(email, verification_code):
+        return {"message": "Código de recuperação enviado para seu email"}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erro ao enviar email"
+        )
+
+@router.post("/verify-reset-code")
+def verify_reset_code(email: str, code: str):
+    """Verifica código de recuperação"""
+    if email_service.verify_code(email, code):
+        return {"message": "Código válido", "valid": True}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Código inválido ou expirado"
+        )
+
+@router.post("/reset-password")
+def reset_password(email: str, code: str, new_password: str):
+    """Redefine senha após verificar código"""
+    # Verifica código novamente e o consome (remove após verificação)
+    if not email_service.verify_code(email, code, consume=True):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Código inválido ou expirado"
+        )
+    
+    # Valida nova senha
+    if len(new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Senha deve ter pelo menos 6 caracteres"
+        )
+    
+    # Atualiza senha
+    password_hash = get_password_hash(new_password)
+    with db.get_db_cursor() as cursor:
+        cursor.execute(
+            "UPDATE users SET password_hash = %s WHERE email = %s",
+            (password_hash, email)
+        )
+    
+    return {"message": "Senha alterada com sucesso"}
