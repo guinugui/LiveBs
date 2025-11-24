@@ -108,6 +108,44 @@ class ApiService {
     return response.data;
   }
 
+  Future<Map<String, dynamic>> forgotPassword({required String email}) async {
+    final response = await _dio.post(
+      '/auth/forgot-password',
+      queryParameters: {'email': email},
+    );
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> verifyResetCode({
+    required String email,
+    required String code,
+  }) async {
+    final response = await _dio.post(
+      '/auth/verify-reset-code',
+      queryParameters: {
+        'email': email,
+        'code': code,
+      },
+    );
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    final response = await _dio.post(
+      '/auth/reset-password',
+      queryParameters: {
+        'email': email,
+        'code': code,
+        'new_password': newPassword,
+      },
+    );
+    return response.data;
+  }
+
   // ==================== PROFILE ====================
 
   Future<Map<String, dynamic>> createProfile({

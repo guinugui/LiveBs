@@ -194,6 +194,16 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 16),
 
+                  // Forgot Password Link
+                  TextButton(
+                    onPressed: () => context.go('/forgot-password'),
+                    child: const Text(
+                      'Esqueci minha senha',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
                   // Register Link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
