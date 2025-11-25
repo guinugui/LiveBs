@@ -1,26 +1,27 @@
 from openai import OpenAI
 from app.config import settings
+import json
 
 client = OpenAI(api_key=settings.openai_api_key)
 
 def get_ai_response(messages: list[dict], user_profile: dict = None) -> str:
     """
     Obtém resposta do nutricionista IA
-    
+
     Args:
         messages: Lista de mensagens no formato [{"role": "user", "content": "..."}]
         user_profile: Dados do perfil do usuário (peso, altura, objetivo, etc)
-    
+
     Returns:
         Resposta do assistente IA
     """
-    system_prompt = """Você é Dr. Nutri, um nutricionista virtual especializado em 
+    system_prompt = """Você é Dr. Nutri, um nutricionista virtual especializado em
     emagrecimento saudável. Você é gentil, motivador e baseado em evidências científicas.
     Sempre considere o perfil do usuário ao dar recomendações."""
-    
+
     if user_profile:
         system_prompt += f"""
-        
+
         Perfil do usuário:
         - Peso atual: {user_profile.get('weight')} kg
         - Altura: {user_profile.get('height')} cm
@@ -29,140 +30,117 @@ def get_ai_response(messages: list[dict], user_profile: dict = None) -> str:
         - Nível de atividade: {user_profile.get('activity_level')}
         - Calorias diárias: {user_profile.get('daily_calories')} kcal
         """
-        
+
         if user_profile.get('dietary_restrictions'):
             system_prompt += f"\n- Restrições alimentares: {', '.join(user_profile['dietary_restrictions'])}"
-        
+
         if user_profile.get('dietary_preferences'):
             system_prompt += f"\n- Preferências: {', '.join(user_profile['dietary_preferences'])}"
-    
+
     all_messages = [{"role": "system", "content": system_prompt}] + messages
-    
+
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=all_messages,
         temperature=0.7,
         max_tokens=500
     )
-    
+
     return response.choices[0].message.content
+
 
 def generate_meal_plan(user_profile: dict) -> dict:
     """
-    Gera plano alimentar de 7 dias personalizado
+    Gera plano alimentar personalizado usando OpenAI
     
     Args:
-        user_profile: Dados do perfil do usuário
-    
+        user_profile: Dados do usuário incluindo calorias, restrições, preferências
+        
     Returns:
-        Dicionário com plano de 7 dias
+        dict: Plano alimentar com estrutura de dias e refeições
     """
     
-    # Monta informações do perfil
-    peso_atual = user_profile.get('weight', 0)
-    peso_meta = user_profile.get('target_weight', 0)
-    diferenca_peso = peso_atual - peso_meta
-    altura = user_profile.get('height', 0)
-    idade = user_profile.get('age', 0)
-    calorias = user_profile.get('daily_calories', 0)
-    atividade = user_profile.get('activity_level', '')
+    # Extrair dados do perfil
+    calories = user_profile.get('daily_calories', 2000)
+    restrictions = user_profile.get('dietary_restrictions', [])
+    preferences = user_profile.get('dietary_preferences', [])
     
-    # Traduz nível de atividade
-    atividade_texto = {
-        'sedentary': 'sedentário',
-        'light': 'levemente ativo',
-        'moderate': 'moderadamente ativo',
-        'active': 'muito ativo',
-        'very_active': 'extremamente ativo'
-    }.get(atividade, atividade)
+    # Construir informações de restrições
+    restriction_text = ""
+    if restrictions:
+        restriction_text = f"- Restrições: SEM {', '.join(restrictions)}"
     
-    prompt = f"""Você é Dr. Nutri, um nutricionista especialista em emagrecimento saudável e sustentável.
-
-Crie um plano alimentar completo de 7 dias para o seguinte paciente:
-
-📊 DADOS DO PACIENTE:
-• Peso atual: {peso_atual} kg
-• Peso meta: {peso_meta} kg
-• Objetivo: Perder {diferenca_peso:.1f} kg
-• Altura: {altura} cm
-• Idade: {idade} anos
-• Nível de atividade física: {atividade_texto}
-• Meta calórica diária: {calorias} kcal"""
+    preference_text = ""
+    if preferences:
+        preference_text = f"- Preferência: {', '.join(preferences)}"
     
-    if user_profile.get('dietary_restrictions'):
-        restricoes = ', '.join(user_profile['dietary_restrictions'])
-        prompt += f"\n• Restrições alimentares: {restricoes}"
-    
-    if user_profile.get('dietary_preferences'):
-        preferencias = ', '.join(user_profile['dietary_preferences'])
-        prompt += f"\n• Preferências alimentares: {preferencias}"
-    
-    prompt += """
+    prompt = f'''Crie um plano alimentar para 3 dias seguindo EXATAMENTE esta estrutura JSON:
 
-🎯 DIRETRIZES PARA O PLANO:
-1. Crie um plano de 7 dias (segunda a domingo)
-2. Cada dia deve ter 5 refeições: Café da Manhã, Lanche da Manhã, Almoço, Lanche da Tarde, Jantar
-3. Para CADA refeição, forneça 2 OPÇÕES diferentes (Opção A e Opção B)
-4. Distribua as calorias de forma equilibrada ao longo do dia
-5. Priorize alimentos naturais, nutritivos e saudáveis
-6. Respeite todas as restrições e preferências alimentares do paciente
-7. Varie os alimentos ao longo da semana para evitar monotonia
-8. Inclua fontes de proteína de qualidade em todas as refeições principais
-9. Equilibre carboidratos complexos e gorduras saudáveis
-10. Sugira preparos práticos e viáveis
-
-📋 FORMATO DA RESPOSTA:
-Retorne APENAS um JSON válido (sem markdown, sem ```json) com esta estrutura EXATA:
-
-{
+{{
   "days": [
-    {
+    {{
       "day": 1,
-      "day_name": "Segunda-feira",
       "meals": [
-        {
-          "type": "Café da Manhã",
+        {{
+          "type": "breakfast",
           "options": [
-            {
-              "name": "Opção A - Nome da refeição",
-              "calories": 350,
-              "protein": 15,
-              "carbs": 45,
-              "fat": 10,
-              "ingredients": "Lista de ingredientes com quantidades",
-              "recipe": "Modo de preparo passo a passo"
-            },
-            {
-              "name": "Opção B - Nome da refeição alternativa",
-              "calories": 350,
-              "protein": 15,
-              "carbs": 45,
-              "fat": 10,
-              "ingredients": "Lista de ingredientes com quantidades",
-              "recipe": "Modo de preparo passo a passo"
-            }
+            {{"name": "nome específico", "calories": 400, "protein": 25, "carbs": 40, "fat": 12, "recipe": "receita"}}
           ]
-        }
+        }},
+        {{
+          "type": "morning_snack",
+          "options": [
+            {{"name": "nome", "calories": 150, "protein": 10, "carbs": 15, "fat": 5, "recipe": "receita"}}
+          ]
+        }},
+        {{
+          "type": "lunch",
+          "options": [
+            {{"name": "nome", "calories": 500, "protein": 40, "carbs": 50, "fat": 15, "recipe": "receita"}}
+          ]
+        }},
+        {{
+          "type": "afternoon_snack",
+          "options": [
+            {{"name": "nome", "calories": 150, "protein": 10, "carbs": 15, "fat": 5, "recipe": "receita"}}
+          ]
+        }},
+        {{
+          "type": "dinner",
+          "options": [
+            {{"name": "nome", "calories": 450, "protein": 35, "carbs": 40, "fat": 15, "recipe": "receita"}}
+          ]
+        }}
       ]
-    }
+    }}
   ]
-}
+}}
 
-IMPORTANTE: 
-- As calorias devem somar aproximadamente {calorias} kcal por dia
-- Cada tipo de refeição deve ter EXATAMENTE 2 opções
-- Use os tipos de refeição: "Café da Manhã", "Lanche da Manhã", "Almoço", "Lanche da Tarde", "Jantar"
-- Seja específico nas quantidades (gramas, unidades, colheres, etc)
-- Retorne APENAS o JSON, sem texto adicional antes ou depois
-"""
+IMPORTANTE:
+- Total ~{calories} calorias/dia
+{restriction_text}
+{preference_text}
+- Comidas específicas com quantidades (ex: "150g arroz integral", "2 ovos mexidos"), NÃO categorias genéricas
+- Receitas devem ser práticas e detalhadas
+- Repita a estrutura para day 2 e day 3 com refeições DIFERENTES
+
+Retorne APENAS o JSON, nada mais.'''
     
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
         response_format={"type": "json_object"},
-        temperature=0.8,
+        temperature=0.7,
         max_tokens=4000
     )
     
-    import json
-    return json.loads(response.choices[0].message.content)
+    content = response.choices[0].message.content
+    
+    try:
+        meal_plan = json.loads(content)
+        return meal_plan
+    except json.JSONDecodeError as e:
+        # Salvar resposta para debug
+        with open('error_response.txt', 'w', encoding='utf-8') as f:
+            f.write(content)
+        raise Exception(f"Erro ao fazer parse do JSON da OpenAI: {e}")

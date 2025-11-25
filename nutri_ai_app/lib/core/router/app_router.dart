@@ -10,6 +10,7 @@ import '../../features/profile/presentation/pages/onboarding_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
 import '../../features/meal_plan/presentation/pages/meal_plan_page.dart';
+import '../../features/meal_plan/screens/meal_plan_form_screen.dart';
 import '../../features/progress/presentation/pages/progress_page.dart';
 import '../../features/profile/presentation/pages/quick_update_page.dart';
 
@@ -68,6 +69,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/meal-plan',
         name: 'meal-plan',
         builder: (context, state) => const MealPlanPage(),
+      ),
+      GoRoute(
+        path: '/meal-plan-form',
+        name: 'meal-plan-form',
+        builder: (context, state) => const MealPlanFormScreen(),
       ),
       GoRoute(
         path: '/progress',
