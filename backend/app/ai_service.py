@@ -1,26 +1,27 @@
 from openai import OpenAI
 from app.config import settings
+import json
 
 client = OpenAI(api_key=settings.openai_api_key)
 
 def get_ai_response(messages: list[dict], user_profile: dict = None) -> str:
     """
     Obtém resposta do nutricionista IA
-    
+
     Args:
         messages: Lista de mensagens no formato [{"role": "user", "content": "..."}]
         user_profile: Dados do perfil do usuário (peso, altura, objetivo, etc)
-    
+
     Returns:
         Resposta do assistente IA
     """
-    system_prompt = """Você é Dr. Nutri, um nutricionista virtual especializado em 
+    system_prompt = """Você é Dr. Nutri, um nutricionista virtual especializado em
     emagrecimento saudável. Você é gentil, motivador e baseado em evidências científicas.
     Sempre considere o perfil do usuário ao dar recomendações."""
-    
+
     if user_profile:
         system_prompt += f"""
-        
+
         Perfil do usuário:
         - Peso atual: {user_profile.get('weight')} kg
         - Altura: {user_profile.get('height')} cm
@@ -29,31 +30,32 @@ def get_ai_response(messages: list[dict], user_profile: dict = None) -> str:
         - Nível de atividade: {user_profile.get('activity_level')}
         - Calorias diárias: {user_profile.get('daily_calories')} kcal
         """
-        
+
         if user_profile.get('dietary_restrictions'):
             system_prompt += f"\n- Restrições alimentares: {', '.join(user_profile['dietary_restrictions'])}"
-        
+
         if user_profile.get('dietary_preferences'):
             system_prompt += f"\n- Preferências: {', '.join(user_profile['dietary_preferences'])}"
-    
+
     all_messages = [{"role": "system", "content": system_prompt}] + messages
-    
+
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=all_messages,
         temperature=0.7,
         max_tokens=500
     )
-    
+
     return response.choices[0].message.content
+
 
 def generate_meal_plan(user_profile: dict) -> dict:
     """
     Gera plano alimentar de 3 dias personalizado
     
     Args:
-        user_profile: Dados do perfil do usuário
-    
+        user_profile: Dados do usuário incluindo calorias, restrições, preferências
+        
     Returns:
         Dicionário com plano de 3 dias
     """
