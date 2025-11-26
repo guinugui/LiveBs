@@ -1,0 +1,367 @@
+{
+  "days": [
+    {
+      "day": 1,
+      "day_name": "Segunda",
+      "meals": [
+        {
+          "type": "breakfast",
+          "options": [
+            {
+              "name": "Omelete",
+              "calories": 300,
+              "protein": 25,
+              "carbs": 10,
+              "fat": 15,
+              "ingredients": "3 ovos, tomate",
+              "recipe": "Bata e frite"
+            },
+            {
+              "name": "Tapioca",
+              "calories": 310,
+              "protein": 20,
+              "carbs": 35,
+              "fat": 8,
+              "ingredients": "50g tapioca, queijo",
+              "recipe": "Hidrate e doure"
+            }
+          ]
+        },
+        {
+          "type": "morning_snack",
+          "options": [
+            {
+              "name": "Fruta",
+              "calories": 80,
+              "protein": 1,
+              "carbs": 21,
+              "fat": 0,
+              "ingredients": "1 banana",
+              "recipe": "Comer in natura"
+            },
+            {
+              "name": "Iogurte",
+              "calories": 150,
+              "protein": 8,
+              "carbs": 12,
+              "fat": 5,
+              "ingredients": "1 pote de iogurte natural",
+              "recipe": "Consumir gelado"
+            }
+          ]
+        },
+        {
+          "type": "lunch",
+          "options": [
+            {
+              "name": "Frango grelhado com arroz",
+              "calories": 600,
+              "protein": 40,
+              "carbs": 75,
+              "fat": 10,
+              "ingredients": "150g frango, 100g arroz, brócolis",
+              "recipe": "Grelhar o frango e cozinhar o arroz"
+            },
+            {
+              "name": "Salada de atum",
+              "calories": 500,
+              "protein": 35,
+              "carbs": 20,
+              "fat": 25,
+              "ingredients": "1 lata de atum, alface, tomate, azeite",
+              "recipe": "Misturar todos os ingredientes"
+            }
+          ]
+        },
+        {
+          "type": "afternoon_snack",
+          "options": [
+            {
+              "name": "Mix de castanhas",
+              "calories": 200,
+              "protein": 5,
+              "carbs": 10,
+              "fat": 18,
+              "ingredients": "30g de castanhas",
+              "recipe": "Consumir in natura"
+            },
+            {
+              "name": "Biscoito integral",
+              "calories": 150,
+              "protein": 3,
+              "carbs": 30,
+              "fat": 5,
+              "ingredients": "5 biscoitos integrais",
+              "recipe": "Consumir com chá"
+            }
+          ]
+        },
+        {
+          "type": "dinner",
+          "options": [
+            {
+              "name": "Sopa de legumes",
+              "calories": 250,
+              "protein": 10,
+              "carbs": 30,
+              "fat": 5,
+              "ingredients": "Legumes variados, caldo de galinha",
+              "recipe": "Cozinhar os legumes e bater"
+            },
+            {
+              "name": "Peixe assado com batata",
+              "calories": 400,
+              "protein": 30,
+              "carbs": 35,
+              "fat": 15,
+              "ingredients": "150g de peixe, 100g de batata",
+              "recipe": "Assar peixe e batata"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "day": 2,
+      "day_name": "Terça",
+      "meals": [
+        {
+          "type": "breakfast",
+          "options": [
+            {
+              "name": "Smoothie de frutas",
+              "calories": 250,
+              "protein": 5,
+              "carbs": 50,
+              "fat": 2,
+              "ingredients": "1 banana, 100g de morangos, 200ml de água",
+              "recipe": "Bater no liquidificador"
+            },
+            {
+              "name": "Pão integral com abacate",
+              "calories": 300,
+              "protein": 7,
+              "carbs": 40,
+              "fat": 15,
+              "ingredients": "1 fatia de pão integral, 1/2 abacate",
+              "recipe": "Amasse o abacate e espalhe no pão"
+            }
+          ]
+        },
+        {
+          "type": "morning_snack",
+          "options": [
+            {
+              "name": "Maçã",
+              "calories": 95,
+              "protein": 0,
+              "carbs": 25,
+              "fat": 0,
+              "ingredients": "1 maçã",
+              "recipe": "Comer in natura"
+            },
+            {
+              "name": "Iogurte com granola",
+              "calories": 200,
+              "protein": 8,
+              "carbs": 30,
+              "fat": 5,
+              "ingredients": "1 pote de iogurte, 30g de granola",
+              "recipe": "Misturar granola no iogurte"
+            }
+          ]
+        },
+        {
+          "type": "lunch",
+          "options": [
+            {
+              "name": "Quinoa com legumes",
+              "calories": 450,
+              "protein": 15,
+              "carbs": 60,
+              "fat": 10,
+              "ingredients": "100g de quinoa, legumes variados",
+              "recipe": "Cozinhar a quinoa e grelhar os legumes"
+            },
+            {
+              "name": "Frango ao curry",
+              "calories": 550,
+              "protein": 40,
+              "carbs": 20,
+              "fat": 35,
+              "ingredients": "150g de frango, curry, leite de coco",
+              "recipe": "Cozinhar frango com curry e leite de coco"
+            }
+          ]
+        },
+        {
+          "type": "afternoon_snack",
+          "options": [
+            {
+              "name": "Palitos de cenoura",
+              "calories": 50,
+              "protein": 1,
+              "carbs": 12,
+              "fat": 0,
+              "ingredients": "1 cenoura",
+              "recipe": "Cortar em palitos"
+            },
+            {
+              "name": "Hummus com torrada",
+              "calories": 250,
+              "protein": 8,
+              "carbs": 30,
+              "fat": 10,
+              "ingredients": "50g de hummus, 2 torradas integrais",
+              "recipe": "Espalhar hummus nas torradas"
+            }
+          ]
+        },
+        {
+          "type": "dinner",
+          "options": [
+            {
+              "name": "Wrap de frango",
+              "calories": 400,
+              "protein": 30,
+              "carbs": 40,
+              "fat": 10,
+              "ingredients": "1 tortilla, 100g de frango, alface, tomate",
+              "recipe": "Enrolar os ingredientes na tortilla"
+            },
+            {
+              "name": "Sopa de lentilha",
+              "calories": 300,
+              "protein": 20,
+              "carbs": 40,
+              "fat": 5,
+              "ingredients": "Lentilhas, cenoura, cebola",
+              "recipe": "Cozinhar os ingredientes em água"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "day": 3,
+      "day_name": "Quarta",
+      "meals": [
+        {
+          "type": "breakfast",
+          "options": [
+            {
+              "name": "Panquecas de aveia",
+              "calories": 350,
+              "protein": 10,
+              "carbs": 50,
+              "fat": 10,
+              "ingredients": "100g de aveia, 2 ovos, leite",
+              "recipe": "Misturar e cozinhar em frigideira"
+            },
+            {
+              "name": "Iogurte com frutas",
+              "calories": 200,
+              "protein": 8,
+              "carbs": 30,
+              "fat": 5,
+              "ingredients": "1 pote de iogurte, 100g de frutas",
+              "recipe": "Misturar frutas no iogurte"
+            }
+          ]
+        },
+        {
+          "type": "morning_snack",
+          "options": [
+            {
+              "name": "Pera",
+              "calories": 100,
+              "protein": 1,
+              "carbs": 27,
+              "fat": 0,
+              "ingredients": "1 pera",
+              "recipe": "Comer in natura"
+            },
+            {
+              "name": "Barrinha de cereal",
+              "calories": 150,
+              "protein": 3,
+              "carbs": 25,
+              "fat": 5,
+              "ingredients": "1 barrinha",
+              "recipe": "Consumir como lanche"
+            }
+          ]
+        },
+        {
+          "type": "lunch",
+          "options": [
+            {
+              "name": "Bife grelhado com purê",
+              "calories": 500,
+              "protein": 40,
+              "carbs": 40,
+              "fat": 20,
+              "ingredients": "150g de bife, 100g de batata",
+              "recipe": "Grelhar o bife e fazer purê"
+            },
+            {
+              "name": "Salada de grão-de-bico",
+              "calories": 400,
+              "protein": 15,
+              "carbs": 60,
+              "fat": 10,
+              "ingredients": "Grão-de-bico, tomate, cebola",
+              "recipe": "Misturar todos os ingredientes"
+            }
+          ]
+        },
+        {
+          "type": "afternoon_snack",
+          "options": [
+            {
+              "name": "Biscoitos de arroz",
+              "calories": 70,
+              "protein": 1,
+              "carbs": 15,
+              "fat": 1,
+              "ingredients": "5 biscoitos de arroz",
+              "recipe": "Consumir com chá"
+            },
+            {
+              "name": "Iogurte grego",
+              "calories": 150,
+              "protein": 10,
+              "carbs": 8,
+              "fat": 8,
+              "ingredients": "1 pote de iogurte grego",
+              "recipe": "Consumir gelado"
+            }
+          ]
+        },
+        {
+          "type": "dinner",
+          "options": [
+            {
+              "name": "Frango assado com legumes",
+              "calories": 450,
+              "protein": 35,
+              "carbs": 35,
+              "fat": 15,
+              "ingredients": "150g de frango, legumes variados",
+              "recipe": "Assar frango e legumes juntos"
+            },
+            {
+              "name": "Sopa de abóbora",
+              "calories": 250,
+              "protein": 5,
+              "carbs": 40,
+              "fat": 5,
+              "ingredients": "Abóbora, cebola, caldo de legumes",
+              "recipe": "Cozinhar e bater"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

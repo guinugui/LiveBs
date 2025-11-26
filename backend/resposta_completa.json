@@ -1,0 +1,109 @@
+{
+  "days": [
+    {
+      "day": 1,
+      "meals": [
+        {
+          "type": "breakfast",
+          "options": [
+            {"name": "Omelete de 3 ovos com espinafre e tomate", "calories": 400, "protein": 25, "carbs": 10, "fat": 30, "recipe": "Bata 3 ovos e misture com espinafre e tomate picados, cozinhe em uma frigideira com um pouco de azeite."}
+          ]
+        },
+        {
+          "type": "morning_snack",
+          "options": [
+            {"name": "30g de nozes", "calories": 150, "protein": 5, "carbs": 5, "fat": 14, "recipe": "Consuma 30g de nozes como lanche."}
+          ]
+        },
+        {
+          "type": "lunch",
+          "options": [
+            {"name": "150g de peito de frango grelhado com salada de folhas verdes", "calories": 500, "protein": 40, "carbs": 15, "fat": 20, "recipe": "Grelhe 150g de peito de frango e sirva com uma salada de folhas verdes, azeite e vinagre."}
+          ]
+        },
+        {
+          "type": "afternoon_snack",
+          "options": [
+            {"name": "1 fatia de abacate", "calories": 150, "protein": 2, "carbs": 8, "fat": 14, "recipe": "Consuma uma fatia de abacate como lanche."}
+          ]
+        },
+        {
+          "type": "dinner",
+          "options": [
+            {"name": "200g de salmão grelhado com brócolis no vapor", "calories": 450, "protein": 35, "carbs": 7, "fat": 25, "recipe": "Grelhe 200g de salmão e sirva com brócolis cozidos no vapor."}
+          ]
+        }
+      ]
+    },
+    {
+      "day": 2,
+      "meals": [
+        {
+          "type": "breakfast",
+          "options": [
+            {"name": "Smoothie de 200ml de leite de amêndoas com 1 banana e 1 colher de sopa de manteiga de amêndoas", "calories": 400, "protein": 10, "carbs": 40, "fat": 25, "recipe": "Misture 200ml de leite de amêndoas, 1 banana e 1 colher de sopa de manteiga de amêndoas no liquidificador."}
+          ]
+        },
+        {
+          "type": "morning_snack",
+          "options": [
+            {"name": "1 maçã média", "calories": 150, "protein": 1, "carbs": 22, "fat": 0, "recipe": "Consuma uma maçã média como lanche."}
+          ]
+        },
+        {
+          "type": "lunch",
+          "options": [
+            {"name": "150g de carne moída com abobrinha refogada", "calories": 500, "protein": 40, "carbs": 15, "fat": 30, "recipe": "Refogue 150g de carne moída com abobrinha em cubos e temperos a gosto."}
+          ]
+        },
+        {
+          "type": "afternoon_snack",
+          "options": [
+            {"name": "2 colheres de sopa de hummus com cenouras baby", "calories": 150, "protein": 5, "carbs": 15, "fat": 8, "recipe": "Sirva 2 colheres de sopa de hummus com cenouras baby."}
+          ]
+        },
+        {
+          "type": "dinner",
+          "options": [
+            {"name": "200g de peito de peru grelhado com aspargos", "calories": 450, "protein": 35, "carbs": 6, "fat": 20, "recipe": "Grelhe 200g de peito de peru e sirva com aspargos cozidos."}
+          ]
+        }
+      ]
+    },
+    {
+      "day": 3,
+      "meals": [
+        {
+          "type": "breakfast",
+          "options": [
+            {"name": "Panquecas de 2 ovos com farinha de amêndoas", "calories": 400, "protein": 20, "carbs": 10, "fat": 30, "recipe": "Misture 2 ovos com 50g de farinha de amêndoas e cozinhe em uma frigideira."}
+          ]
+        },
+        {
+          "type": "morning_snack",
+          "options": [
+            {"name": "1 pera média", "calories": 150, "protein": 1, "carbs": 27, "fat": 0, "recipe": "Consuma uma pera média como lanche."}
+          ]
+        },
+        {
+          "type": "lunch",
+          "options": [
+            {"name": "150g de filé de peixe grelhado com couve-flor", "calories": 500, "protein": 40, "carbs": 10, "fat": 25, "recipe": "Grelhe 150g de filé de peixe e sirva com couve-flor cozida."}
+          ]
+        },
+        {
+          "type": "afternoon_snack",
+          "options": [
+            {"name": "10 azeitonas pretas", "calories": 150, "protein": 1, "carbs": 6, "fat": 15, "recipe": "Consuma 10 azeitonas pretas como lanche."}
+          ]
+        },
+        {
+          "type": "dinner",
+          "options": [
+            {"name": "200g de frango assado com brócolis", "calories": 450, "protein": 35, "carbs": 5, "fat": 25, "recipe": "Asse 200g de frango e sirva com brócolis cozidos."}
+          ]
+        }
+      ]
+    }
+  ]
+}
