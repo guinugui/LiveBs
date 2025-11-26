@@ -75,6 +75,7 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
       return const Center(child: Text('Dados não encontrados'));
     }
 
+<<<<<<< HEAD
     // Verificar estrutura dos dados - suporta nova estrutura aninhada
     List<dynamic> meals = [];
     
@@ -105,6 +106,23 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
     
     if (meals.isEmpty) {
       print('[NEW] ❌ Nenhuma meal encontrada');
+=======
+    // Verificar estrutura dos dados
+    List<dynamic> meals = [];
+    
+    if (planData!.containsKey('meals')) {
+      meals = planData!['meals'] as List<dynamic>;
+    } else if (planData!.containsKey('plan_data')) {
+      final planDataContent = planData!['plan_data'];
+      if (planDataContent is Map && planDataContent.containsKey('meals')) {
+        meals = planDataContent['meals'] as List<dynamic>;
+      }
+    }
+    
+    print('[NEW] 🍽️ Found ${meals.length} meals');
+    
+    if (meals.isEmpty) {
+>>>>>>> 848763521f357a608b376f621f188f225d66593d
       return const Center(child: Text('Nenhuma refeição encontrada'));
     }
 
@@ -131,7 +149,11 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
                 ),
               ],
             ),
+<<<<<<< HEAD
             child: Column(
+=======
+            child: const Column(
+>>>>>>> 848763521f357a608b376f621f188f225d66593d
               children: [
                 Icon(Icons.restaurant_menu, color: Colors.white, size: 40),
                 SizedBox(height: 12),
@@ -154,6 +176,7 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
                   ),
                   textAlign: TextAlign.center,
                 ),
+<<<<<<< HEAD
                 SizedBox(height: 12),
                 Container(
                   padding: EdgeInsets.all(12),
@@ -172,6 +195,8 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
                     textAlign: TextAlign.center,
                   ),
                 ),
+=======
+>>>>>>> 848763521f357a608b376f621f188f225d66593d
               ],
             ),
           ),

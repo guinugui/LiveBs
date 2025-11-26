@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/meal_plan.dart';
 import '../../../core/network/api_service.dart';
 
@@ -56,9 +57,14 @@ class MealPlanService {
   }
 
   Future<List<MealPlan>> getUserMealPlans(int userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
     final response = await http.get(
       Uri.parse('$baseUrl/meal-plans/$userId'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
     );
 
     if (response.statusCode == 200) {
