@@ -51,96 +51,49 @@ def get_ai_response(messages: list[dict], user_profile: dict = None) -> str:
 
 def generate_meal_plan(user_profile: dict) -> dict:
     """
-    Gera plano alimentar personalizado usando OpenAI
+    Gera plano alimentar de 3 dias personalizado
     
     Args:
         user_profile: Dados do usuário incluindo calorias, restrições, preferências
         
     Returns:
-        dict: Plano alimentar com estrutura de dias e refeições
+        Dicionário com plano de 3 dias
     """
     
-    # Extrair dados do perfil
-    calories = user_profile.get('daily_calories', 2000)
-    restrictions = user_profile.get('dietary_restrictions', [])
-    preferences = user_profile.get('dietary_preferences', [])
-    
-    # Construir informações de restrições
-    restriction_text = ""
-    if restrictions:
-        restriction_text = f"- Restrições: SEM {', '.join(restrictions)}"
-    
-    preference_text = ""
-    if preferences:
-        preference_text = f"- Preferência: {', '.join(preferences)}"
-    
-    prompt = f'''Crie um plano alimentar para 3 dias seguindo EXATAMENTE esta estrutura JSON:
+    prompt = """COPIE E COMPLETE este JSON exato com 3 dias:
 
-{{
-  "days": [
-    {{
-      "day": 1,
-      "meals": [
-        {{
-          "type": "breakfast",
-          "options": [
-            {{"name": "nome específico", "calories": 400, "protein": 25, "carbs": 40, "fat": 12, "recipe": "receita"}}
-          ]
-        }},
-        {{
-          "type": "morning_snack",
-          "options": [
-            {{"name": "nome", "calories": 150, "protein": 10, "carbs": 15, "fat": 5, "recipe": "receita"}}
-          ]
-        }},
-        {{
-          "type": "lunch",
-          "options": [
-            {{"name": "nome", "calories": 500, "protein": 40, "carbs": 50, "fat": 15, "recipe": "receita"}}
-          ]
-        }},
-        {{
-          "type": "afternoon_snack",
-          "options": [
-            {{"name": "nome", "calories": 150, "protein": 10, "carbs": 15, "fat": 5, "recipe": "receita"}}
-          ]
-        }},
-        {{
-          "type": "dinner",
-          "options": [
-            {{"name": "nome", "calories": 450, "protein": 35, "carbs": 40, "fat": 15, "recipe": "receita"}}
-          ]
-        }}
-      ]
-    }}
-  ]
-}}
+{"days":[{"day":1,"day_name":"Dia 1","meals":[{"type":"breakfast","options":[{"name":"Ovos","calories":300,"protein":25,"carbs":10,"fat":15,"ingredients":"2 ovos 100g batata","recipe":"Cozinhe frite"},{"name":"Tapioca","calories":300,"protein":20,"carbs":35,"fat":8,"ingredients":"tapioca frango","recipe":"Prepare recheie"}]},{"type":"morning_snack","options":[{},{}}]},{"type":"lunch","options":[{},{}]},{"type":"afternoon_snack","options":[{},{}]},{"type":"dinner","options":[{},{}]}]},{"day":2,"day_name":"Dia 2","meals":[{"type":"breakfast","options":[{},{}]},{"type":"morning_snack","options":[{},{}]},{"type":"lunch","options":[{},{}]},{"type":"afternoon_snack","options":[{},{}]},{"type":"dinner","options":[{},{}]}]},{"day":3,"day_name":"Dia 3","meals":[{"type":"breakfast","options":[{},{}]},{"type":"morning_snack","options":[{},{}]},{"type":"lunch","options":[{},{}]},{"type":"afternoon_snack","options":[{},{}]},{"type":"dinner","options":[{},{}]}]}]}
 
-IMPORTANTE:
-- Total ~{calories} calorias/dia
-{restriction_text}
-{preference_text}
-- Comidas específicas com quantidades (ex: "150g arroz integral", "2 ovos mexidos"), NÃO categorias genéricas
-- Receitas devem ser práticas e detalhadas
-- Repita a estrutura para day 2 e day 3 com refeições DIFERENTES
-
-Retorne APENAS o JSON, nada mais.'''
+PREENCHA os {} com objetos: name calories protein carbs fat ingredients recipe.
+REGRAS: ingredients e recipe MAX 25 chars. Sem virgulas nas strings. 1800 cal total/dia."""
     
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
         response_format={"type": "json_object"},
-        temperature=0.7,
-        max_tokens=4000
+        temperature=0.7
+        # Sem max_tokens - deixa a IA decidir
     )
     
+    import json
+    import re
+    
+    # Pega a resposta
     content = response.choices[0].message.content
     
+    # Remove possíveis markdown ou texto extra
+    content = re.sub(r'^```json\s*', '', content)
+    content = re.sub(r'\s*```$', '', content)
+    content = content.strip()
+    
+    # Tenta fazer parse
     try:
-        meal_plan = json.loads(content)
-        return meal_plan
+        return json.loads(content)
     except json.JSONDecodeError as e:
-        # Salvar resposta para debug
+        # Se falhar, salva para debug
         with open('error_response.txt', 'w', encoding='utf-8') as f:
+            f.write(f"ERRO: {e}\n\n")
+            f.write(f"POSIÇÃO: linha {e.lineno}, coluna {e.colno}, char {e.pos}\n\n")
+            f.write("RESPOSTA:\n")
             f.write(content)
-        raise Exception(f"Erro ao fazer parse do JSON da OpenAI: {e}")
+        raise Exception(f"Erro ao parsear JSON da OpenAI. Detalhes salvos em error_response.txt: {e}")
