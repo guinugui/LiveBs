@@ -13,16 +13,16 @@ def create_meal_plan(current_user = Depends(get_current_user)):
     user_id = current_user['id']
     
     # Busca perfil do usuário
-    profile = get_profile(current_user)
+    profile = get_profile(current_user)  # retorna dict
     user_profile = {
-        'weight': profile.weight,
-        'height': profile.height,
-        'age': profile.age,
-        'target_weight': profile.target_weight,
-        'activity_level': profile.activity_level,
-        'daily_calories': profile.daily_calories,
-        'dietary_restrictions': profile.dietary_restrictions,
-        'dietary_preferences': profile.dietary_preferences
+        'weight': profile['weight'],
+        'height': profile['height'],
+        'age': profile['age'],
+        'target_weight': profile.get('target_weight'),
+        'activity_level': profile['activity_level'],
+        'daily_calories': profile['daily_calories'],
+        'dietary_restrictions': profile.get('dietary_restrictions', []),
+        'dietary_preferences': profile.get('dietary_preferences', [])
     }
     
     # Gera plano com IA

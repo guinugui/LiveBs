@@ -1,37 +1,31 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/meal_plan.dart';
 
 class MealPlanService {
   static const String baseUrl = 'http://192.168.0.85:8000';
 
-  Future<MealPlan> generateMealPlan({
-    required double weight,
-    required double height,
-    required int age,
-    required double targetWeight,
-    required String activityLevel,
-    required int dailyCalories,
-    List<String>? dietaryRestrictions,
-    List<String>? dietaryPreferences,
-  }) async {
+  Future<MealPlan> generateMealPlan() async {
+    // Backend já obtém todos os dados do perfil autenticado
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
     final response = await http.post(
       Uri.parse('$baseUrl/meal-plan'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'weight': weight,
-        'height': height,
-        'age': age,
-        'target_weight': targetWeight,
-        'activity_level': activityLevel,
-        'daily_calories': dailyCalories,
-        'dietary_restrictions': dietaryRestrictions ?? [],
-        'dietary_preferences': dietaryPreferences ?? [],
-      }),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+      // Corpo vazio: perfil vem do banco
+      body: jsonEncode({}),
     );
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       final data = jsonDecode(response.body);
+      
+      // A nova estrutura já vem no formato correto do backend
+      
       return MealPlan.fromJson(data);
     } else {
       throw Exception('Erro ao gerar plano alimentar: ${response.body}');
@@ -39,9 +33,14 @@ class MealPlanService {
   }
 
   Future<List<MealPlan>> getUserMealPlans(int userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
     final response = await http.get(
       Uri.parse('$baseUrl/meal-plans/$userId'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
     );
 
     if (response.statusCode == 200) {
