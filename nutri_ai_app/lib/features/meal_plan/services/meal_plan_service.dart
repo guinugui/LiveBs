@@ -1,40 +1,57 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/meal_plan.dart';
+import '../../../core/network/api_service.dart';
 
 class MealPlanService {
   static const String baseUrl = 'http://192.168.0.85:8000';
+  final ApiService _apiService = ApiService();
 
-  Future<MealPlan> generateMealPlan({
-    required double weight,
-    required double height,
-    required int age,
-    required double targetWeight,
-    required String activityLevel,
-    required int dailyCalories,
-    List<String>? dietaryRestrictions,
-    List<String>? dietaryPreferences,
-  }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/meal-plan'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'weight': weight,
-        'height': height,
-        'age': age,
-        'target_weight': targetWeight,
-        'activity_level': activityLevel,
-        'daily_calories': dailyCalories,
-        'dietary_restrictions': dietaryRestrictions ?? [],
-        'dietary_preferences': dietaryPreferences ?? [],
-      }),
-    );
+  /// Gera e salva um novo plano alimentar
+  Future<Map<String, dynamic>> generateMealPlan() async {
+    try {
+      return await _apiService.generateMealPlan();
+    } catch (e) {
+      throw Exception('Erro ao gerar plano alimentar: $e');
+    }
+  }
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return MealPlan.fromJson(data);
-    } else {
-      throw Exception('Erro ao gerar plano alimentar: ${response.body}');
+  /// Lista todos os planos salvos do usuário
+  Future<List<Map<String, dynamic>>> getSavedMealPlans() async {
+    try {
+      print('[DEBUG] MealPlanService: Chamando getSavedMealPlans...');
+      final response = await _apiService.getSavedMealPlans();
+      print('[DEBUG] MealPlanService: Response recebida: $response');
+      
+      if (response['plans'] != null) {
+        final plans = List<Map<String, dynamic>>.from(response['plans']);
+        print('[DEBUG] MealPlanService: ${plans.length} planos encontrados');
+        return plans;
+      } else {
+        print('[DEBUG] MealPlanService: Nenhum plano encontrado');
+        return [];
+      }
+    } catch (e) {
+      print('[ERROR] MealPlanService: $e');
+      throw Exception('Erro ao buscar planos salvos: $e');
+    }
+  }
+
+  /// Obtém detalhes completos de um plano específico
+  Future<Map<String, dynamic>> getMealPlanDetails(String planId) async {
+    try {
+      return await _apiService.getMealPlanDetails(planId);
+    } catch (e) {
+      throw Exception('Erro ao buscar detalhes do plano: $e');
+    }
+  }
+
+  /// Deleta um plano salvo
+  Future<void> deleteMealPlan(String planId) async {
+    try {
+      await _apiService.deleteMealPlan(planId);
+    } catch (e) {
+      throw Exception('Erro ao deletar plano: $e');
     }
   }
 

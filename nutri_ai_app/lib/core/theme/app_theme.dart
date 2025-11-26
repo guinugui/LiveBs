@@ -32,14 +32,8 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           color: textDark,
         ),
-        bodyLarge: GoogleFonts.inter(
-          fontSize: 16,
-          color: textDark,
-        ),
-        bodyMedium: GoogleFonts.inter(
-          fontSize: 14,
-          color: textLight,
-        ),
+        bodyLarge: GoogleFonts.inter(fontSize: 16, color: textDark),
+        bodyMedium: GoogleFonts.inter(fontSize: 14, color: textLight),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(

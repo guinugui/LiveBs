@@ -8,13 +8,13 @@ import 'core/router/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Carregar variáveis de ambiente
   await dotenv.load(fileName: ".env");
-  
+
   // Inicializar API Service
   await ApiService().initialize();
-  
+
   // Inicializar Supabase
   try {
     await SupabaseService.initialize();
@@ -22,11 +22,7 @@ void main() async {
     debugPrint('Erro ao inicializar Supabase: $e');
   }
 
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends ConsumerWidget {

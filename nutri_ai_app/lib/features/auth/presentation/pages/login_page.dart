@@ -66,7 +66,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (mounted) {
         String errorMessage = 'Erro ao fazer login';
-        
+
         final errorStr = e.toString();
         if (errorStr.contains('401') || errorStr.contains('Unauthorized')) {
           errorMessage = 'Email ou senha incorretos';
@@ -77,7 +77,7 @@ class _LoginPageState extends State<LoginPage> {
         } else if (errorStr.contains('400')) {
           errorMessage = 'Dados inválidos. Verifique os campos.';
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
@@ -113,7 +113,7 @@ class _LoginPageState extends State<LoginPage> {
                     color: Color(0xFF6C63FF),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Title
                   Text(
                     'LiveBs',

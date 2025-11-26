@@ -25,9 +25,9 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final prefs = await SharedPreferences.getInstance();
       _email = prefs.getString('email') ?? '';
-      
+
       final profile = await ApiService().getProfile();
-      
+
       if (mounted) {
         setState(() {
           _profile = profile;
@@ -37,30 +37,40 @@ class _ProfilePageState extends State<ProfilePage> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar perfil: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao carregar perfil: $e')));
       }
     }
   }
 
   String _getActivityLevelText(String level) {
     switch (level) {
-      case 'sedentary': return 'Sedentário';
-      case 'lightly_active': return 'Levemente Ativo';
-      case 'moderately_active': return 'Moderadamente Ativo';
-      case 'very_active': return 'Muito Ativo';
-      case 'extremely_active': return 'Extremamente Ativo';
-      default: return level;
+      case 'sedentary':
+        return 'Sedentário';
+      case 'lightly_active':
+        return 'Levemente Ativo';
+      case 'moderately_active':
+        return 'Moderadamente Ativo';
+      case 'very_active':
+        return 'Muito Ativo';
+      case 'extremely_active':
+        return 'Extremamente Ativo';
+      default:
+        return level;
     }
   }
 
   String _getGenderText(String gender) {
     switch (gender) {
-      case 'male': return 'Masculino';
-      case 'female': return 'Feminino';
-      case 'other': return 'Outro';
-      default: return gender;
+      case 'male':
+        return 'Masculino';
+      case 'female':
+        return 'Feminino';
+      case 'other':
+        return 'Outro';
+      default:
+        return gender;
     }
   }
 
@@ -75,9 +85,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_profile == null) {
@@ -109,7 +117,9 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 CircleAvatar(
                   radius: 50,
-                  backgroundColor: const Color(0xFF6C63FF).withValues(alpha: 0.2),
+                  backgroundColor: const Color(
+                    0xFF6C63FF,
+                  ).withValues(alpha: 0.2),
                   child: const Icon(
                     Icons.person,
                     size: 50,
@@ -122,10 +132,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  _email,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+                Text(_email, style: Theme.of(context).textTheme.bodyMedium),
               ],
             ),
           ),
@@ -134,37 +141,61 @@ class _ProfilePageState extends State<ProfilePage> {
           // Personal Info Section
           Text(
             'Informações Pessoais',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontSize: 18,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontSize: 18),
           ),
           const SizedBox(height: 16),
-          _buildInfoCard('Peso Atual', '${_profile!['weight'].toStringAsFixed(1)} kg', Icons.monitor_weight_outlined),
+          _buildInfoCard(
+            'Peso Atual',
+            '${_profile!['weight'].toStringAsFixed(1)} kg',
+            Icons.monitor_weight_outlined,
+          ),
           _buildInfoCard('Altura', '${_profile!['height']} cm', Icons.height),
-          _buildInfoCard('Idade', '${_profile!['age']} anos', Icons.cake_outlined),
+          _buildInfoCard(
+            'Idade',
+            '${_profile!['age']} anos',
+            Icons.cake_outlined,
+          ),
           _buildInfoCard('Sexo', _getGenderText(_profile!['gender']), Icons.wc),
-          _buildInfoCard('IMC', _profile!['bmi'].toStringAsFixed(1), Icons.analytics_outlined),
+          _buildInfoCard(
+            'IMC',
+            _profile!['bmi'].toStringAsFixed(1),
+            Icons.analytics_outlined,
+          ),
           const SizedBox(height: 24),
 
           // Goals Section
           Text(
             'Objetivos',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontSize: 18,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontSize: 18),
           ),
           const SizedBox(height: 16),
-          _buildInfoCard('Peso Meta', '${_profile!['target_weight'].toStringAsFixed(1)} kg', Icons.flag_outlined),
-          _buildInfoCard('Atividade', _getActivityLevelText(_profile!['activity_level']), Icons.fitness_center_outlined),
-          _buildInfoCard('Calorias Diárias', '${_profile!['daily_calories']} kcal', Icons.local_fire_department_outlined),
+          _buildInfoCard(
+            'Peso Meta',
+            '${_profile!['target_weight'].toStringAsFixed(1)} kg',
+            Icons.flag_outlined,
+          ),
+          _buildInfoCard(
+            'Atividade',
+            _getActivityLevelText(_profile!['activity_level']),
+            Icons.fitness_center_outlined,
+          ),
+          _buildInfoCard(
+            'Calorias Diárias',
+            '${_profile!['daily_calories']} kcal',
+            Icons.local_fire_department_outlined,
+          ),
           const SizedBox(height: 24),
 
           // Preferences Section
           Text(
             'Preferências Alimentares',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontSize: 18,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontSize: 18),
           ),
           const SizedBox(height: 16),
           Card(
@@ -178,7 +209,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  if (_profile!['dietary_restrictions'] != null && 
+                  if (_profile!['dietary_restrictions'] != null &&
                       (_profile!['dietary_restrictions'] as List).isNotEmpty)
                     Wrap(
                       spacing: 8,
@@ -187,14 +218,17 @@ class _ProfilePageState extends State<ProfilePage> {
                           .toList(),
                     )
                   else
-                    const Text('Nenhuma restrição', style: TextStyle(color: Colors.grey)),
+                    const Text(
+                      'Nenhuma restrição',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   const SizedBox(height: 16),
                   const Text(
                     'Preferências:',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  if (_profile!['dietary_preferences'] != null && 
+                  if (_profile!['dietary_preferences'] != null &&
                       (_profile!['dietary_preferences'] as List).isNotEmpty)
                     Wrap(
                       spacing: 8,
@@ -203,7 +237,10 @@ class _ProfilePageState extends State<ProfilePage> {
                           .toList(),
                     )
                   else
-                    const Text('Nenhuma preferência', style: TextStyle(color: Colors.grey)),
+                    const Text(
+                      'Nenhuma preferência',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                 ],
               ),
             ),

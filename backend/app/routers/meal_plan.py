@@ -1,141 +1,181 @@
 from fastapi import APIRouter, HTTPException, Depends, status
-from app.schemas import MealPlanResponse, MealPlanDayResponse, MealResponse
+import json
+from datetime import datetime
+
 from app.database import db
 from app.routers.auth import get_current_user
-from app.routers.profile import get_profile
 from app.ai_service import generate_meal_plan
+from app.schemas import MealPlanResponse
 
 router = APIRouter(prefix="/meal-plan", tags=["Meal Plan"])
 
-@router.post("", response_model=MealPlanResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 def create_meal_plan(current_user = Depends(get_current_user)):
-    """Gera novo plano alimentar usando IA"""
+    """Gera e salva novo plano alimentar usando IA"""
     user_id = current_user['id']
     
-    # Busca perfil do usuário
-    profile = get_profile(current_user)
+    # Busca perfil do usuário no banco
+    with db.get_db_cursor() as cursor:
+        cursor.execute("""
+            SELECT weight, height, age, target_weight, activity_level, daily_calories
+            FROM profiles 
+            WHERE user_id = %s
+        """, (user_id,))
+        
+        profile_row = cursor.fetchone()
+        
+        if not profile_row:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Perfil do usuário não encontrado. Configure seu perfil primeiro."
+            )
+    
     user_profile = {
-        'weight': profile.weight,
-        'height': profile.height,
-        'age': profile.age,
-        'target_weight': profile.target_weight,
-        'activity_level': profile.activity_level,
-        'daily_calories': profile.daily_calories,
-        'dietary_restrictions': profile.dietary_restrictions,
-        'dietary_preferences': profile.dietary_preferences
+        'weight': profile_row['weight'],
+        'height': profile_row['height'], 
+        'age': profile_row['age'],
+        'target_weight': profile_row['target_weight'],
+        'activity_level': profile_row['activity_level'],
+        'daily_calories': profile_row['daily_calories'],
+        'dietary_restrictions': [],  # Por enquanto vazio
+        'dietary_preferences': []    # Por enquanto vazio
     }
     
-    # Gera plano com IA
-    ai_plan = generate_meal_plan(user_profile)
-    
-    with db.get_db_cursor() as cursor:
-        # Desativa planos antigos
-        cursor.execute(
-            "UPDATE meal_plans SET is_active = false WHERE user_id = %s",
-            (user_id,)
-        )
+    # Gera plano com IA e salva no banco
+    try:
+        print(f"[DEBUG] Gerando plano para usuário {user_id}")
+        print(f"[DEBUG] Perfil: {user_profile}")
         
-        # Cria novos planos
-        for day_data in ai_plan['days']:
-            day_number = day_data['day']
-            
-            # Cria registro do dia
+        ai_plan = generate_meal_plan(user_profile)
+        
+        print(f"[DEBUG] Plano gerado com sucesso")
+        print(f"[DEBUG] Tipo do plano: {type(ai_plan)}")
+        print(f"[DEBUG] Keys do plano: {list(ai_plan.keys()) if isinstance(ai_plan, dict) else 'Not dict'}")
+        
+        if isinstance(ai_plan, dict) and 'days' in ai_plan:
+            print(f"[DEBUG] Número de dias: {len(ai_plan['days'])}")
+        
+        # Salvar o plano no banco de dados
+        with db.get_db_cursor() as cursor:
+            # Descobrir o próximo número do plano
             cursor.execute(
-                """INSERT INTO meal_plans (user_id, day_number, is_active) 
-                   VALUES (%s, %s, true) RETURNING id""",
-                (user_id, day_number)
+                "SELECT COALESCE(MAX(plan_number), 0) + 1 as next_number FROM saved_meal_plans WHERE user_id = %s",
+                (user_id,)
             )
-            plan_id = cursor.fetchone()['id']
+            next_number = cursor.fetchone()['next_number']
             
-            # Cria refeições do dia (com 2 opções cada)
-            for meal_data in day_data['meals']:
-                meal_type = meal_data['type']
-                
-                # Salva cada opção
-                for option in meal_data.get('options', []):
-                    ingredients = option.get('ingredients', '')
-                    recipe = option.get('recipe', '')
-                    full_recipe = f"Ingredientes:\n{ingredients}\n\nModo de Preparo:\n{recipe}"
-                    
-                    cursor.execute(
-                        """INSERT INTO meals (meal_plan_id, meal_type, name, calories, 
-                                              protein, carbs, fat, recipe)
-                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
-                        (plan_id, meal_type, option['name'], 
-                         option['calories'], option['protein'], 
-                         option['carbs'], option['fat'], full_recipe)
-                    )
-    
-    return get_active_meal_plan(current_user)
+            # Inserir o plano
+            plan_name = f"Plano Alimentar {next_number:02d}"
+            cursor.execute("""
+                INSERT INTO saved_meal_plans (user_id, plan_number, plan_name, plan_data)
+                VALUES (%s, %s, %s, %s)
+                RETURNING id
+            """, (user_id, next_number, plan_name, json.dumps(ai_plan)))
+            
+            plan_id = cursor.fetchone()['id']
+            print(f"[DEBUG] Plano salvo com ID: {plan_id}, nome: {plan_name}")
+        
+        return {
+            "id": str(plan_id),
+            "plan_name": plan_name,
+            "plan_number": next_number,
+            "plan_data": ai_plan,
+            "message": f"Plano '{plan_name}' criado com sucesso!"
+        }
+        
+    except Exception as e:
+        print(f"[DEBUG] Erro ao gerar plano: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao gerar plano alimentar: {str(e)}"
+        )
 
-@router.get("", response_model=MealPlanResponse)
-def get_active_meal_plan(current_user = Depends(get_current_user)):
-    """Retorna plano alimentar ativo"""
+@router.get("")
+def get_saved_meal_plans(current_user = Depends(get_current_user)):
+    """Retorna lista de planos alimentares salvos do usuário"""
     user_id = current_user['id']
     
     with db.get_db_cursor() as cursor:
-        # Busca planos ativos
-        cursor.execute(
-            """SELECT mp.id, mp.day_number,
-                      m.id as meal_id, m.meal_type, m.name, m.calories, 
-                      m.protein, m.carbs, m.fat, m.recipe
-               FROM meal_plans mp
-               LEFT JOIN meals m ON m.meal_plan_id = mp.id
-               WHERE mp.user_id = %s AND mp.is_active = true
-               ORDER BY mp.day_number, 
-                        CASE m.meal_type
-                            WHEN 'breakfast' THEN 1
-                            WHEN 'morning_snack' THEN 2
-                            WHEN 'lunch' THEN 3
-                            WHEN 'afternoon_snack' THEN 4
-                            WHEN 'dinner' THEN 5
-                        END""",
-            (user_id,)
-        )
-        rows = cursor.fetchall()
+        cursor.execute("""
+            SELECT id, plan_number, plan_name, created_at
+            FROM saved_meal_plans 
+            WHERE user_id = %s 
+            ORDER BY plan_number DESC
+        """, (user_id,))
+        
+        plans = cursor.fetchall()
     
-    if not rows:
+    if not plans:
+        return {
+            "plans": [],
+            "message": "Nenhum plano alimentar encontrado. Crie seu primeiro plano!"
+        }
+    
+    return {
+        "plans": [
+            {
+                "id": str(plan['id']),
+                "plan_number": plan['plan_number'],
+                "plan_name": plan['plan_name'],
+                "created_at": plan['created_at'].isoformat()
+            }
+            for plan in plans
+        ]
+    }
+
+@router.get("/{plan_id}")
+def get_meal_plan_details(plan_id: str, current_user = Depends(get_current_user)):
+    """Retorna detalhes completos de um plano alimentar específico"""
+    user_id = current_user['id']
+    
+    with db.get_db_cursor() as cursor:
+        cursor.execute("""
+            SELECT id, plan_number, plan_name, plan_data, created_at
+            FROM saved_meal_plans 
+            WHERE id = %s AND user_id = %s
+        """, (plan_id, user_id))
+        
+        plan = cursor.fetchone()
+    
+    if not plan:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Nenhum plano alimentar ativo encontrado"
+            detail="Plano alimentar não encontrado"
         )
     
-    # Organiza em dias
-    days_dict = {}
-    for row in rows:
-        day_num = row['day_number']
-        if day_num not in days_dict:
-            days_dict[day_num] = []
-        
-        if row['meal_id']:  # Se tem refeição
-            days_dict[day_num].append({
-                'id': row['meal_id'],
-                'meal_type': row['meal_type'],
-                'name': row['name'],
-                'calories': row['calories'],
-                'protein': row['protein'],
-                'carbs': row['carbs'],
-                'fat': row['fat'],
-                'recipe': row['recipe']
-            })
-    
-    # Monta resposta
-    plan = [
-        {'day_number': day, 'meals': meals}
-        for day, meals in sorted(days_dict.items())
-    ]
-    
-    return {'plan': plan}
+    return {
+        "id": str(plan['id']),
+        "plan_number": plan['plan_number'],
+        "plan_name": plan['plan_name'],
+        "plan_data": plan['plan_data'],
+        "created_at": plan['created_at'].isoformat()
+    }
 
-@router.delete("")
-def delete_meal_plan(current_user = Depends(get_current_user)):
-    """Deleta plano alimentar ativo"""
+@router.delete("/{plan_id}")
+def delete_meal_plan(plan_id: str, current_user = Depends(get_current_user)):
+    """Deleta um plano alimentar salvo específico"""
     user_id = current_user['id']
     
     with db.get_db_cursor() as cursor:
+        # Verificar se o plano existe e pertence ao usuário
         cursor.execute(
-            "UPDATE meal_plans SET is_active = false WHERE user_id = %s",
-            (user_id,)
+            "SELECT plan_name FROM saved_meal_plans WHERE id = %s AND user_id = %s",
+            (plan_id, user_id)
+        )
+        plan = cursor.fetchone()
+        
+        if not plan:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Plano alimentar não encontrado"
+            )
+        
+        # Deletar o plano
+        cursor.execute(
+            "DELETE FROM saved_meal_plans WHERE id = %s AND user_id = %s",
+            (plan_id, user_id)
         )
     
-    return {"message": "Plano alimentar deletado com sucesso"}
+    return {"message": f"Plano '{plan['plan_name']}' deletado com sucesso"}

@@ -63,9 +63,9 @@ class _RegisterPageState extends State<RegisterPage> {
       if (mounted) {
         // Converte o erro para string
         String errorMessage = e.toString();
-        
+
         print('DEBUG - Erro completo: $errorMessage'); // Para debug
-        
+
         // Remove prefixos técnicos do Dio
         if (errorMessage.contains('DioException')) {
           final parts = errorMessage.split(':');
@@ -73,14 +73,14 @@ class _RegisterPageState extends State<RegisterPage> {
             errorMessage = parts.sublist(1).join(':').trim();
           }
         }
-        
+
         // Limpa a mensagem
         errorMessage = errorMessage.replaceAll('[bad response]', '').trim();
-        
+
         print('DEBUG - Mensagem limpa: $errorMessage'); // Para debug
-        
+
         // Define erro específico para cada campo
-        if (errorMessage.contains('Email já cadastrado') || 
+        if (errorMessage.contains('Email já cadastrado') ||
             errorMessage.contains('Email ja cadastrado')) {
           setState(() {
             _emailError = 'Este email já está cadastrado';
@@ -96,16 +96,18 @@ class _RegisterPageState extends State<RegisterPage> {
         } else {
           // Erro genérico - mostra em SnackBar
           String displayMessage = 'Erro ao criar conta';
-          
+
           if (errorMessage.contains('400')) {
             displayMessage = 'Dados inválidos. Verifique os campos.';
-          } else if (errorMessage.contains('Network') || errorMessage.contains('network')) {
+          } else if (errorMessage.contains('Network') ||
+              errorMessage.contains('network')) {
             displayMessage = 'Erro de conexão. Verifique sua internet.';
-          } else if (errorMessage.isNotEmpty && !errorMessage.contains('Exception')) {
+          } else if (errorMessage.isNotEmpty &&
+              !errorMessage.contains('Exception')) {
             // Se tiver uma mensagem limpa, usa ela
             displayMessage = errorMessage;
           }
-          
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(displayMessage),

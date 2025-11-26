@@ -19,12 +19,16 @@ class OpenAIService {
     );
   }
 
-  Future<String> sendChatMessage(String message, List<Map<String, String>> history) async {
+  Future<String> sendChatMessage(
+    String message,
+    List<Map<String, String>> history,
+  ) async {
     try {
       final messages = [
         {
           'role': 'system',
-          'content': '''Você é Dr. Nutri, um nutricionista virtual especializado em emagrecimento saudável.
+          'content':
+              '''Você é Dr. Nutri, um nutricionista virtual especializado em emagrecimento saudável.
 Suas responsabilidades:
 - Fornecer orientações nutricionais personalizadas
 - Sugerir planos alimentares balanceados
@@ -34,10 +38,10 @@ Suas responsabilidades:
 - Sempre priorizar a saúde e bem-estar
 
 Tom: amigável, profissional, motivador
-Sempre responda em português do Brasil.'''
+Sempre responda em português do Brasil.''',
         },
         ...history,
-        {'role': 'user', 'content': message}
+        {'role': 'user', 'content': message},
       ];
 
       final response = await _dio.post(
@@ -63,7 +67,8 @@ Sempre responda em português do Brasil.'''
     required List<String> preferences,
   }) async {
     try {
-      final prompt = '''
+      final prompt =
+          '''
 Crie um plano alimentar para 7 dias com as seguintes especificações:
 - Calorias diárias: $calories kcal
 - Nível de atividade: $activityLevel
@@ -96,8 +101,12 @@ Formato JSON:
         data: {
           'model': 'gpt-4o-mini',
           'messages': [
-            {'role': 'system', 'content': 'Você é um nutricionista especializado. Retorne apenas JSON válido.'},
-            {'role': 'user', 'content': prompt}
+            {
+              'role': 'system',
+              'content':
+                  'Você é um nutricionista especializado. Retorne apenas JSON válido.',
+            },
+            {'role': 'user', 'content': prompt},
           ],
           'temperature': 0.8,
           'response_format': {'type': 'json_object'},

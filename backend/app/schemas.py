@@ -83,6 +83,24 @@ class MealPlanDayResponse(BaseModel):
 class MealPlanResponse(BaseModel):
     plan: list[MealPlanDayResponse]
 
+# Saved Meal Plan schemas
+class SavedMealPlanSummary(BaseModel):
+    id: str
+    plan_number: int
+    plan_name: str
+    created_at: str
+
+class SavedMealPlanDetails(BaseModel):
+    id: str
+    plan_number: int
+    plan_name: str
+    plan_data: dict
+    created_at: str
+
+class SavedMealPlansResponse(BaseModel):
+    plans: list[SavedMealPlanSummary]
+    message: Optional[str] = None
+
 # Weight Log schemas
 class WeightLogCreate(BaseModel):
     weight: float

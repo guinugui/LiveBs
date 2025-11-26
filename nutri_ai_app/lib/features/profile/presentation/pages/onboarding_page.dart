@@ -20,12 +20,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final _heightController = TextEditingController();
   final _ageController = TextEditingController();
   final _targetWeightController = TextEditingController();
-  
+
   String? _selectedGender;
   String? _selectedActivityLevel;
   final List<String> _selectedRestrictions = [];
   final List<String> _selectedPreferences = [];
-  
+
   // Erros inline
   String? _weightError;
   String? _heightError;
@@ -120,9 +120,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
     }
 
     if (_selectedGender == null || _selectedActivityLevel == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha todos os campos')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Preencha todos os campos')));
       hasError = true;
     }
 
@@ -154,9 +154,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
     } catch (e) {
       if (mounted) {
         String errorMessage = e.toString();
-        
+
         print('DEBUG Onboarding - Erro: $errorMessage');
-        
+
         // Remove prefixos técnicos
         if (errorMessage.contains('DioException')) {
           final parts = errorMessage.split(':');
@@ -165,24 +165,29 @@ class _OnboardingPageState extends State<OnboardingPage> {
           }
         }
         errorMessage = errorMessage.replaceAll('[bad response]', '').trim();
-        
+
         print('DEBUG Onboarding - Mensagem limpa: $errorMessage');
-        
+
         // Mensagens específicas
         String displayMessage = 'Erro ao criar perfil';
-        
-        if (errorMessage.contains('já existe') || errorMessage.contains('already exists')) {
+
+        if (errorMessage.contains('já existe') ||
+            errorMessage.contains('already exists')) {
           displayMessage = 'Você já possui um perfil cadastrado.';
-        } else if (errorMessage.contains('inválido') || errorMessage.contains('invalid')) {
+        } else if (errorMessage.contains('inválido') ||
+            errorMessage.contains('invalid')) {
           displayMessage = 'Dados inválidos. Verifique todos os campos.';
-        } else if (errorMessage.contains('401') || errorMessage.contains('Unauthorized')) {
+        } else if (errorMessage.contains('401') ||
+            errorMessage.contains('Unauthorized')) {
           displayMessage = 'Sessão expirada. Faça login novamente.';
-        } else if (errorMessage.contains('Network') || errorMessage.contains('network')) {
+        } else if (errorMessage.contains('Network') ||
+            errorMessage.contains('network')) {
           displayMessage = 'Erro de conexão. Verifique sua internet.';
-        } else if (errorMessage.isNotEmpty && !errorMessage.contains('Exception')) {
+        } else if (errorMessage.isNotEmpty &&
+            !errorMessage.contains('Exception')) {
           displayMessage = errorMessage;
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(displayMessage),
@@ -260,9 +265,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
       }
 
       if (_selectedGender == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Selecione o sexo')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Selecione o sexo')));
         hasError = true;
       }
     }
@@ -318,16 +323,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Configurar Perfil'),
-      ),
+      appBar: AppBar(title: const Text('Configurar Perfil')),
       body: Column(
         children: [
           // Progress Indicator
-          LinearProgressIndicator(
-            value: (_currentPage + 1) / 4,
-          ),
-          
+          LinearProgressIndicator(value: (_currentPage + 1) / 4),
+
           Expanded(
             child: PageView(
               controller: _pageController,
@@ -490,7 +491,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
           ),
           const SizedBox(height: 24),
 
-          const Text('Este é seu objetivo de peso ideal. Vamos trabalhar juntos para alcançá-lo de forma saudável!'),
+          const Text(
+            'Este é seu objetivo de peso ideal. Vamos trabalhar juntos para alcançá-lo de forma saudável!',
+          ),
         ],
       ),
     );

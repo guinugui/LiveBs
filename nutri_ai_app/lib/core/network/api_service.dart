@@ -226,14 +226,27 @@ class ApiService {
 
   // ==================== MEAL PLAN ====================
 
+  /// Gera e salva um novo plano alimentar
   Future<Map<String, dynamic>> generateMealPlan() async {
     final response = await _dio.post(kMealPlanEndpoint);
     return response.data;
   }
 
-  Future<Map<String, dynamic>> getMealPlan() async {
+  /// Lista todos os planos salvos do usuário
+  Future<Map<String, dynamic>> getSavedMealPlans() async {
     final response = await _dio.get(kMealPlanEndpoint);
     return response.data;
+  }
+
+  /// Obtém detalhes completos de um plano específico
+  Future<Map<String, dynamic>> getMealPlanDetails(String planId) async {
+    final response = await _dio.get('$kMealPlanEndpoint/$planId');
+    return response.data;
+  }
+
+  /// Deleta um plano salvo
+  Future<void> deleteMealPlan(String planId) async {
+    await _dio.delete('$kMealPlanEndpoint/$planId');
   }
 
   // ==================== LOGS ====================

@@ -29,18 +29,19 @@ class _ChatPageState extends State<ChatPage> {
   Future<void> _loadChatHistory() async {
     try {
       final history = await ApiService().getChatHistory();
-      
+
       if (mounted) {
         setState(() {
           _messages.clear();
           _messages.add(
             ChatBubble(
-              message: 'Olá! Sou o Dr. Nutri, seu nutricionista virtual. Como posso ajudá-lo hoje?',
+              message:
+                  'Olá! Sou o Dr. Nutri, seu nutricionista virtual. Como posso ajudá-lo hoje?',
               isUser: false,
               time: DateTime.now(),
             ),
           );
-          
+
           for (final msg in history) {
             _messages.add(
               ChatBubble(
@@ -50,7 +51,7 @@ class _ChatPageState extends State<ChatPage> {
               ),
             );
           }
-          
+
           _isLoading = false;
         });
       }
@@ -59,7 +60,8 @@ class _ChatPageState extends State<ChatPage> {
         setState(() {
           _messages.add(
             ChatBubble(
-              message: 'Olá! Sou o Dr. Nutri, seu nutricionista virtual. Como posso ajudá-lo hoje?',
+              message:
+                  'Olá! Sou o Dr. Nutri, seu nutricionista virtual. Como posso ajudá-lo hoje?',
               isUser: false,
               time: DateTime.now(),
             ),
@@ -78,18 +80,14 @@ class _ChatPageState extends State<ChatPage> {
 
     setState(() {
       _messages.add(
-        ChatBubble(
-          message: userMessage,
-          isUser: true,
-          time: DateTime.now(),
-        ),
+        ChatBubble(message: userMessage, isUser: true, time: DateTime.now()),
       );
       _isSending = true;
     });
 
     try {
       final response = await ApiService().sendChatMessage(userMessage);
-      
+
       if (mounted) {
         setState(() {
           _messages.add(
@@ -107,16 +105,17 @@ class _ChatPageState extends State<ChatPage> {
         setState(() {
           _messages.add(
             ChatBubble(
-              message: 'Desculpe, houve um erro ao processar sua mensagem. Tente novamente.',
+              message:
+                  'Desculpe, houve um erro ao processar sua mensagem. Tente novamente.',
               isUser: false,
               time: DateTime.now(),
             ),
           );
           _isSending = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro: $e')));
       }
     }
   }
@@ -124,9 +123,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -236,9 +233,5 @@ class ChatBubble {
   final bool isUser;
   final DateTime time;
 
-  ChatBubble({
-    required this.message,
-    required this.isUser,
-    required this.time,
-  });
+  ChatBubble({required this.message, required this.isUser, required this.time});
 }

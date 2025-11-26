@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/meal_plan_service.dart';
-import './meal_plan_view_screen.dart';
 
 class MealPlanFormScreen extends StatefulWidget {
   const MealPlanFormScreen({super.key});
@@ -75,24 +74,19 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
     });
 
     try {
-      final mealPlan = await _service.generateMealPlan(
-        weight: double.parse(_weightController.text),
-        height: double.parse(_heightController.text),
-        age: int.parse(_ageController.text),
-        targetWeight: double.parse(_targetWeightController.text),
-        activityLevel: _activityLevel,
-        dailyCalories: _calculatedCalories,
-        dietaryRestrictions: _selectedRestrictions,
-        dietaryPreferences: _selectedPreferences,
-      );
-
+      // Gerar plano usando o serviço atualizado
+      await _service.generateMealPlan();
+      
       if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MealPlanViewScreen(mealPlan: mealPlan),
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Plano alimentar gerado com sucesso!'),
+            backgroundColor: Colors.green,
           ),
         );
+        
+        // Voltar para a tela anterior ou navegar para a lista de planos
+        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {

@@ -1,0 +1,332 @@
+import 'package:flutter/material.dart';
+import 'meal_plan_details_page.dart';
+import '../../../../core/network/api_service.dart';
+
+class MealPlanPage extends StatefulWidget {
+  const MealPlanPage({super.key});
+
+  @override
+  State<MealPlanPage> createState() => _MealPlanPageState();
+}
+
+class _MealPlanPageState extends State<MealPlanPage> {
+  final ApiService _apiService = ApiService();
+  List<Map<String, dynamic>> _savedPlans = [];
+  bool _isLoading = true;
+  bool _isGenerating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAndLoadPlans();
+  }
+
+  Future<void> _initializeAndLoadPlans() async {
+    try {
+      print('[DEBUG] === INICIANDO CARREGAMENTO DE PLANOS ===');
+      
+      // Garantir que o ApiService está inicializado
+      await _apiService.initialize();
+      print('[DEBUG] ApiService inicializado');
+      
+      // Debug: verificar usuário atual
+      try {
+        final userInfo = await _apiService.getProfile();
+        print('[DEBUG] ✅ Usuário logado - ID: ${userInfo['user_id']}');
+      } catch (e) {
+        print('[WARNING] ⚠️ Erro ao obter perfil do usuário: $e');
+      }
+      
+      // Carregar planos
+      await _loadSavedPlans();
+      
+    } catch (e) {
+      print('[ERROR] 💥 Erro na inicialização: $e');
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro de inicialização: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _loadSavedPlans() async {
+    try {
+      print('[DEBUG] Carregando planos salvos...');
+      
+      // Usar ApiService diretamente
+      await _apiService.initialize();
+      final response = await _apiService.getSavedMealPlans();
+      
+      print('[DEBUG] Response da API: $response');
+      
+      final plans = List<Map<String, dynamic>>.from(response['plans'] ?? []);
+      print('[DEBUG] ${plans.length} planos encontrados');
+      
+      // Ordenar por número do plano (mais recente primeiro)
+      plans.sort((a, b) => (b['plan_number'] ?? 0).compareTo(a['plan_number'] ?? 0));
+      
+      setState(() {
+        _savedPlans = plans;
+        _isLoading = false;
+      });
+      
+      if (plans.isEmpty) {
+        print('[DEBUG] Nenhum plano encontrado - mostrando estado vazio');
+      } else {
+        print('[DEBUG] Planos carregados com sucesso:');
+        for (final plan in plans) {
+          print('[DEBUG]   - ${plan['plan_name']} (${plan['id']})');
+        }
+      }
+      
+    } catch (e) {
+      print('[ERROR] Erro ao carregar planos: $e');
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao carregar planos: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _generateNewPlan() async {
+    setState(() {
+      _isGenerating = true;
+    });
+
+    try {
+      print('[DEBUG] 🚀 Gerando novo plano...');
+      
+      final result = await _apiService.generateMealPlan();
+      print('[DEBUG] ✅ Plano criado: ${result['plan_name']}');
+      
+      // Recarregar lista de planos
+      await _loadSavedPlans();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Plano ${result['plan_name']} criado!'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      print('[ERROR] 💥 Erro ao gerar plano: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao gerar plano: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isGenerating = false;
+      });
+    }
+  }
+
+  Future<void> _deletePlan(String planId, String planName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Deletar Plano'),
+        content: Text('Tem certeza que deseja deletar o plano "$planName"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Deletar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        print('[DEBUG] 🗑️ Deletando plano: $planName');
+        await _apiService.deleteMealPlan(planId);
+        await _loadSavedPlans();
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✅ Plano "$planName" deletado!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        print('[ERROR] Erro ao deletar: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro ao deletar: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Planos Alimentares'),
+        actions: [
+          IconButton(
+            onPressed: _loadSavedPlans,
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadSavedPlans,
+              child: _savedPlans.isEmpty ? _buildEmptyState() : _buildPlansList(),
+            ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _isGenerating ? null : _generateNewPlan,
+        icon: _isGenerating 
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              )
+            : const Icon(Icons.add),
+        label: Text(_isGenerating ? 'Gerando...' : 'Criar Plano'),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.restaurant_menu, size: 100, color: Colors.grey),
+          const SizedBox(height: 24),
+          const Text(
+            'Nenhum plano alimentar encontrado',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              'Crie seu primeiro plano alimentar personalizado gerado por IA',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ),
+          const SizedBox(height: 120), // Espaço para o FAB
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlansList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _savedPlans.length,
+      itemBuilder: (context, index) {
+        final plan = _savedPlans[index];
+        return Card(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: Theme.of(context).primaryColor,
+              child: Text(
+                plan['plan_number'].toString().padLeft(2, '0'),
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+            title: Text(
+              plan['plan_name'] ?? 'Plano Alimentar ${plan['plan_number']}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(
+              'Criado em ${_formatDate(plan['created_at'])}',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  onPressed: () => _viewPlanDetails(plan['id']),
+                  icon: const Icon(Icons.visibility),
+                  tooltip: 'Ver detalhes',
+                ),
+                IconButton(
+                  onPressed: () => _deletePlan(plan['id'], plan['plan_name']),
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  tooltip: 'Deletar',
+                ),
+              ],
+            ),
+            onTap: () => _viewPlanDetails(plan['id']),
+          ),
+        );
+      },
+    );
+  }
+
+  String _formatDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return 'Data inválida';
+    }
+  }
+
+  void _viewPlanDetails(String planId) {
+    try {
+      final plan = _savedPlans.firstWhere((p) => p['id'] == planId);
+      print('[DEBUG] 👁️ Abrindo detalhes do plano: ${plan['plan_name']}');
+      
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => MealPlanDetailsPage(
+            planId: planId,
+            planName: plan['plan_name'] ?? 'Plano Alimentar',
+          ),
+        ),
+      );
+    } catch (e) {
+      print('[ERROR] Erro ao abrir detalhes: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao abrir plano: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+}
