@@ -75,16 +75,8 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
     });
 
     try {
-      final mealPlan = await _service.generateMealPlan(
-        weight: double.parse(_weightController.text),
-        height: double.parse(_heightController.text),
-        age: int.parse(_ageController.text),
-        targetWeight: double.parse(_targetWeightController.text),
-        activityLevel: _activityLevel,
-        dailyCalories: _calculatedCalories,
-        dietaryRestrictions: _selectedRestrictions,
-        dietaryPreferences: _selectedPreferences,
-      );
+      // TODO: Corrigir parametros
+final mealPlan = await _service.generateMealPlan();
 
       if (mounted) {
         Navigator.push(
@@ -360,3 +352,4 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
     super.dispose();
   }
 }
+
