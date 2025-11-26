@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/workout_plan.dart';
 import '../../services/workout_plan_service.dart';
 import 'workout_questionnaire_page.dart';
+import 'workout_plan_details_page.dart';
 
 class WorkoutPlanListPage extends StatefulWidget {
   const WorkoutPlanListPage({super.key});
@@ -189,8 +190,11 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _openWorkoutDetails(plan),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -257,7 +261,7 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
                   onSelected: (value) {
                     switch (value) {
                       case 'view':
-                        // TODO: Implementar visualização de detalhes
+                        _openWorkoutDetails(plan);
                         break;
                       case 'delete':
                         _confirmDelete(plan);
@@ -277,6 +281,18 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
             ),
           ],
         ),
+        ),
+      ),
+    );
+  }
+
+  void _openWorkoutDetails(WorkoutPlan plan) {
+    print('[WORKOUT_LIST] 🔄 Abrindo detalhes do plano: ${plan.planName}');
+    print('[WORKOUT_LIST] 📊 Dados do plano: ${plan.workoutData.length} caracteres');
+    
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => WorkoutPlanDetailsPage(plan: plan),
       ),
     );
   }

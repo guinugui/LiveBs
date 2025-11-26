@@ -29,6 +29,8 @@ def create_workout_plan(workout_data: dict, current_user = Depends(get_current_u
     """Cria um novo plano de treino baseado no questionário"""
     user_id = current_user['id']
     
+    print(f"[WORKOUT_API] 📋 Dados recebidos do questionário: {workout_data}")
+    
     try:
         # Buscar perfil do usuário para personalizar o treino
         with db.get_db_cursor() as cursor:

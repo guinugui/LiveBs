@@ -364,11 +364,32 @@ def generate_workout_plan(user_profile, questionnaire_data):
     Gera um plano de treino personalizado baseado no perfil do usuário e questionário
     """
     try:
+        print(f"[AI_SERVICE] ===== INÍCIO DEBUG TREINO =====")
         print(f"[AI_SERVICE] Gerando plano de treino para usuário...")
+        print(f"[AI_SERVICE] 📊 Dados do questionário COMPLETO: {questionnaire_data}")
+        print(f"[AI_SERVICE] 👤 Perfil do usuário COMPLETO: {user_profile}")
+        
+        # Extrair dados específicos para validação
+        days_per_week = questionnaire_data.get('days_per_week', 3)
+        available_days = questionnaire_data.get('available_days', [])
+        workout_type = questionnaire_data.get('workout_type', 'casa')
+        session_duration = questionnaire_data.get('session_duration', 60)
+        
+        print(f"[AI_SERVICE] 🔍 DADOS EXTRAÍDOS:")
+        print(f"[AI_SERVICE] - days_per_week: {days_per_week} (tipo: {type(days_per_week)})")
+        print(f"[AI_SERVICE] - available_days: {available_days}")
+        print(f"[AI_SERVICE] - workout_type: {workout_type}")
+        print(f"[AI_SERVICE] - session_duration: {session_duration}")
+        
+        if days_per_week != 4:
+            print(f"[AI_SERVICE] ⚠️ PROBLEMA: days_per_week deveria ser 4 mas é {days_per_week}")
         
         # Construir o prompt personalizado para treino
         workout_prompt = f"""
-        Você é um personal trainer especializado. Crie um plano de treino COMPLETO e DETALHADO baseado nas seguintes informações:
+        Você é um personal trainer especializado. 
+        
+        ATENÇÃO CRÍTICA: O usuário quer treinar EXATAMENTE {days_per_week} DIAS POR SEMANA.
+        NÃO CRIE MENOS DIAS. NÃO SUGIRA MENOS DIAS. CRIE EXATAMENTE {days_per_week} DIAS.
         
         PERFIL DO USUÁRIO:
         - Nome: {user_profile.get('name', 'Não informado')}
@@ -376,51 +397,82 @@ def generate_workout_plan(user_profile, questionnaire_data):
         - Peso: {user_profile.get('weight', 'Não informado')} kg
         - Altura: {user_profile.get('height', 'Não informado')} cm
         - Sexo: {user_profile.get('gender', 'Não informado')}
-        - Objetivo: {user_profile.get('goal', 'Não informado')}
+        - Objetivo: Emagrecimento
         
         QUESTIONÁRIO DE TREINO:
-        - Problemas de saúde: {questionnaire_data.get('healthProblems', [])}
-        - Lesões anteriores: {questionnaire_data.get('previousInjuries', [])}
-        - Nível de condicionamento: {questionnaire_data.get('fitnessLevel', 'Não informado')}
-        - Preferências de exercício: {questionnaire_data.get('exercisePreferences', [])}
-        - Tipo de treino: {questionnaire_data.get('workoutType', 'Não informado')}
-        - Dias por semana: {questionnaire_data.get('daysPerWeek', 'Não informado')}
-        - Horários disponíveis: {questionnaire_data.get('availableTimes', [])}
+        - Problemas musculoesqueléticos: {questionnaire_data.get('has_musculoskeletal_problems', False)} - {questionnaire_data.get('musculoskeletal_details', 'Não informado')}
+        - Problemas respiratórios: {questionnaire_data.get('has_respiratory_problems', False)} - {questionnaire_data.get('respiratory_details', 'Não informado')}
+        - Problemas cardíacos: {questionnaire_data.get('has_cardiac_problems', False)} - {questionnaire_data.get('cardiac_details', 'Não informado')}
+        - Lesões anteriores: {questionnaire_data.get('previous_injuries', [])}
+        - Nível de condicionamento: {questionnaire_data.get('fitness_level', 'Não informado')}
+        - Preferências de exercício: {questionnaire_data.get('preferred_exercises', [])}
+        - Exercícios a evitar: {questionnaire_data.get('exercises_to_avoid', [])}
+        - Tipo de treino: {workout_type}
+        - DIAS POR SEMANA: {days_per_week} (OBRIGATÓRIO RESPEITAR)
+        - Duração da sessão: {session_duration} minutos
+        - Dias disponíveis: {available_days}
         
-        INSTRUÇÕES ESPECÍFICAS:
-        1. Crie um plano de {questionnaire_data.get('daysPerWeek', 3)} dias por semana
-        2. Considere o tipo: {questionnaire_data.get('workoutType', 'casa')}
-        3. Respeite limitações de saúde e lesões anteriores
-        4. Inclua aquecimento e alongamento
-        5. Forneça alternativas para exercícios quando necessário
+        REGRAS OBRIGATÓRIAS:
+        1. ⚠️ CRIAR EXATAMENTE {days_per_week} DIAS DE TREINO - NÃO MENOS, NÃO MAIS
+        2. Tipo de local: {"Academia" if workout_type == "gym" else "Casa"}
+        3. Respeitar limitações de saúde e lesões anteriores
+        4. Incluir aquecimento e alongamento em cada dia
+        5. Duração: {session_duration} minutos por sessão
+        6. Usar preferencialmente os dias: {', '.join(available_days) if available_days else 'Qualquer dia'}
+        7. Focar em exercícios preferidos: {', '.join(questionnaire_data.get('preferred_exercises', []))}
+        8. ⚠️ SE O USUÁRIO QUER {days_per_week} DIAS, VOCÊ DEVE CRIAR {days_per_week} ENTRADAS NO CRONOGRAMA
         
         FORMATO DE RESPOSTA:
-        Retorne um JSON com a seguinte estrutura:
+        ⚠️ CRÍTICO: Você DEVE criar EXATAMENTE {days_per_week} entradas no array workout_schedule.
+        
+        Exemplo para {days_per_week} dias:
         {{
-            "plan_name": "Nome do Plano",
-            "plan_summary": "Resumo do plano em 2-3 linhas",
+            "plan_name": "Plano de Treino {workout_type.title()} - {days_per_week} Dias",
+            "plan_summary": "Plano de {days_per_week} dias por semana focado em emagrecimento e condicionamento físico",
             "workout_schedule": [
                 {{
-                    "day": "Segunda-feira",
-                    "focus": "Foco do treino (ex: Peito e Tríceps)",
+                    "day": "{available_days[0] if available_days else 'Dia 1'}",
+                    "focus": "Treino A - Peito, Ombros e Tríceps",
                     "exercises": [
                         {{
-                            "name": "Nome do exercício",
+                            "name": "Flexão de Braços",
                             "sets": "3",
-                            "reps": "12-15",
+                            "reps": "10-15",
                             "rest": "60 segundos",
-                            "instructions": "Instruções detalhadas",
-                            "equipment": "Equipamento necessário"
+                            "instructions": "Mantenha o corpo alinhado, desça controladamente",
+                            "equipment": "Peso corporal"
+                        }}
+                    ]
+                }},
+                {{
+                    "day": "{available_days[1] if len(available_days) > 1 else 'Dia 2'}",
+                    "focus": "Treino B - Costas e Bíceps",
+                    "exercises": [
+                        {{
+                            "name": "Puxada na Barra",
+                            "sets": "3",
+                            "reps": "8-12",
+                            "rest": "90 segundos", 
+                            "instructions": "Puxe com controle, focando nas costas",
+                            "equipment": "Barra fixa"
                         }}
                     ]
                 }}
+                // ⚠️ CONTINUE ATÉ COMPLETAR TODOS OS {days_per_week} DIAS
             ],
             "important_notes": [
-                "Nota importante 1",
-                "Nota importante 2"
+                "Respeitar problemas respiratórios (asma) - intensidade moderada",
+                "Cuidado com lesões no ombro - evitar sobrecarga",
+                "Descanso adequado entre as séries"
             ],
-            "progression_tips": "Como progredir no treino"
+            "progression_tips": "Aumente gradualmente a intensidade a cada 2 semanas"
         }}
+        
+        ⚠️ VALIDAÇÃO FINAL: 
+        - Conte as entradas em workout_schedule
+        - DEVE ter exatamente {days_per_week} entradas
+        - Se tiver menos, ADICIONE mais dias
+        - Se tiver mais, REMOVA dias extras
         
         IMPORTANTE: 
         1. Retorne APENAS o JSON válido, sem texto adicional antes ou depois
@@ -430,12 +482,52 @@ def generate_workout_plan(user_profile, questionnaire_data):
         5. Termine todas as strings e feche todas as chaves corretamente
         """
         
+        print(f"[AI_SERVICE] 📝 PROMPT COMPLETO ENVIADO:")
+        print(f"[AI_SERVICE] {workout_prompt}")
+        print(f"[AI_SERVICE] ===== FIM DO PROMPT =====")
+        print(f"[AI_SERVICE] 🚀 Enviando para IA agora...")
+        
         try:
             # Gerar resposta usando o serviço de IA
             messages = [{"role": "user", "content": workout_prompt}]
             ai_response = get_ai_response(messages, user_profile)
             
             print(f"[AI_SERVICE] Resposta da IA recebida: {ai_response[:200]}...")
+            
+            # Validar se a resposta tem o número correto de dias
+            try:
+                parsed_response = json.loads(ai_response)
+                workout_schedule = parsed_response.get('workout_schedule', [])
+                actual_days = len(workout_schedule)
+                
+                print(f"[AI_SERVICE] 📊 Dias solicitados: {days_per_week}, Dias criados: {actual_days}")
+                
+                if actual_days != days_per_week:
+                    print(f"[AI_SERVICE] ⚠️ ERRO: IA criou {actual_days} dias mas usuário quer {days_per_week} dias!")
+                    
+                    # Tentar corrigir automaticamente
+                    if actual_days < days_per_week:
+                        print(f"[AI_SERVICE] 🔧 Tentando regenerar com prompt mais específico...")
+                        
+                        # Prompt mais agressivo
+                        strict_prompt = f"""
+                        INSTRUÇÃO CRÍTICA: Crie um plano com EXATAMENTE {days_per_week} dias de treino.
+                        
+                        O usuário quer {days_per_week} dias por semana de treino.
+                        Você DEVE criar {days_per_week} entradas no array workout_schedule.
+                        
+                        Dados: {questionnaire_data}
+                        
+                        Retorne apenas um JSON válido com {days_per_week} dias no workout_schedule.
+                        """
+                        
+                        strict_messages = [{"role": "user", "content": strict_prompt}]
+                        ai_response = get_ai_response(strict_messages, user_profile)
+                        
+                        print(f"[AI_SERVICE] 🔄 Resposta corrigida: {ai_response[:200]}...")
+            
+            except json.JSONDecodeError:
+                print("[AI_SERVICE] ⚠️ Resposta não é JSON válido, mas retornando assim mesmo")
             
             return ai_response
             

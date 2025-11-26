@@ -1,34 +1,65 @@
 class WorkoutPlan {
   final String id;
   final String planName;
-  final String planNumber;
-  final String workoutType; // 'home' ou 'gym'
-  final int daysPerWeek;
-  final Map<String, dynamic> planContent;
+  final String? planSummary;
+  final String workoutData;
   final DateTime createdAt;
   final String userId;
+  final String workoutType; // derivado dos dados
+  final int daysPerWeek; // derivado dos dados
 
   WorkoutPlan({
     required this.id,
     required this.planName,
-    required this.planNumber,
-    required this.workoutType,
-    required this.daysPerWeek,
-    required this.planContent,
+    this.planSummary,
+    required this.workoutData,
     required this.createdAt,
     required this.userId,
+    this.workoutType = 'home',
+    this.daysPerWeek = 3,
   });
 
   factory WorkoutPlan.fromJson(Map<String, dynamic> json) {
+    // Tentar extrair workoutType e daysPerWeek dos dados do treino
+    String workoutType = 'home';
+    int daysPerWeek = 3;
+    
+    try {
+      String workoutDataString = json['workout_data']?.toString() ?? '{}';
+      
+      // Tentar extrair workout_schedule para contar os dias
+      RegExp scheduleRegex = RegExp(r'workout_schedule:\s*\[([^\]]+)\]');
+      Match? scheduleMatch = scheduleRegex.firstMatch(workoutDataString);
+      if (scheduleMatch != null) {
+        String scheduleContent = scheduleMatch.group(1) ?? '';
+        // Contar quantos objetos de dia existem
+        RegExp dayRegex = RegExp(r'\{day:');
+        Iterable<Match> dayMatches = dayRegex.allMatches(scheduleContent);
+        daysPerWeek = dayMatches.length;
+        print('[WORKOUT_PLAN] 📊 Dias encontrados no workoutData: $daysPerWeek');
+      }
+      
+      // Extrair workout_type se presente
+      if (workoutDataString.contains('gym') || workoutDataString.contains('academia')) {
+        workoutType = 'gym';
+      } else if (workoutDataString.contains('casa') || workoutDataString.contains('home')) {
+        workoutType = 'home';
+      }
+      
+    } catch (e) {
+      print('[WORKOUT_PLAN] ⚠️ Erro ao extrair dados: $e');
+      // Manter valores padrão
+    }
+
     return WorkoutPlan(
       id: json['id']?.toString() ?? '',
       planName: json['plan_name']?.toString() ?? '',
-      planNumber: json['plan_number']?.toString() ?? '',
-      workoutType: json['workout_type']?.toString() ?? 'home',
-      daysPerWeek: json['days_per_week'] ?? 5,
-      planContent: json['plan_content'] ?? {},
+      planSummary: json['plan_summary']?.toString(),
+      workoutData: json['workout_data']?.toString() ?? '{}',
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
       userId: json['user_id']?.toString() ?? '',
+      workoutType: workoutType,
+      daysPerWeek: daysPerWeek,
     );
   }
 
@@ -36,10 +67,8 @@ class WorkoutPlan {
     return {
       'id': id,
       'plan_name': planName,
-      'plan_number': planNumber,
-      'workout_type': workoutType,
-      'days_per_week': daysPerWeek,
-      'plan_content': planContent,
+      'plan_summary': planSummary,
+      'workout_data': workoutData,
       'created_at': createdAt.toIso8601String(),
       'user_id': userId,
     };
