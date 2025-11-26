@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, profile, chat, meal_plan, logs
+from app.routers import auth, profile, chat, meal_plan, logs, workout_plan
 
 app = FastAPI(
     title="LiveBs API",
@@ -22,6 +22,7 @@ app.include_router(auth.router)
 app.include_router(profile.router)
 app.include_router(chat.router)
 app.include_router(meal_plan.router)
+app.include_router(workout_plan.router)
 app.include_router(logs.router)
 
 @app.get("/")

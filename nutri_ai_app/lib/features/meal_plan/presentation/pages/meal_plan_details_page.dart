@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import '../../services/direct_meal_plan_service.dart';
 
 class MealPlanDetailsPage extends StatefulWidget {
@@ -22,107 +23,133 @@ class MealPlanDetailsPage extends StatefulWidget {
 class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
   Map<String, dynamic>? planData;
   bool isLoading = true;
-  String? error;
+  String? errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _loadPlanData();
+    _loadPlanDetails();
   }
 
-  Future<void> _loadPlanData() async {
+  Future<void> _loadPlanDetails() async {
     try {
-      final data = await DirectMealPlanService.fetchPlanDetailsDirectly(
+      setState(() {
+        isLoading = true;
+        errorMessage = null;
+      });
+
+      final plan = await DirectMealPlanService.fetchPlanDetailsDirectly(
         widget.userEmail,
         widget.userPassword,
         widget.planId,
       );
+
       setState(() {
-        planData = data;
+        planData = plan;
         isLoading = false;
       });
     } catch (e) {
       setState(() {
-        error = e.toString();
+        errorMessage = e.toString();
         isLoading = false;
       });
+      print('Erro ao carregar detalhes: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: Text(widget.planName),
-        backgroundColor: const Color(0xFF4CAF50),
+        backgroundColor: Colors.green,
         foregroundColor: Colors.white,
-        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadPlanDetails,
+            tooltip: 'Atualizar',
+          ),
+        ],
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : error != null
-              ? Center(child: Text('Erro: $error', style: const TextStyle(color: Colors.red)))
+          ? const Center(child: CircularProgressIndicator(color: Colors.green))
+          : errorMessage != null
+              ? _buildErrorState()
               : _buildContent(),
     );
   }
 
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+            const SizedBox(height: 16),
+            Text(
+              'Erro ao carregar plano',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              errorMessage!,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _loadPlanDetails,
+              child: const Text('Tentar novamente'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildContent() {
-    print('[NEW] 📊 Plan data keys: ${planData?.keys.toList()}');
-    print('[NEW] 📊 Full plan data: $planData');
-    
     if (planData == null) {
       return const Center(child: Text('Dados não encontrados'));
     }
 
-<<<<<<< HEAD
-    // Verificar estrutura dos dados - suporta nova estrutura aninhada
-    List<dynamic> meals = [];
-    
-    if (planData!.containsKey('meals')) {
-      // Estrutura antiga direta: meals
-      meals = planData!['meals'] as List<dynamic>;
-      print('[NEW] 🔍 Estrutura antiga - meals direto');
-    } else if (planData!.containsKey('plan_data')) {
-      final planDataContent = planData!['plan_data'];
-      print('[NEW] 🔍 Plan data content type: ${planDataContent.runtimeType}');
-      
-      if (planDataContent is Map) {
-        if (planDataContent.containsKey('meals')) {
-          // Estrutura: plan_data -> meals
-          meals = planDataContent['meals'] as List<dynamic>;
-          print('[NEW] 🔍 Estrutura plan_data.meals');
-        } else if (planDataContent.containsKey('days')) {
-          // Nova estrutura: plan_data -> days -> [0] -> meals
-          final days = planDataContent['days'] as List<dynamic>;
-          print('[NEW] 🔍 Estrutura plan_data.days com ${days.length} dia(s)');
-          if (days.isNotEmpty && days[0] is Map && days[0].containsKey('meals')) {
-            meals = days[0]['meals'] as List<dynamic>;
-            print('[NEW] 🔍 ✅ Extraído ${meals.length} meals do primeiro dia');
-          }
-        }
-      }
-    }
-    
-    if (meals.isEmpty) {
-      print('[NEW] ❌ Nenhuma meal encontrada');
-=======
     // Verificar estrutura dos dados
     List<dynamic> meals = [];
     
     if (planData!.containsKey('meals')) {
       meals = planData!['meals'] as List<dynamic>;
-    } else if (planData!.containsKey('plan_data')) {
-      final planDataContent = planData!['plan_data'];
-      if (planDataContent is Map && planDataContent.containsKey('meals')) {
-        meals = planDataContent['meals'] as List<dynamic>;
+    } else if (planData!.containsKey('plan_content')) {
+      final planContent = planData!['plan_content'];
+      
+      if (planContent is Map && planContent.containsKey('meals')) {
+        meals = planContent['meals'] as List<dynamic>;
+      } else if (planContent is Map && planContent.containsKey('days')) {
+        final days = planContent['days'] as List<dynamic>;
+        if (days.isNotEmpty && days[0] is Map && days[0].containsKey('meals')) {
+          meals = days[0]['meals'] as List<dynamic>;
+        }
+      } else if (planContent is String) {
+        try {
+          final decoded = json.decode(planContent);
+          if (decoded is Map) {
+            if (decoded.containsKey('meals')) {
+              meals = decoded['meals'] as List<dynamic>;
+            } else if (decoded.containsKey('days')) {
+              final days = decoded['days'] as List<dynamic>;
+              if (days.isNotEmpty && days[0] is Map && days[0].containsKey('meals')) {
+                meals = days[0]['meals'] as List<dynamic>;
+              }
+            }
+          }
+        } catch (e) {
+          print('Erro ao decodificar JSON: $e');
+        }
       }
     }
     
-    print('[NEW] 🍽️ Found ${meals.length} meals');
-    
     if (meals.isEmpty) {
->>>>>>> 848763521f357a608b376f621f188f225d66593d
       return const Center(child: Text('Nenhuma refeição encontrada'));
     }
 
@@ -149,16 +176,12 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
                 ),
               ],
             ),
-<<<<<<< HEAD
-            child: Column(
-=======
             child: const Column(
->>>>>>> 848763521f357a608b376f621f188f225d66593d
               children: [
                 Icon(Icons.restaurant_menu, color: Colors.white, size: 40),
                 SizedBox(height: 12),
                 Text(
-                  '🍽️ Plano Modelo para 7 Dias',
+                  '🍽️ Plano Alimentar Personalizado',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -176,27 +199,6 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-<<<<<<< HEAD
-                SizedBox(height: 12),
-                Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '⚠️ IMPORTANTE: Não coma tudo que está listado! Escolha apenas as porções que somem a quantidade recomendada de cada grupo alimentar. Por exemplo: 1 pão francês equivale a 150-200g de carboidratos.',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      height: 1.3,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-=======
->>>>>>> 848763521f357a608b376f621f188f225d66593d
               ],
             ),
           ),
@@ -221,60 +223,49 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
       case 'breakfast':
         title = '☀️ Café da Manhã';
         icon = Icons.wb_sunny;
-        color = const Color(0xFFFF9800);
+        color = Colors.orange;
         break;
       case 'lunch':
-        title = '🍽️ Almoço';
-        icon = Icons.restaurant;
-        color = const Color(0xFF2196F3);
+        title = '🌞 Almoço';
+        icon = Icons.lunch_dining;
+        color = Colors.green;
         break;
       case 'afternoon_snack':
-        title = '☕ Lanche da Tarde';
+        title = '🥪 Lanche da Tarde';
         icon = Icons.local_cafe;
-        color = const Color(0xFF9C27B0);
+        color = Colors.purple;
         break;
       case 'dinner':
         title = '🌙 Jantar';
-        icon = Icons.nights_stay;
-        color = const Color(0xFF673AB7);
+        icon = Icons.dinner_dining;
+        color = Colors.indigo;
         break;
       default:
-        title = '🍴 Refeição';
-        icon = Icons.fastfood;
+        title = type.toUpperCase();
+        icon = Icons.restaurant;
         color = Colors.grey;
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 15,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Meal Header
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: color,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
               ),
             ),
             child: Row(
               children: [
                 Icon(icon, color: Colors.white, size: 24),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Text(
                   title,
                   style: const TextStyle(
@@ -286,48 +277,18 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
               ],
             ),
           ),
-
-          // Food Groups
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Carboidratos
-                _buildFoodGroupRow(
-                  '🌾 Carboidratos',
-                  '150-200g',
-                  meal['carbs_foods'] as List<dynamic>? ?? [],
-                  const Color(0xFFFF9800),
-                ),
-                const SizedBox(height: 16),
-
-                // Proteínas
-                _buildFoodGroupRow(
-                  '🥩 Proteínas',
-                  '100-150g',
-                  meal['protein_foods'] as List<dynamic>? ?? [],
-                  const Color(0xFFF44336),
-                ),
-                const SizedBox(height: 16),
-
-                // Gorduras
-                _buildFoodGroupRow(
-                  '🫒 Gorduras',
-                  '1-2 colheres',
-                  meal['fat_foods'] as List<dynamic>? ?? [],
-                  const Color(0xFF9C27B0),
-                ),
-
-                // Verduras/Frutas (se houver)
-                if ((meal['vegetables'] as List<dynamic>? ?? []).isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  _buildFoodGroupRow(
-                    '🥬 Verduras/Frutas',
-                    'À vontade',
-                    meal['vegetables'] as List<dynamic>? ?? [],
-                    const Color(0xFF4CAF50),
-                  ),
-                ],
+                _buildFoodGroup('🍞 Carboidratos', meal['carbs_foods'] as List<dynamic>?, Colors.brown),
+                const SizedBox(height: 12),
+                _buildFoodGroup('🥩 Proteínas', meal['protein_foods'] as List<dynamic>?, Colors.red),
+                const SizedBox(height: 12),
+                _buildFoodGroup('🥑 Gorduras Boas', meal['fat_foods'] as List<dynamic>?, Colors.yellow[700]!),
+                const SizedBox(height: 12),
+                _buildFoodGroup('🥬 Verduras/Frutas', meal['vegetables'] as List<dynamic>?, Colors.green),
               ],
             ),
           ),
@@ -336,74 +297,47 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
     );
   }
 
-  Widget _buildFoodGroupRow(String title, String quantity, List<dynamic> foods, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title and Quantity
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  quantity,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                  ),
-                ),
-              ),
-            ],
+  Widget _buildFoodGroup(String title, List<dynamic>? foods, Color color) {
+    if (foods == null || foods.isEmpty) return Container();
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: color,
           ),
-          const SizedBox(height: 12),
-
-          // Food List
-          Wrap(
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.withOpacity(0.3)),
+          ),
+          child: Wrap(
             spacing: 8,
-            runSpacing: 8,
-            children: foods.map<Widget>((food) {
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: color.withOpacity(0.3)),
+            runSpacing: 4,
+            children: foods.map<Widget>((food) => Chip(
+              label: Text(
+                food.toString(),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: color.withOpacity(0.8),
+                  fontWeight: FontWeight.w500,
                 ),
-                child: Text(
-                  food.toString(),
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: color.withOpacity(0.8),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              );
-            }).toList(),
+              ),
+              backgroundColor: color.withOpacity(0.2),
+              side: BorderSide(color: color.withOpacity(0.5)),
+            )).toList(),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
