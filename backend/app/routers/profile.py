@@ -60,12 +60,12 @@ def create_profile(profile: ProfileCreate, current_user = Depends(get_current_us
         # Cria perfil
         cursor.execute(
             """INSERT INTO profiles (user_id, weight, height, age, gender, target_weight, 
-                                     activity_level, daily_calories, last_profile_update)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                                     activity_level, goal, daily_calories)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                RETURNING id, user_id, weight, height, age, gender, target_weight, 
-                         activity_level, daily_calories, created_at""",
+                         activity_level, goal, daily_calories, created_at""",
             (user_id, profile.weight, profile.height, profile.age, profile.gender,
-             profile.target_weight, profile.activity_level, daily_calories)
+             profile.target_weight, profile.activity_level, profile.goal, daily_calories)
         )
         new_profile = cursor.fetchone()
         profile_id = new_profile['id']
@@ -95,7 +95,7 @@ def get_profile(current_user = Depends(get_current_user)):
     with db.get_db_cursor() as cursor:
         cursor.execute(
             """SELECT id, user_id, weight, height, age, gender, target_weight, 
-                      activity_level, daily_calories
+                      activity_level, goal, daily_calories
                FROM profiles WHERE user_id = %s""",
             (user_id,)
         )
@@ -138,7 +138,7 @@ def update_profile(profile_update: ProfileUpdate, current_user = Depends(get_cur
     with db.get_db_cursor() as cursor:
         # Busca perfil atual
         cursor.execute(
-            "SELECT id, weight, height, age, gender, activity_level FROM profiles WHERE user_id = %s",
+            "SELECT id, weight, height, age, gender, target_weight, activity_level, goal FROM profiles WHERE user_id = %s",
             (user_id,)
         )
         current_profile = cursor.fetchone()
@@ -165,7 +165,7 @@ def update_profile(profile_update: ProfileUpdate, current_user = Depends(get_cur
                 update_data['daily_calories'] = calculate_daily_calories(profile_for_calc)
             
             # Adiciona timestamp de atualização
-            update_data['last_profile_update'] = 'CURRENT_TIMESTAMP'
+            update_data['updated_at'] = 'CURRENT_TIMESTAMP'
             
             # Monta query dinâmica
             set_parts = []
@@ -195,7 +195,7 @@ def check_update_needed(current_user = Depends(get_current_user)):
     with db.get_db_cursor() as cursor:
         # Busca data de criação do usuário e última atualização do perfil
         cursor.execute(
-            """SELECT u.created_at, p.last_profile_update
+            """SELECT u.created_at, p.updated_at
                FROM users u
                LEFT JOIN profiles p ON p.user_id = u.id
                WHERE u.id = %s""",
@@ -210,7 +210,7 @@ def check_update_needed(current_user = Depends(get_current_user)):
             }
         
         created_at = result['created_at']
-        last_update = result['last_profile_update']
+        last_update = result['updated_at']
         
         # Pega dia da semana que foi criado (0=domingo, 1=segunda, ..., 6=sábado)
         cursor.execute("SELECT EXTRACT(DOW FROM %s) as day_of_week", (created_at,))

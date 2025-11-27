@@ -31,6 +31,7 @@ class ProfileCreate(BaseModel):
     gender: str
     target_weight: float
     activity_level: str
+    goal: str = "weight_loss"  # weight_loss, weight_gain, maintenance
     dietary_restrictions: list[str] = []
     dietary_preferences: list[str] = []
 
@@ -40,6 +41,7 @@ class ProfileUpdate(BaseModel):
     age: Optional[int] = None
     target_weight: Optional[float] = None
     activity_level: Optional[str] = None
+    goal: Optional[str] = None
 
 class ProfileResponse(BaseModel):
     id: UUID
@@ -50,6 +52,7 @@ class ProfileResponse(BaseModel):
     gender: str
     target_weight: float
     activity_level: str
+    goal: str
     daily_calories: Optional[int]
     bmi: Optional[float] = None
     dietary_restrictions: list[str] = []

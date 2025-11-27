@@ -7,6 +7,7 @@ from app.auth import verify_password, get_password_hash, create_access_token, de
 from app.config import settings
 from app.email_service import email_service
 from uuid import UUID
+import uuid
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 security = HTTPBearer()
@@ -30,7 +31,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         )
     
     with db.get_db_cursor() as cursor:
-        cursor.execute("SELECT id, email, name, created_at FROM users WHERE id = %s", (user_id,))
+        cursor.execute(f"SELECT id, email, name, created_at FROM users WHERE id = {db.get_param_placeholder()}", (user_id,))
         user = cursor.fetchone()
         
         if user is None:
@@ -59,7 +60,7 @@ def register(user: UserRegister):
     
     with db.get_db_cursor() as cursor:
         # Verifica se email já existe
-        cursor.execute("SELECT id FROM users WHERE LOWER(email) = LOWER(%s)", (user.email.strip(),))
+        cursor.execute(f"SELECT id FROM users WHERE LOWER(email) = LOWER({db.get_param_placeholder()})", (user.email.strip(),))
         existing_user = cursor.fetchone()
         if existing_user:
             raise HTTPException(
@@ -70,8 +71,8 @@ def register(user: UserRegister):
         # Cria usuário
         password_hash = get_password_hash(user.password)
         cursor.execute(
-            """INSERT INTO users (email, password_hash, name) 
-               VALUES (%s, %s, %s) RETURNING id, email, name, created_at""",
+            f\"\"\"INSERT INTO users (email, password_hash, name) 
+               VALUES ({db.get_param_placeholder()}, {db.get_param_placeholder()}, {db.get_param_placeholder()}) RETURNING id, email, name, created_at\"\"\",
             (user.email.lower().strip(), password_hash, user.name.strip())
         )
         new_user = cursor.fetchone()
@@ -83,7 +84,7 @@ def login(credentials: UserLogin):
     """Faz login e retorna token JWT"""
     with db.get_db_cursor() as cursor:
         cursor.execute(
-            "SELECT id, email, password_hash FROM users WHERE email = %s",
+            f"SELECT id, email, password_hash FROM users WHERE email = {db.get_param_placeholder()}",
             (credentials.email,)
         )
         user = cursor.fetchone()
@@ -111,7 +112,7 @@ def forgot_password(email: str):
     """Envia código de recuperação de senha por email"""
     with db.get_db_cursor() as cursor:
         # Verifica se email existe
-        cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+        cursor.execute(f"SELECT id FROM users WHERE email = {db.get_param_placeholder()}", (email,))
         user = cursor.fetchone()
         
         if not user:
@@ -167,7 +168,7 @@ def reset_password(email: str, code: str, new_password: str):
     password_hash = get_password_hash(new_password)
     with db.get_db_cursor() as cursor:
         cursor.execute(
-            "UPDATE users SET password_hash = %s WHERE email = %s",
+            f"UPDATE users SET password_hash = {db.get_param_placeholder()} WHERE email = {db.get_param_placeholder()}",
             (password_hash, email)
         )
     

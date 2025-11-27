@@ -3,14 +3,14 @@ import '../../../../core/network/api_service.dart';
 import '../../../workout/presentation/pages/workout_questionnaire_page.dart';
 import '../../../workout/presentation/pages/workout_plan_list_page.dart';
 
-class ProgressPage extends StatefulWidget {
-  const ProgressPage({super.key});
+class VirtualTrainerPage extends StatefulWidget {
+  const VirtualTrainerPage({super.key});
 
   @override
-  State<ProgressPage> createState() => _ProgressPageState();
+  State<VirtualTrainerPage> createState() => _VirtualTrainerPageState();
 }
 
-class _ProgressPageState extends State<ProgressPage>
+class _VirtualTrainerPageState extends State<VirtualTrainerPage>
     with TickerProviderStateMixin {
   final ApiService _apiService = ApiService();
   late AnimationController _animationController;
@@ -20,7 +20,8 @@ class _ProgressPageState extends State<ProgressPage>
   bool _isLoading = true;
   String _userName = 'Usuário';
   Map<String, dynamic>? _profile;
-  final bool _needsProfileUpdate = false;
+  Map<String, dynamic>? _todayWorkout;
+  bool _needsProfileUpdate = false;
 
   // Conversação com Personal Virtual
   final List<Map<String, dynamic>> _conversation = [];
@@ -69,8 +70,14 @@ class _ProgressPageState extends State<ProgressPage>
         _profile = profileResponse;
         _userName = profileResponse['name'] ?? 'Usuário';
       } catch (e) {
-        // Ignorar erro de carregamento de perfil
+        print('Erro ao carregar perfil: $e');
       }
+
+      // Verificar se precisa atualizar perfil (simulado)
+      _needsProfileUpdate = false;
+
+      // Buscar treino de hoje (implementar depois)
+      // _todayWorkout será carregado quando o endpoint estiver pronto
 
       setState(() {
         _isLoading = false;
@@ -86,13 +93,13 @@ class _ProgressPageState extends State<ProgressPage>
   void _startIntroduction() {
     Future.delayed(const Duration(milliseconds: 1000), () {
       _addMessage(
-        'Olá! 👋 Sou sua Personal Virtual! Como posso te ajudar hoje?',
+        'Olá! 👋 Sou sua Personal Virtual! Como está se sentindo hoje?',
         isBot: true,
       );
       
       Future.delayed(const Duration(milliseconds: 2000), () {
         _addMessage(
-          'Estou aqui para te ajudar com treinos, alimentação e metas. Posso criar planos personalizados e dar dicas motivacionais! 💪',
+          'Estou aqui para te ajudar com seus treinos e metas de fitness. Posso criar planos personalizados, acompanhar seu progresso e dar dicas!',
           isBot: true,
         );
       });
@@ -132,7 +139,7 @@ class _ProgressPageState extends State<ProgressPage>
     });
 
     try {
-      // Simular resposta da IA
+      // Simular resposta da IA (você pode conectar com a API real)
       await Future.delayed(const Duration(milliseconds: 1500));
       
       String response = _generateSmartResponse(message);
@@ -154,24 +161,28 @@ class _ProgressPageState extends State<ProgressPage>
     final msg = userMessage.toLowerCase();
     
     if (msg.contains('treino') || msg.contains('exercício')) {
-      return 'Perfeito! Vamos criar um treino personalizado para você. Clique em "Gerar Treino" para começarmos! 🏋️‍♀️';
+      if (_todayWorkout != null) {
+        return 'Perfeito! Vejo que você tem um treino programado para hoje: ${_todayWorkout!['day_name']}. Quer que eu te mostre os detalhes? 💪';
+      } else {
+        return 'Que ótimo! Vamos criar um treino personalizado para você. Clique em "Gerar Novo Treino" para começarmos! 🏋️‍♀️';
+      }
     }
     
     if (msg.contains('peso') || msg.contains('emagrecer') || msg.contains('gordura')) {
       if (_profile != null) {
         final currentWeight = _profile!['weight'];
         final targetWeight = _profile!['target_weight'];
-        return 'Entendo! Você está em ${currentWeight}kg e quer chegar em ${targetWeight}kg. Vou criar um plano que combine treino e alimentação! 🎯';
+        return 'Entendo! Você está em ${currentWeight}kg e quer chegar em ${targetWeight}kg. Vou criar um plano que combine treino e alimentação para te ajudar! 🎯';
       }
-      return 'Vamos trabalhar juntos no seu objetivo! Primeiro, preciso conhecer melhor seu perfil.';
+      return 'Vamos trabalhar juntos no seu objetivo! Primeiro, preciso conhecer melhor seu perfil. Que tal completarmos suas informações?';
     }
     
     if (msg.contains('dieta') || msg.contains('alimentação') || msg.contains('comida')) {
-      return 'Ótima pergunta! A alimentação é fundamental! Vou te ajudar com dicas alimentares personalizadas. 🥗';
+      return 'Ótima pergunta! A alimentação é fundamental! Vou te ajudar com um plano alimentar personalizado. Quer começar agora? 🥗';
     }
     
     if (msg.contains('motivação') || msg.contains('desânimo') || msg.contains('difícil')) {
-      return 'Eu entendo que às vezes é desafiador, mas você não está sozinho(a)! Cada pequeno passo conta. Vamos começar hoje mesmo! 💚';
+      return 'Eu entendo que às vezes é desafiador, mas você não está sozinho(a)! Cada pequeno passo conta. Que tal começarmos com algo simples hoje? 💚';
     }
     
     if (msg.contains('obrigad') || msg.contains('valeu')) {
@@ -179,7 +190,7 @@ class _ProgressPageState extends State<ProgressPage>
     }
     
     // Resposta padrão
-    return 'Interessante! Como posso te ajudar especificamente? Posso criar treinos, dar dicas de alimentação ou te motivar! ✨';
+    return 'Interessante! Conte-me mais sobre isso. Como posso te ajudar especificamente? Posso criar treinos, planos alimentares ou te dar dicas de motivação! ✨';
   }
 
   @override
@@ -450,6 +461,12 @@ class _ProgressPageState extends State<ProgressPage>
               () => _navigateToWorkoutList(),
             ),
             const SizedBox(width: 8),
+            if (_todayWorkout != null)
+              _buildQuickActionChip(
+                '💪 Treino de Hoje',
+                () => _showTodayWorkout(),
+              ),
+            const SizedBox(width: 8),
             _buildQuickActionChip(
               '🎯 Minhas Metas',
               () => _showGoals(),
@@ -543,17 +560,44 @@ class _ProgressPageState extends State<ProgressPage>
     );
   }
 
-  void _showGoals() {
-    if (_profile == null) {
-      showDialog(
-        context: context,
-        builder: (context) => const AlertDialog(
-          title: Text('Carregando...'),
-          content: Text('Aguarde enquanto carregamos suas informações.'),
+  void _showTodayWorkout() {
+    if (_todayWorkout == null) return;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Treino de ${_todayWorkout!['day_name']}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Plano: ${_todayWorkout!['plan_name']}'),
+            const SizedBox(height: 12),
+            const Text(
+              'Pronto para treinar hoje? 💪',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
-      );
-      return;
-    }
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fechar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Navegar para detalhes do treino
+            },
+            child: const Text('Ver Detalhes'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showGoals() {
+    if (_profile == null) return;
     
     showDialog(
       context: context,
