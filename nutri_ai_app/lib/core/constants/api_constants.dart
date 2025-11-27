@@ -10,6 +10,9 @@ const String kProfileEndpoint = '/profile';
 const String kChatEndpoint = '/chat';
 const String kChatHistoryEndpoint = '/chat/history';
 
+const String kPersonalEndpoint = '/personal/chat';
+const String kPersonalHistoryEndpoint = '/personal/history';
+
 const String kMealPlanEndpoint = '/meal-plan';
 
 const String kWeightLogsEndpoint = '/logs/weight';

@@ -47,6 +47,9 @@ dependencies:
   dio: ^5.7.0
   http: ^1.2.2
   
+  # Markdown
+  flutter_markdown: ^0.7.3
+  
   # Firebase/Supabase (vamos usar Supabase)
   supabase_flutter: ^2.6.0
   

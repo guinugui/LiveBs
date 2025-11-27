@@ -224,6 +224,24 @@ class ApiService {
     return response.data;
   }
 
+  // ==================== PERSONAL TRAINER ====================
+
+  Future<Map<String, dynamic>> sendPersonalMessage(String message) async {
+    final response = await _dio.post(
+      kPersonalEndpoint,
+      data: {'message': message},
+    );
+    return response.data;
+  }
+
+  Future<List<dynamic>> getPersonalHistory({int limit = 50}) async {
+    final response = await _dio.get(
+      kPersonalHistoryEndpoint,
+      queryParameters: {'limit': limit},
+    );
+    return response.data;
+  }
+
   // ==================== MEAL PLAN ====================
 
   /// Gera e salva um novo plano alimentar

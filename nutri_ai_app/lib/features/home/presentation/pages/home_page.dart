@@ -458,19 +458,19 @@ class _HomePageState extends State<HomePage> {
             label: 'Início',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            activeIcon: Icon(Icons.chat_bubble),
-            label: 'Chat IA',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.restaurant_menu_outlined),
             activeIcon: Icon(Icons.restaurant_menu),
             label: 'Plano Alimentar',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.trending_up_outlined),
-            activeIcon: Icon(Icons.trending_up),
-            label: 'Progresso',
+            icon: Icon(Icons.chat_bubble_outline),
+            activeIcon: Icon(Icons.chat_bubble),
+            label: 'Nutri',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fitness_center_outlined),
+            activeIcon: Icon(Icons.fitness_center),
+            label: 'Personal',
           ),
         ],
         onTap: (index) {
@@ -479,10 +479,10 @@ class _HomePageState extends State<HomePage> {
               // Já está na home
               break;
             case 1:
-              context.push('/chat');
+              context.push('/meal-plan');
               break;
             case 2:
-              context.push('/meal-plan');
+              context.push('/chat');
               break;
             case 3:
               context.push('/progress');

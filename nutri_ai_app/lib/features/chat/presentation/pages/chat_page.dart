@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/network/api_service.dart';
 
 class ChatPage extends StatefulWidget {
@@ -33,14 +34,18 @@ class _ChatPageState extends State<ChatPage> {
       if (mounted) {
         setState(() {
           _messages.clear();
-          _messages.add(
-            ChatBubble(
-              message:
-                  'Olá! Sou o Dr. Nutri, seu nutricionista virtual. Como posso ajudá-lo hoje?',
-              isUser: false,
-              time: DateTime.now(),
-            ),
-          );
+          
+          // Só adicionar mensagem de boas-vindas se não há histórico
+          if (history.isEmpty) {
+            _messages.add(
+              ChatBubble(
+                message:
+                    'Olá! Sou a Nutri Clara, sua nutricionista especializada em alimentos 😊\n\n🎯 Meu objetivo é esclarecer dúvidas sobre:\n• Propriedades dos alimentos\n• Valores nutricionais\n• Combinações alimentares\n• Mitos e verdades nutricionais\n• Efeitos dos alimentos no organismo\n\n⚠️ Importante: Não prescrevo dietas personalizadas - para isso, consulte um nutricionista presencialmente.\n\nComo posso te ajudar hoje?',
+                isUser: false,
+                time: DateTime.now(),
+              ),
+            );
+          }
 
           for (final msg in history) {
             _messages.add(
@@ -61,7 +66,7 @@ class _ChatPageState extends State<ChatPage> {
           _messages.add(
             ChatBubble(
               message:
-                  'Olá! Sou o Dr. Nutri, seu nutricionista virtual. Como posso ajudá-lo hoje?',
+                  'Olá! Sou a Nutri Clara, sua nutricionista especializada 😊\n\nPosso ajudar apenas com dúvidas sobre alimentos e nutrição. Como posso te auxiliar hoje?',
               isUser: false,
               time: DateTime.now(),
             ),
@@ -92,7 +97,7 @@ class _ChatPageState extends State<ChatPage> {
         setState(() {
           _messages.add(
             ChatBubble(
-              message: response['response'],
+              message: response['message'] ?? response['response'] ?? 'Erro na resposta',
               isUser: false,
               time: DateTime.parse(response['created_at']),
             ),
@@ -131,9 +136,9 @@ class _ChatPageState extends State<ChatPage> {
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Dr. Nutri'),
+            Text('Nutri Clara'),
             Text(
-              'Nutricionista Virtual',
+              'Nutricionista Especializada',
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
             ),
           ],
@@ -172,12 +177,28 @@ class _ChatPageState extends State<ChatPage> {
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
-        child: Text(
-          message.message,
-          style: TextStyle(
-            color: message.isUser ? Colors.white : Colors.black87,
-          ),
-        ),
+        child: message.isUser 
+          ? Text(
+              message.message,
+              style: const TextStyle(color: Colors.white),
+            )
+          : MarkdownBody(
+              data: message.message,
+              styleSheet: MarkdownStyleSheet(
+                p: TextStyle(color: Colors.black87, fontSize: 14),
+                h1: TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.bold),
+                h2: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold),
+                h3: TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.bold),
+                listBullet: TextStyle(color: Colors.black87, fontSize: 14),
+                strong: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+                em: TextStyle(color: Colors.black87, fontStyle: FontStyle.italic),
+                code: TextStyle(
+                  backgroundColor: Colors.grey.shade300,
+                  color: Colors.black87,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
       ),
     );
   }

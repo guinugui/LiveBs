@@ -3,13 +3,14 @@ from app.schemas import ChatMessage, ChatResponse
 from app.database import db
 from app.routers.auth import get_current_user
 from app.routers.profile import get_profile
-from app.ai_service import get_ai_response
+from app.ai_service import get_ai_response, get_nutri_ai_response
+import uuid
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
 @router.post("", response_model=ChatResponse)
 def send_message(message: ChatMessage, current_user = Depends(get_current_user)):
-    """Envia mensagem para o nutricionista IA"""
+    """Envia mensagem para a nutricionista IA especializada (Nutri Clara)"""
     user_id = current_user['id']
     
     # Busca perfil do usuário
@@ -28,8 +29,40 @@ def send_message(message: ChatMessage, current_user = Depends(get_current_user))
     except:
         user_profile = None
     
-    # Busca histórico recente (últimas 10 mensagens)
+    # Busca histórico recente (últimas 10 mensagens) e limita a 10 total
     with db.get_db_cursor() as cursor:
+        # Verifica quantas mensagens existem
+        cursor.execute(
+            """SELECT COUNT(*) as message_count FROM chat_messages WHERE user_id = %s""",
+            (user_id,)
+        )
+        count_result = cursor.fetchone()
+        # Tentar acessar como dict primeiro, depois como tupla/lista
+        if count_result:
+            if isinstance(count_result, dict) and 'message_count' in count_result:
+                total_messages = count_result['message_count']
+            elif isinstance(count_result, (list, tuple)) and len(count_result) > 0:
+                total_messages = count_result[0]
+            else:
+                total_messages = 0
+        else:
+            total_messages = 0
+        
+        # Se já temos 11+ mensagens, remove as mais antigas para manter limite de 10
+        if total_messages >= 10:
+            cursor.execute(
+                """DELETE FROM chat_messages 
+                   WHERE user_id = %s 
+                   AND id IN (
+                       SELECT id FROM chat_messages 
+                       WHERE user_id = %s 
+                       ORDER BY created_at ASC 
+                       LIMIT %s
+                   )""",
+                (user_id, user_id, total_messages - 9)  # Remove para deixar espaço para nova mensagem
+            )
+        
+        # Busca histórico recente (últimas 10 mensagens)
         cursor.execute(
             """SELECT role, message FROM chat_messages 
                WHERE user_id = %s 
@@ -43,8 +76,8 @@ def send_message(message: ChatMessage, current_user = Depends(get_current_user))
     messages = [{"role": msg['role'], "content": msg['message']} for msg in reversed(history)]
     messages.append({"role": "user", "content": message.message})
     
-    # Obtém resposta da IA
-    ai_response = get_ai_response(messages, user_profile)
+    # Obtém resposta da IA usando prompt da Nutri Clara
+    ai_response = get_nutri_ai_response(messages, user_profile)
     
     # Salva mensagem do usuário e resposta da IA
     with db.get_db_cursor() as cursor:
@@ -62,9 +95,27 @@ def send_message(message: ChatMessage, current_user = Depends(get_current_user))
                RETURNING id, role, message, created_at""",
             (user_id, 'assistant', ai_response)
         )
-        response = cursor.fetchone()
-    
-    return response
+        response_row = cursor.fetchone()
+        
+        # Garantir que retornamos um dicionário para o Pydantic
+        if isinstance(response_row, dict):
+            return response_row
+        elif isinstance(response_row, (list, tuple)) and len(response_row) >= 4:
+            return {
+                "id": response_row[0],
+                "role": response_row[1], 
+                "message": response_row[2],
+                "created_at": response_row[3]
+            }
+        else:
+            # Fallback se algo der errado
+            from datetime import datetime
+            return {
+                "id": str(uuid.uuid4()),
+                "role": "assistant",
+                "message": ai_response,
+                "created_at": datetime.utcnow()
+            }
 
 @router.get("/history", response_model=list[ChatResponse])
 def get_chat_history(current_user = Depends(get_current_user), limit: int = 50):

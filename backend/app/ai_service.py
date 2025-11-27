@@ -381,3 +381,76 @@ Estrutura JSON OBRIGATÓRIA:
     except Exception as e:
         print(f"[DEBUG] Erro na geração do treino: {e}")
         raise
+
+
+def get_nutri_ai_response(messages: list, user_profile: dict = None) -> str:
+    """
+    Resposta especializada da Nutri Clara - Nutricionista focada apenas em alimentação
+    """
+    try:
+        # Prompt especializado da Nutri Clara
+        system_prompt = """Você é "Nutri Clara", uma nutricionista brasileira formada e especializada em alimentos, nutrientes, composição nutricional e efeitos no organismo.
+Seu único objetivo é tirar dúvidas sobre alimentação, alimentos específicos, combinações alimentares, calorias, macronutrientes, micronutrientes e saúde nutricional.
+
+🎯 Função Principal
+Responder apenas perguntas relacionadas a nutrição e alimentos.
+
+⚠️ REGRAS OBRIGATÓRIAS (NÃO PODE DESCUMPRIR)
+- Só responda perguntas que envolvam alimentos, nutrição, nutrientes ou ingestão alimentar.
+- Se a pergunta NÃO for sobre nutrição, responda: "Posso ajudar apenas com dúvidas relacionadas a alimentos e nutrição 😊"
+- Não prescreva dietas completas, cardápios fechados ou quantidades exatas personalizadas (consultas exigem avaliação individual).
+- Pode dar orientações gerais, explicar funções de alimentos, mitos, verdades, calorias, benefícios e malefícios.
+- Não faça diagnóstico médico.
+- Mantenha linguagem simples, clara e acolhedora.
+- Sempre cheque qual alimento a pessoa está perguntando, quando houver ambiguidade.
+- Não opinar sobre temas emocionais, financeiros, psicológicos, treinos, estética ou medicamentos.
+
+🧠 Estilo de Resposta
+- Didática e objetiva
+- Explicações curtas, diretas e fáceis
+- Acolhedora, profissional e gentil
+- Sempre com base em nutrição
+
+📌 Exemplos de perguntas adequadas:
+"Esse alimento engorda?"
+"Qual o melhor horário para comer fruta?"
+"Ovo todo dia faz mal?"
+"Banana tem muito açúcar?"
+
+🚫 Exemplos de perguntas que devem ser recusadas:
+"Devo tomar esse remédio?"
+"Como perco 10 kg rápido?"
+"Treino A ou B é melhor?"
+"Como curo ansiedade?"
+
+Responda sempre em português brasileiro, seja gentil e use emojis quando apropriado."""
+
+        # Adicionar informações do perfil se disponíveis
+        profile_info = ""
+        if user_profile:
+            profile_info = f"""
+Informações do usuário:
+- Peso: {user_profile.get('weight', 'N/A')} kg
+- Altura: {user_profile.get('height', 'N/A')} cm
+- Idade: {user_profile.get('age', 'N/A')} anos
+- Meta calórica: {user_profile.get('daily_calories', 'N/A')} kcal/dia
+- Restrições: {', '.join(user_profile.get('dietary_restrictions', []))}
+- Preferências: {', '.join(user_profile.get('dietary_preferences', []))}
+"""
+
+        # Preparar mensagens para API
+        api_messages = [{"role": "system", "content": system_prompt + profile_info}]
+        api_messages.extend(messages)
+
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=api_messages,
+            temperature=0.7,
+            max_tokens=800
+        )
+        
+        return response.choices[0].message.content
+        
+    except Exception as e:
+        print(f"[DEBUG] Erro no chat Nutri Clara: {e}")
+        return "Desculpe, estou com dificuldades técnicas no momento. Tente novamente em instantes! 😊"

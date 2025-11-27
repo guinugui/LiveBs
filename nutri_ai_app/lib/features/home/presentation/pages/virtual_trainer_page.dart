@@ -73,6 +73,20 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
         print('Erro ao carregar perfil: $e');
       }
 
+      // Carregar histórico do Personal Virtual
+      try {
+        final history = await _apiService.getPersonalHistory(limit: 20);
+        for (var message in history) {
+          _conversation.add({
+            'content': message['message'],
+            'isBot': message['role'] == 'assistant',
+            'timestamp': DateTime.now(),
+          });
+        }
+      } catch (e) {
+        print('Erro ao carregar histórico do Personal: $e');
+      }
+
       // Verificar se precisa atualizar perfil (simulado)
       _needsProfileUpdate = false;
 
@@ -91,19 +105,22 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
   }
 
   void _startIntroduction() {
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      _addMessage(
-        'Olá! 👋 Sou sua Personal Virtual! Como está se sentindo hoje?',
-        isBot: true,
-      );
-      
-      Future.delayed(const Duration(milliseconds: 2000), () {
+    // Só mostra introdução se não há histórico
+    if (_conversation.isEmpty) {
+      Future.delayed(const Duration(milliseconds: 1000), () {
         _addMessage(
-          'Estou aqui para te ajudar com seus treinos e metas de fitness. Posso criar planos personalizados, acompanhar seu progresso e dar dicas!',
+          'Olá! 👋 Sou o Coach Leo, seu Personal Trainer brasileiro! Como posso te ajudar hoje?',
           isBot: true,
         );
+        
+        Future.delayed(const Duration(milliseconds: 2000), () {
+          _addMessage(
+            'Estou aqui para te orientar com treinos, exercícios e rotinas. Posso te ajudar com emagrecimento, ganho de massa, cardio e muito mais! 💪',
+            isBot: true,
+          );
+        });
       });
-    });
+    }
   }
 
   void _addMessage(String content, {bool isBot = false}) {
@@ -139,15 +156,14 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
     });
 
     try {
-      // Simular resposta da IA (você pode conectar com a API real)
-      await Future.delayed(const Duration(milliseconds: 1500));
-      
-      String response = _generateSmartResponse(message);
-      _addMessage(response, isBot: true);
+      // Enviar mensagem para o Personal Virtual (Coach Atlas) via API
+      final response = await _apiService.sendPersonalMessage(message);
+      _addMessage(response['message'], isBot: true);
       
     } catch (e) {
+      print('Erro ao enviar mensagem para Personal: $e');
       _addMessage(
-        'Desculpe, tive um problema técnico. Tente novamente! 😅',
+        'Desculpe, tive um problema técnico! 😅 Mas não desista do seu treino! 💪 Tente novamente em alguns segundos!',
         isBot: true,
       );
     } finally {
@@ -157,41 +173,7 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
     }
   }
 
-  String _generateSmartResponse(String userMessage) {
-    final msg = userMessage.toLowerCase();
-    
-    if (msg.contains('treino') || msg.contains('exercício')) {
-      if (_todayWorkout != null) {
-        return 'Perfeito! Vejo que você tem um treino programado para hoje: ${_todayWorkout!['day_name']}. Quer que eu te mostre os detalhes? 💪';
-      } else {
-        return 'Que ótimo! Vamos criar um treino personalizado para você. Clique em "Gerar Novo Treino" para começarmos! 🏋️‍♀️';
-      }
-    }
-    
-    if (msg.contains('peso') || msg.contains('emagrecer') || msg.contains('gordura')) {
-      if (_profile != null) {
-        final currentWeight = _profile!['weight'];
-        final targetWeight = _profile!['target_weight'];
-        return 'Entendo! Você está em ${currentWeight}kg e quer chegar em ${targetWeight}kg. Vou criar um plano que combine treino e alimentação para te ajudar! 🎯';
-      }
-      return 'Vamos trabalhar juntos no seu objetivo! Primeiro, preciso conhecer melhor seu perfil. Que tal completarmos suas informações?';
-    }
-    
-    if (msg.contains('dieta') || msg.contains('alimentação') || msg.contains('comida')) {
-      return 'Ótima pergunta! A alimentação é fundamental! Vou te ajudar com um plano alimentar personalizado. Quer começar agora? 🥗';
-    }
-    
-    if (msg.contains('motivação') || msg.contains('desânimo') || msg.contains('difícil')) {
-      return 'Eu entendo que às vezes é desafiador, mas você não está sozinho(a)! Cada pequeno passo conta. Que tal começarmos com algo simples hoje? 💚';
-    }
-    
-    if (msg.contains('obrigad') || msg.contains('valeu')) {
-      return 'Por nada! Estou aqui sempre que precisar. Juntos vamos alcançar seus objetivos! 🌟';
-    }
-    
-    // Resposta padrão
-    return 'Interessante! Conte-me mais sobre isso. Como posso te ajudar especificamente? Posso criar treinos, planos alimentares ou te dar dicas de motivação! ✨';
-  }
+
 
   @override
   Widget build(BuildContext context) {

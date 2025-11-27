@@ -27,19 +27,19 @@ class MainLayout extends StatelessWidget {
             label: 'Início',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            activeIcon: Icon(Icons.chat_bubble),
-            label: 'Chat IA',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.restaurant_menu_outlined),
             activeIcon: Icon(Icons.restaurant_menu),
-            label: 'Plano',
+            label: 'Plano Alimentar',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.trending_up_outlined),
-            activeIcon: Icon(Icons.trending_up),
-            label: 'Progresso',
+            icon: Icon(Icons.chat_bubble_outline),
+            activeIcon: Icon(Icons.chat_bubble),
+            label: 'Nutri',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fitness_center_outlined),
+            activeIcon: Icon(Icons.fitness_center),
+            label: 'Personal',
           ),
         ],
         onTap: (index) {
@@ -48,10 +48,10 @@ class MainLayout extends StatelessWidget {
               context.go('/home');
               break;
             case 1:
-              context.go('/chat');
+              context.go('/meal-plan');
               break;
             case 2:
-              context.go('/meal-plan');
+              context.go('/chat');
               break;
             case 3:
               context.go('/progress');
