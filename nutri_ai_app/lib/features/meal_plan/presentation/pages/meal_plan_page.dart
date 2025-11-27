@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/direct_meal_plan_service.dart';
 import 'meal_plan_details_page.dart';
+import '../../../../core/network/api_service.dart';
 
 class MealPlanPage extends StatefulWidget {
   const MealPlanPage({super.key});
@@ -14,9 +16,9 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
   bool _isLoading = true;
   bool _isCreating = false;
   
-  // Credenciais do usuário logado
-  static const String _userEmail = 'gui@gmail.com';
-  static const String _userPassword = '123123';
+  // Credenciais do usuário atual (obtidas dinamicamente)
+  String? _userEmail;
+  String? _userPassword;
   
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -34,8 +36,44 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     
-    // Buscar planos ao inicializar
-    _loadMealPlans();
+    // Inicializar usuário e buscar planos
+    _initializeUser();
+  }
+  
+  /// 👤 INICIALIZA AS CREDENCIAIS DO USUÁRIO ATUAL
+  Future<void> _initializeUser() async {
+    try {
+      print('🔐 [USER] Obtendo credenciais do usuário logado...');
+      
+      // Obter email do SharedPreferences (salvo no login)
+      final prefs = await SharedPreferences.getInstance();
+      _userEmail = prefs.getString('email');
+      
+      if (_userEmail == null) {
+        throw Exception('Usuário não está logado');
+      }
+      
+      // Verificar se o usuário tem token válido
+      try {
+        await ApiService().getMe();
+        print('✅ [USER] Usuário autenticado: $_userEmail');
+        
+        // Para compatibilidade com DirectMealPlanService, usar uma senha padrão
+        // TODO: Migrar para autenticação baseada em token
+        _userPassword = '123123'; // Temporário até migração completa
+        
+        await _loadMealPlans();
+      } catch (e) {
+        throw Exception('Token inválido ou expirado');
+      }
+      
+    } catch (e) {
+      print('❌ [USER ERROR] Erro de autenticação: $e');
+      if (mounted) {
+        _showErrorSnackBar('Erro de autenticação: $e');
+        // Redirecionar para login se necessário
+      }
+    }
   }
 
   @override
@@ -46,12 +84,17 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
 
   /// 🔍 BUSCA TODOS OS PLANOS DO USUÁRIO NO BANCO DE DADOS
   Future<void> _loadMealPlans() async {
+    if (_userEmail == null || _userPassword == null) {
+      print('⚠️ [MEAL_PLANS] Credenciais não disponíveis');
+      return;
+    }
+    
     setState(() => _isLoading = true);
     
     try {
       print('🔍 [MEAL_PLANS] Buscando planos para: $_userEmail');
       
-      final plans = await DirectMealPlanService.fetchPlansDirectly(_userEmail, _userPassword);
+      final plans = await DirectMealPlanService.fetchPlansDirectly(_userEmail!, _userPassword!);
       
       print('📊 [MEAL_PLANS] ${plans.length} planos encontrados');
       
@@ -88,12 +131,17 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
 
   /// ➕ CRIAR NOVO PLANO ALIMENTAR
   Future<void> _createNewMealPlan() async {
+    if (_userEmail == null || _userPassword == null) {
+      _showErrorSnackBar('Erro de autenticação. Faça login novamente.');
+      return;
+    }
+    
     setState(() => _isCreating = true);
     
     try {
       print('🚀 [CREATE] Criando novo plano alimentar...');
       
-      final result = await DirectMealPlanService.createPlanDirectly(_userEmail, _userPassword);
+      final result = await DirectMealPlanService.createPlanDirectly(_userEmail!, _userPassword!);
       
       print('✅ [CREATE] Plano criado: ${result['plan_name']}');
       
@@ -124,10 +172,15 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
     final confirmed = await _showDeleteConfirmation(planName);
     if (!confirmed) return;
     
+    if (_userEmail == null || _userPassword == null) {
+      _showErrorSnackBar('Erro de autenticação. Faça login novamente.');
+      return;
+    }
+    
     try {
       print('🗑️ [DELETE] Deletando: $planName ($planId)');
       
-      await DirectMealPlanService.deletePlanDirectly(_userEmail, _userPassword, planId);
+      await DirectMealPlanService.deletePlanDirectly(_userEmail!, _userPassword!, planId);
       
       print('✅ [DELETE] Plano deletado com sucesso');
       
@@ -148,6 +201,11 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
 
   /// 👁️ VER DETALHES DO PLANO
   void _viewPlanDetails(Map<String, dynamic> plan) {
+    if (_userEmail == null || _userPassword == null) {
+      _showErrorSnackBar('Erro de autenticação. Faça login novamente.');
+      return;
+    }
+    
     final planId = plan['id']?.toString() ?? '';
     final planName = plan['plan_name']?.toString() ?? 'Plano';
     
@@ -156,8 +214,8 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
         builder: (context) => MealPlanDetailsPage(
           planId: planId,
           planName: planName,
-          userEmail: _userEmail,
-          userPassword: _userPassword,
+          userEmail: _userEmail!,
+          userPassword: _userPassword!,
         ),
       ),
     );
@@ -403,7 +461,6 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
     final planName = plan['plan_name']?.toString() ?? 'Plano sem nome';
     final planNumber = plan['plan_number']?.toString() ?? '0';
     final createdAt = plan['created_at']?.toString() ?? '';
-    final planId = plan['id']?.toString() ?? '';
     
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -473,15 +530,7 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
                             fontSize: 13,
                           ),
                         ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'ID: $planId',
-                        style: TextStyle(
-                          color: Colors.grey[500],
-                          fontSize: 11,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
+
                     ],
                   ),
                 ),
