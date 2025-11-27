@@ -39,11 +39,32 @@ class WorkoutPlan {
         print('[WORKOUT_PLAN] 📊 Dias encontrados no workoutData: $daysPerWeek');
       }
       
-      // Extrair workout_type se presente
-      if (workoutDataString.contains('gym') || workoutDataString.contains('academia')) {
+      // Extrair workout_type de forma mais precisa
+      // Primeiro: tentar encontrar no plan_name
+      String planName = json['plan_name']?.toString().toLowerCase() ?? '';
+      if (planName.contains('gym') || planName.contains('academia')) {
         workoutType = 'gym';
-      } else if (workoutDataString.contains('casa') || workoutDataString.contains('home')) {
+        print('[WORKOUT_PLAN] 🏋️ Tipo detectado pelo plan_name: GYM/Academia');
+      } else if (planName.contains('casa') || planName.contains('home')) {
         workoutType = 'home';
+        print('[WORKOUT_PLAN] 🏠 Tipo detectado pelo plan_name: Casa/Home');
+      } else {
+        // Segundo: procurar nos dados do workout
+        String lowerData = workoutDataString.toLowerCase();
+        if (lowerData.contains('gym') || lowerData.contains('academia') || 
+            lowerData.contains('halteres') || lowerData.contains('máquinas') || 
+            lowerData.contains('equipamentos')) {
+          workoutType = 'gym';
+          print('[WORKOUT_PLAN] 🏋️ Tipo detectado pelos dados: GYM (equipamentos)');
+        } else if (lowerData.contains('casa') || lowerData.contains('home') || 
+                   lowerData.contains('peso corporal') || lowerData.contains('flexão')) {
+          workoutType = 'home';
+          print('[WORKOUT_PLAN] 🏠 Tipo detectado pelos dados: Casa (peso corporal)');
+        } else {
+          // Padrão: assumir gym se não conseguir detectar
+          workoutType = 'gym';
+          print('[WORKOUT_PLAN] ⚙️ Tipo padrão aplicado: GYM');
+        }
       }
       
     } catch (e) {
@@ -56,11 +77,45 @@ class WorkoutPlan {
       planName: json['plan_name']?.toString() ?? '',
       planSummary: json['plan_summary']?.toString(),
       workoutData: json['workout_data']?.toString() ?? '{}',
-      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+      createdAt: _parseDateTime(json['created_at']),
       userId: json['user_id']?.toString() ?? '',
       workoutType: workoutType,
       daysPerWeek: daysPerWeek,
     );
+  }
+
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    
+    if (value is DateTime) {
+      return value;
+    }
+    
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        // Se não conseguir fazer parse, retorna a data atual
+        return DateTime.now();
+      }
+    }
+    
+    if (value is int) {
+      try {
+        // Assume que é timestamp em milliseconds
+        return DateTime.fromMillisecondsSinceEpoch(value);
+      } catch (e) {
+        try {
+          // Tenta como timestamp em seconds
+          return DateTime.fromMillisecondsSinceEpoch(value * 1000);
+        } catch (e) {
+          return DateTime.now();
+        }
+      }
+    }
+    
+    // Para qualquer outro tipo, retorna a data atual
+    return DateTime.now();
   }
 
   Map<String, dynamic> toJson() {

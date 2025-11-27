@@ -213,23 +213,27 @@ def check_update_needed(current_user = Depends(get_current_user)):
         created_at = result['created_at']
         last_update = result['updated_at']
         
-        # Pega dia da semana que foi criado (0=domingo, 1=segunda, ..., 6=sábado)
-        cursor.execute("SELECT EXTRACT(DOW FROM %s) as day_of_week", (created_at,))
-        creation_day = int(cursor.fetchone()['day_of_week'])
+        # Pega dia da semana usando Python ao invés de EXTRACT
+        from datetime import datetime
         
-        # Pega dia da semana atual
-        cursor.execute("SELECT EXTRACT(DOW FROM CURRENT_DATE) as day_of_week")
-        current_day = int(cursor.fetchone()['day_of_week'])
+        # Converte created_at para datetime se for string
+        if isinstance(created_at, str):
+            created_at_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+        else:
+            created_at_dt = created_at
+            
+        creation_day = created_at_dt.weekday()  # 0=segunda, 6=domingo
+        current_day = datetime.now().weekday()
         
-        # Nomes dos dias para exibir ao usuário
+        # Nomes dos dias para exibir ao usuário (weekday: 0=segunda, 6=domingo)
         day_names = {
-            0: 'Domingo',
-            1: 'Segunda-feira',
-            2: 'Terça-feira',
-            3: 'Quarta-feira',
-            4: 'Quinta-feira',
-            5: 'Sexta-feira',
-            6: 'Sábado'
+            0: 'Segunda-feira',
+            1: 'Terça-feira', 
+            2: 'Quarta-feira',
+            3: 'Quinta-feira',
+            4: 'Sexta-feira',
+            5: 'Sábado',
+            6: 'Domingo'
         }
         
         # Verifica se é o dia da semana de atualização
@@ -250,19 +254,25 @@ def check_update_needed(current_user = Depends(get_current_user)):
                 "update_day_name": day_names[creation_day]
             }
         
-        # Verifica se já atualizou nesta semana
-        cursor.execute(
-            """SELECT EXTRACT(WEEK FROM %s) as last_week,
-                      EXTRACT(WEEK FROM CURRENT_DATE) as current_week,
-                      EXTRACT(YEAR FROM %s) as last_year,
-                      EXTRACT(YEAR FROM CURRENT_DATE) as current_year""",
-            (last_update, last_update)
-        )
-        week_data = cursor.fetchone()
+        # Verifica se já atualizou nesta semana usando Python
+        from datetime import datetime
+        
+        # Converte last_update para datetime se for string
+        if isinstance(last_update, str):
+            last_update_dt = datetime.fromisoformat(last_update.replace('Z', '+00:00'))
+        else:
+            last_update_dt = last_update
+            
+        current_dt = datetime.now()
+        
+        # Calcula semana e ano usando Python
+        last_week = last_update_dt.isocalendar()[1]  # Semana ISO
+        current_week = current_dt.isocalendar()[1]
+        last_year = last_update_dt.year
+        current_year = current_dt.year
         
         # Se atualizou na semana atual do ano atual, não precisa atualizar
-        if (week_data['current_year'] == week_data['last_year'] and 
-            week_data['current_week'] == week_data['last_week']):
+        if (current_year == last_year and current_week == last_week):
             return {
                 "needs_update": False,
                 "message": "Dados já atualizados esta semana",

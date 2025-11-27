@@ -226,37 +226,43 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
 
   Widget _buildMealCard(dynamic mealData) {
     final meal = mealData as Map<String, dynamic>;
-    final type = meal['type'] as String;
+    final mealName = meal['name']?.toString() ?? 'Refeição';
+    final mealTime = meal['time']?.toString() ?? '';
     
     String title;
     IconData icon;
     Color color;
     
-    switch (type) {
-      case 'breakfast':
-        title = '☀️ Café da Manhã';
-        icon = Icons.wb_sunny;
-        color = Colors.orange;
-        break;
-      case 'lunch':
-        title = '🌞 Almoço';
-        icon = Icons.lunch_dining;
-        color = Colors.green;
-        break;
-      case 'afternoon_snack':
-        title = '🥪 Lanche da Tarde';
-        icon = Icons.local_cafe;
-        color = Colors.purple;
-        break;
-      case 'dinner':
-        title = '🌙 Jantar';
-        icon = Icons.dinner_dining;
-        color = Colors.indigo;
-        break;
-      default:
-        title = type.toUpperCase();
-        icon = Icons.restaurant;
-        color = Colors.grey;
+    // Determinar ícone e cor baseado no nome da refeição
+    String lowerName = mealName.toLowerCase();
+    if (lowerName.contains('café') || lowerName.contains('manhã')) {
+      title = '☀️ $mealName';
+      icon = Icons.wb_sunny;
+      color = Colors.orange;
+    } else if (lowerName.contains('almoço')) {
+      title = '🌞 $mealName';
+      icon = Icons.lunch_dining;
+      color = Colors.green;
+    } else if (lowerName.contains('lanche') && lowerName.contains('tarde')) {
+      title = '🥪 $mealName';
+      icon = Icons.local_cafe;
+      color = Colors.purple;
+    } else if (lowerName.contains('jantar')) {
+      title = '🌙 $mealName';
+      icon = Icons.dinner_dining;
+      color = Colors.indigo;
+    } else if (lowerName.contains('lanche') && lowerName.contains('manhã')) {
+      title = '🥯 $mealName';
+      icon = Icons.bakery_dining;
+      color = Colors.amber;
+    } else if (lowerName.contains('ceia')) {
+      title = '🌃 $mealName';
+      icon = Icons.nightlight;
+      color = Colors.deepPurple;
+    } else {
+      title = '🍴 $mealName';
+      icon = Icons.restaurant;
+      color = Colors.grey;
     }
 
     return Card(
@@ -295,13 +301,24 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildFoodGroup('🍞 Carboidratos', meal['carbs_foods'] as List<dynamic>?, Colors.brown),
-                const SizedBox(height: 12),
-                _buildFoodGroup('🥩 Proteínas', meal['protein_foods'] as List<dynamic>?, Colors.red),
-                const SizedBox(height: 12),
-                _buildFoodGroup('🥑 Gorduras Boas', meal['fat_foods'] as List<dynamic>?, Colors.yellow[700]!),
-                const SizedBox(height: 12),
-                _buildFoodGroup('🥬 Verduras/Frutas', meal['vegetables'] as List<dynamic>?, Colors.green),
+                if (mealTime.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Text(
+                          mealTime,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                _buildAllFoods(meal['foods'] as List<dynamic>?),
               ],
             ),
           ),
@@ -310,18 +327,18 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
     );
   }
 
-  Widget _buildFoodGroup(String title, List<dynamic>? foods, Color color) {
-    if (foods == null || foods.isEmpty) return Container();
+  Widget _buildAllFoods(List<dynamic>? foods) {
+    if (foods == null || foods.isEmpty) return const Text('Nenhum alimento encontrado');
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
+        const Text(
+          '🍽️ Alimentos',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: color,
+            color: Colors.deepOrange,
           ),
         ),
         const SizedBox(height: 8),
@@ -329,25 +346,44 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: Colors.deepOrange.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: color.withOpacity(0.3)),
+            border: Border.all(color: Colors.deepOrange.withOpacity(0.3)),
           ),
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: foods.map<Widget>((food) => Chip(
-              label: Text(
-                food.toString(),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: color.withOpacity(0.8),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              backgroundColor: color.withOpacity(0.2),
-              side: BorderSide(color: color.withOpacity(0.5)),
-            )).toList(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: foods.map<Widget>((food) {
+              if (food is Map<String, dynamic>) {
+                final name = food['name']?.toString() ?? 'Alimento';
+                final quantity = food['quantity']?.toString() ?? '';
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.circle, size: 8, color: Colors.deepOrange),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '$name - $quantity',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                    food.toString(),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                );
+              }
+            }).toList(),
           ),
         ),
       ],

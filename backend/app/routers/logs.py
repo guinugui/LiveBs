@@ -69,14 +69,15 @@ def get_today_water(current_user = Depends(get_current_user)):
     
     with db.get_db_cursor() as cursor:
         cursor.execute(
-            """SELECT COALESCE(SUM(amount), 0) as total
+            """SELECT COALESCE(SUM(amount), 0)
                FROM water_logs
                WHERE user_id = %s AND logged_at >= %s""",
             (user_id, today_start)
         )
         result = cursor.fetchone()
+        total = result[0] if result else 0
     
-    return {"total_liters": float(result['total'])}
+    return {"total_liters": float(total)}
 
 @router.get("/water", response_model=list[WaterLogResponse])
 def get_water_logs(
@@ -125,14 +126,15 @@ def get_today_calories(current_user = Depends(get_current_user)):
     
     with db.get_db_cursor() as cursor:
         cursor.execute(
-            """SELECT COALESCE(SUM(calories), 0) as total
+            """SELECT COALESCE(SUM(calories), 0)
                FROM meal_logs
                WHERE user_id = %s AND logged_at >= %s AND calories IS NOT NULL""",
             (user_id, today_start)
         )
         result = cursor.fetchone()
+        total = result[0] if result else 0
     
-    return {"total_calories": int(result['total'])}
+    return {"total_calories": int(total)}
 
 @router.get("/meal", response_model=list[MealLogResponse])
 def get_meal_logs(

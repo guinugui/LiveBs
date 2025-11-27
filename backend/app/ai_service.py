@@ -1,541 +1,345 @@
-from openai import OpenAI
-from app.config import settings
+"""
+AI Service - Limpo e funcional
+"""
 import json
-import re
-
+from openai import OpenAI
+from .config import settings
 client = OpenAI(api_key=settings.openai_api_key)
 
-def get_ai_response(messages: list[dict], user_profile: dict = None) -> str:
+def generate_meal_plan(questionnaire_data: dict, previous_plans: list = None) -> dict:
     """
-    Obtém resposta do nutricionista IA
-
-    Args:
-        messages: Lista de mensagens no formato [{"role": "user", "content": "..."}]
-        user_profile: Dados do perfil do usuário (peso, altura, objetivo, etc)
-
-    Returns:
-        Resposta do assistente IA
+    Gera plano alimentar usando OpenAI com sistema anti-repetição
     """
-    system_prompt = """Você é Dr. Nutri, um nutricionista virtual especializado em
-    emagrecimento saudável. Você é gentil, motivador e baseado em evidências científicas.
-    Sempre considere o perfil do usuário ao dar recomendações."""
-
-    if user_profile:
-        system_prompt += f"""
-
-        Perfil do usuário:
-        - Peso atual: {user_profile.get('weight')} kg
-        - Altura: {user_profile.get('height')} cm
-        - Idade: {user_profile.get('age')} anos
-        - Peso alvo: {user_profile.get('target_weight')} kg
-        - Nível de atividade: {user_profile.get('activity_level')}
-        - Calorias diárias: {user_profile.get('daily_calories')} kcal
-        """
-
-        if user_profile.get('dietary_restrictions'):
-            system_prompt += f"\n- Restrições alimentares: {', '.join(user_profile['dietary_restrictions'])}"
-
-        if user_profile.get('dietary_preferences'):
-            system_prompt += f"\n- Preferências: {', '.join(user_profile['dietary_preferences'])}"
-
-    all_messages = [{"role": "system", "content": system_prompt}] + messages
-
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=all_messages,
-        temperature=0.7,
-        max_tokens=2000
-    )
-
-    return response.choices[0].message.content
-
-
-def generate_meal_plan(user_profile: dict) -> dict:
-    """
-    Gera plano alimentar de 3 dias personalizado
+    # Extrair dados do questionário e converter para float
+    age = int(questionnaire_data.get('age', 30))
+    weight = float(questionnaire_data.get('weight', 70))
+    height = float(questionnaire_data.get('height', 170))
+    target_weight = float(questionnaire_data.get('target_weight', weight))
+    activity_level = questionnaire_data.get('activity_level', 'MODERADO')
+    objetivo = questionnaire_data.get('objective', 'MANTER PESO')
+    restrictions = questionnaire_data.get('restrictions', [])
+    preferences = questionnaire_data.get('preferences', [])
     
-    Args:
-        user_profile: Dados do usuário incluindo calorias, restrições, preferências
+    # Calcular TMB (Taxa Metabólica Basal)
+    tmb = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
+    
+    # Fatores de atividade
+    activity_factors = {
+        'SEDENTARIO': 1.2,
+        'LEVE': 1.375,
+        'MODERADO': 1.55,
+        'INTENSO': 1.725,
+        'MUITO_INTENSO': 1.9
+    }
+    
+    factor = activity_factors.get(activity_level, 1.55)
+    calories = int(tmb * factor)
+    
+    # Ajustar calorias baseado no objetivo
+    if objetivo == 'EMAGRECER':
+        calories = int(calories * 0.8)  # Déficit de 20%
+    elif objetivo == 'GANHAR PESO':
+        calories = int(calories * 1.15)  # Superávit de 15%
+    
+    # Análise de planos anteriores para evitar repetições
+    previous_foods_analysis = ""
+    if previous_plans:
+        print(f"[DEBUG] Analisando {len(previous_plans)} planos anteriores para evitar repetição")
         
-    Returns:
-        Dicionário com plano de 3 dias
-    """
-    
-    # Extrair dados do perfil
-    calories = user_profile.get('daily_calories', 1800)
-    weight = user_profile.get('weight', 70)
-    height = user_profile.get('height', 170)
-    age = user_profile.get('age', 30)
-    target_weight = user_profile.get('target_weight', 65)
-    activity_level = user_profile.get('activity_level', 'moderado')
-    restrictions = user_profile.get('dietary_restrictions', [])
-    preferences = user_profile.get('dietary_preferences', [])
-    
-    # Determinar objetivo baseado no peso atual vs peso alvo
-    if target_weight < weight:
-        objetivo = "EMAGRECER"
-        objetivo_text = f"deficit calórico para perder {weight - target_weight:.1f}kg"
-    elif target_weight > weight:
-        objetivo = "GANHAR PESO"
-        objetivo_text = f"superavit calórico para ganhar {target_weight - weight:.1f}kg"
-    else:
-        objetivo = "MANTER PESO"
-        objetivo_text = "manutenção do peso atual"
-    
-    # Construir informações de restrições
-    restriction_text = ""
-    if restrictions:
-        restriction_text = f"EVITE: {', '.join(restrictions)}"
-    
-    preference_text = ""
-    if preferences:
-        preference_text = f"PRIORIZE: {', '.join(preferences)}"
+        # Extrair alimentos dos planos anteriores
+        all_previous_foods = []
+        for i, plan in enumerate(previous_plans):
+            print(f"[DEBUG] Analisando plano {i+1}: {plan.get('plan_name', 'Sem nome')}")
+            plan_data = plan.get('plan_data', {})
+            print(f"[DEBUG] Tipo do plan_data: {type(plan_data)}")
+            print(f"[DEBUG] Keys do plan_data: {list(plan_data.keys()) if isinstance(plan_data, dict) else 'Não é dict'}")
+            
+            if 'days' in plan_data:
+                print(f"[DEBUG] Encontrou {len(plan_data['days'])} dias no plano")
+                for day_idx, day in enumerate(plan_data['days']):
+                    if 'meals' in day:
+                        print(f"[DEBUG] Dia {day_idx+1} tem {len(day['meals'])} refeições")
+                        for meal_idx, meal in enumerate(day['meals']):
+                            if 'foods' in meal:
+                                print(f"[DEBUG] Refeição {meal_idx+1} tem {len(meal['foods'])} alimentos")
+                                for food in meal['foods']:
+                                    food_name = food.get('name', '').strip().lower()
+                                    if food_name:
+                                        all_previous_foods.append(food_name)
+                                        print(f"[DEBUG] Alimento extraído: {food_name}")
+            else:
+                print(f"[DEBUG] Plano não tem chave 'days': {list(plan_data.keys()) if isinstance(plan_data, dict) else plan_data}")
+        
+        # Contar frequência dos alimentos
+        food_frequency = {}
+        for food in all_previous_foods:
+            food_frequency[food] = food_frequency.get(food, 0) + 1
+        
+        # Criar lista dos alimentos mais repetidos
+        frequent_foods = [food for food, freq in food_frequency.items() if freq >= 2]
+        
+        print(f"[DEBUG] Total de alimentos nos planos anteriores: {len(all_previous_foods)}")
+        print(f"[DEBUG] Alimentos únicos: {len(set(all_previous_foods))}")
+        print(f"[DEBUG] Alimentos que repetem 2+ vezes: {len(frequent_foods)}")
+        
+        if frequent_foods:
+            previous_foods_analysis = f"""
+🚫 SISTEMA ANTI-REPETIÇÃO ATIVO:
+Os seguintes alimentos JÁ foram usados nos últimos planos e devem ser EVITADOS para máxima variedade:
+{', '.join(frequent_foods[:20])}  # Limitar a 20 para não sobrecarregar
 
-    prompt = f"""Crie um PLANO MODELO personalizado para 7 dias com grupos alimentares didáticos e comidas brasileiras comuns.
+✅ PRIORIZE alimentos NOVOS e diferentes que ainda NÃO foram usados!
+"""
+    
+    # Textos para restrições e preferências
+    restriction_text = ", ".join(restrictions) if restrictions else "Nenhuma"
+    preference_text = ", ".join(preferences) if preferences else "Nenhuma"
+    
+    # Criar prompt para OpenAI
+    prompt = f"""Sou o Coach Atlas, um treinador especialista em nutrição brasileira. Crie um plano alimentar personalizado para 1 DIA.
 
 PERFIL DO CLIENTE:
-- Peso atual: {weight}kg
-- Altura: {height}cm  
-- Idade: {age} anos
-- Peso alvo: {target_weight}kg
-- Objetivo: {objetivo} ({objetivo_text})
-- Nível de atividade: {activity_level}
-- Calorias diárias recomendadas: {calories} kcal
-- Restrições: {restriction_text if restriction_text else "Nenhuma"}
-- Preferências: {preference_text if preference_text else "Nenhuma"}
+- Peso: {weight}kg | Altura: {height}cm | Idade: {age} anos
+- Objetivo: {objetivo} | Meta de peso: {target_weight}kg  
+- Atividade: {activity_level} | Calorias: {calories} kcal/dia
+- Restrições: {restriction_text}
+- Preferências: {preference_text}
 
-IMPORTANTE: Ajuste as porções e alimentos baseado no OBJETIVO do cliente ({objetivo}):
+{previous_foods_analysis}
 
-MODELO POR REFEIÇÃO PERSONALIZADA (mesmo padrão todos os 7 dias):
+INSTRUÇÕES OBRIGATÓRIAS:
+1. Todos os alimentos devem ter medidas em GRAMAS (g) ou MILILITROS (ml)
+2. Use apenas alimentos brasileiros comuns
+3. Varie os alimentos para evitar monotonia
+4. Inclua 5-6 refeições: Café da manhã, Lanche manhã, Almoço, Lanche tarde, Jantar, Ceia
 
-CAFÉ DA MANHÃ ({int(calories * 0.2)}-{int(calories * 0.25)} kcal):
-- Carboidratos: {"porções menores" if objetivo == "EMAGRECER" else "porções normais" if objetivo == "MANTER PESO" else "porções maiores"}: arroz doce, pão francês, tapioca, aveia, biscoito integral, banana
-- Proteínas (PRIORIDADE para {objetivo}): ovos, leite, iogurte natural, queijo minas, requeijão
-- Gorduras boas: {"1 col" if objetivo == "EMAGRECER" else "1-2 col"}: azeite, manteiga, castanhas, amendoim
-- Frutas: banana, maçã, mamão, laranja, melancia
+Retorne APENAS um JSON válido neste formato:
+{{
+    "day": 1,
+    "meals": [
+        {{
+            "name": "Café da manhã",
+            "time": "07:00",
+            "foods": [
+                {{"name": "Pão francês", "quantity": "75g"}},
+                {{"name": "Ovo mexido", "quantity": "120g"}},
+                {{"name": "Suco de laranja", "quantity": "200ml"}}
+            ]
+        }}
+    ]
+}}"""
 
-ALMOÇO ({int(calories * 0.35)}-{int(calories * 0.4)} kcal):
-- Carboidratos: {"porções reduzidas" if objetivo == "EMAGRECER" else "porções normais" if objetivo == "MANTER PESO" else "porções aumentadas"}: arroz branco, feijão carioca, batata, macarrão, farinha de mandioca
-- Proteínas (ESSENCIAL para {objetivo}): frango grelhado, carne de panela, peixe, ovo cozido
-- Gorduras boas: {"1 col" if objetivo == "EMAGRECER" else "1-2 col"}: óleo de soja, azeite de oliva
-- Verduras/Legumes (À VONTADE - especialmente para emagrecimento): alface, tomate, cenoura, abobrinha, chuchu, repolho
-
-LANCHE ({int(calories * 0.1)}-{int(calories * 0.15)} kcal):
-- Carboidratos: {"evitar se emagrecer" if objetivo == "EMAGRECER" else "moderado"}: biscoito água e sal, pão de forma, fruta
-- Proteínas (IMPORTANTE): queijo, iogurte, leite
-- Gorduras: {"evitar" if objetivo == "EMAGRECER" else "1 col"}: castanhas, amendoim
-
-JANTAR ({int(calories * 0.25)}-{int(calories * 0.3)} kcal):
-- Carboidratos: {"REDUZIR para emagrecimento" if objetivo == "EMAGRECER" else "porções normais"}: arroz, batata cozida, macarrão, pão
-- Proteínas (PRIORIDADE no jantar): frango desfiado, ovo, queijo, sardinha
-- Gorduras: {"mínimo" if objetivo == "EMAGRECER" else "1 col"}: azeite, óleo
-- Verduras/Legumes (AUMENTAR à vontade): salada verde, sopa de legumes, abobrinha refogada
-
-ESTRUTURA JSON:
-{{"day":1,"meals":[{{"type":"breakfast","carbs_foods":["arroz doce","pão francês","tapioca","aveia","biscoito integral","banana"],"protein_foods":["ovos","leite","iogurte natural","queijo minas"],"fat_foods":["azeite","manteiga","castanhas","amendoim"],"vegetables":["banana","maçã","mamão","laranja"]}},{{"type":"lunch","carbs_foods":["arroz branco","feijão carioca","batata","macarrão"],"protein_foods":["frango grelhado","carne de panela","peixe","ovo cozido"],"fat_foods":["óleo de soja","azeite"],"vegetables":["alface","tomate","cenoura","abobrinha","chuchu"]}},{{"type":"afternoon_snack","carbs_foods":["biscoito água e sal","pão de forma","fruta"],"protein_foods":["queijo","iogurte","leite"],"fat_foods":["castanhas","amendoim"],"vegetables":[]}},{{"type":"dinner","carbs_foods":["arroz","batata cozida","macarrão","pão"],"protein_foods":["frango desfiado","ovo","queijo","sardinha"],"fat_foods":["azeite","óleo"],"vegetables":["salada verde","sopa de legumes","abobrinha refogada"]}}]}}
-
-REGRAS IMPORTANTES PERSONALIZADAS:
-- Use APENAS alimentos brasileiros comuns (arroz, feijão, frango, etc)
-- {restriction_text}
-- {preference_text}
-- OBJETIVO {objetivo}: {"Foque em proteínas e verduras, reduza carboidratos" if objetivo == "EMAGRECER" else "Equilibre todos os grupos" if objetivo == "MANTER PESO" else "Aumente porções de todos os grupos, especialmente carboidratos"}
-- ATIVIDADE {activity_level}: {"Mais carboidratos pré e pós treino" if activity_level in ["alto", "muito alto"] else "Carboidratos moderados"}
-- IDADE {age} anos: {"Metabolismo mais lento, porções menores" if age > 50 else "Metabolismo normal"}
-- Separe por grupos: carbs_foods, protein_foods, fat_foods, vegetables  
-- Alimentos específicos, não receitas
-- Variedade em cada grupo para escolha do usuário
-- Ajuste as quantidades de alimentos baseado no perfil: peso {weight}kg → {target_weight}kg
-
-Retorne APENAS o JSON de 1 dia modelo personalizado, sem explicações."""
-
-    print(f"[DEBUG] Chamando OpenAI com prompt de {len(prompt)} chars")
-    
     try:
-    
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
             response_format={"type": "json_object"},
             temperature=0.7,
-            max_tokens=4000
+            max_tokens=2000
         )
         
         print(f"[DEBUG] OpenAI respondeu com sucesso")
         
-        import json
-        import re
-        
-        # Pega a resposta
         content = response.choices[0].message.content
         print(f"[DEBUG] Content length: {len(content)}")
         
-        # Remove possíveis markdown ou texto extra
-        content = re.sub(r'^```json\s*', '', content)
-        content = re.sub(r'\s*```$', '', content)
-        content = content.strip()
+        result = json.loads(content)
+        print(f"[DEBUG] JSON parseado com sucesso. Keys: {list(result.keys())}")
         
-        # Tenta fazer parse
-        try:
-            result = json.loads(content)
-            print(f"[DEBUG] JSON parseado com sucesso. Keys: {list(result.keys()) if isinstance(result, dict) else 'Not dict'}")
-            
-            # Converter para estrutura esperada (compatibilidade com sistema antigo)
-            if 'day' in result and 'meals' in result:
-                # Nova estrutura: transforma em formato antigo com array de dias
-                compatible_result = {
-                    "days": [result]  # Coloca o dia único dentro do array esperado
-                }
-                print(f"[DEBUG] Convertido para estrutura compatível com {len(compatible_result['days'])} dia(s)")
-                return compatible_result
-            
-            return result
-        except json.JSONDecodeError as e:
-            print(f"[DEBUG] Erro ao parsear JSON: {e}")
-            # Se falhar, salva para debug
-            with open('error_response.txt', 'w', encoding='utf-8') as f:
-                f.write(f"ERRO: {e}\n\n")
-                f.write(f"POSIÇÃO: linha {e.lineno}, coluna {e.colno}, char {e.pos}\n\n")
-                f.write("RESPOSTA:\n")
-                f.write(content)
-            raise Exception(f"Erro ao parsear JSON da OpenAI. Detalhes salvos em error_response.txt: {e}")
-            
+        # Converter para estrutura esperada
+        if 'day' in result and 'meals' in result:
+            compatible_result = {
+                "days": [result]
+            }
+            print(f"[DEBUG] Convertido para estrutura compatível")
+            return compatible_result
+        
+        return result
+        
     except Exception as e:
-        print(f"[DEBUG] Erro geral na chamada OpenAI: {e}")
+        print(f"[DEBUG] Erro na geração do plano: {e}")
         raise
+
+
+def get_ai_response(message: str, user_profile: dict = None) -> str:
+    """
+    Resposta geral do Coach Atlas para chat
+    """
+    try:
+        prompt = f"""Sou o Coach Atlas, um personal trainer brasileiro especialista em fitness e nutrição.
+
+Mensagem do usuário: {message}
+
+Responda de forma motivadora, técnica quando necessário, e sempre em português brasileiro.
+Use emojis e seja encorajador. Mantenha o tom profissional mas amigável."""
+
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=1000
+        )
+        
+        return response.choices[0].message.content
+        
+    except Exception as e:
+        print(f"[DEBUG] Erro no chat: {e}")
+        return "Desculpe, estou com dificuldades técnicas no momento. Tente novamente em instantes! 💪"
 
 
 def generate_workout_plan(questionnaire_data: dict) -> dict:
     """
-    Gera plano de treino personalizado baseado no questionário
-    
-    Args:
-        questionnaire_data: Dados do questionário incluindo problemas de saúde, tipo de treino, etc.
-        
-    Returns:
-        Dicionário com plano de treino personalizado
+    Gera plano de treino usando OpenAI
     """
+    # Extrair dados do perfil (se existirem)
+    age = questionnaire_data.get('age', 30)
+    weight = questionnaire_data.get('weight', 70)
+    height = questionnaire_data.get('height', 170)
+    activity_level = questionnaire_data.get('activity_level', 'MODERADO')
+    objective = questionnaire_data.get('objective', 'MANTER PESO')
     
-    # Extrair dados do questionário
-    health_problems = questionnaire_data.get('healthProblems', {})
-    injury_history = questionnaire_data.get('injuryHistory', {})
-    fitness_level = questionnaire_data.get('fitnessLevel', 'iniciante')
-    exercise_preferences = questionnaire_data.get('exercisePreferences', [])
-    workout_type = questionnaire_data.get('workoutType', 'casa')
-    days_per_week = questionnaire_data.get('daysPerWeek', 3)
-    selected_days = questionnaire_data.get('selectedDays', [])
+    # Extrair dados específicos do questionário de treino
+    fitness_level = questionnaire_data.get('fitness_level', 'intermediario')
+    preferred_exercises = questionnaire_data.get('preferred_exercises', [])
+    exercises_to_avoid = questionnaire_data.get('exercises_to_avoid', [])
+    workout_type = questionnaire_data.get('workout_type', 'home')
+    days_per_week = questionnaire_data.get('days_per_week', 3)
+    session_duration = questionnaire_data.get('session_duration', 45)
+    available_days = questionnaire_data.get('available_days', [])
     
-    # Processar problemas de saúde
-    health_issues = []
-    if health_problems.get('muscular', False):
-        if health_problems.get('muscularDetails'):
-            health_issues.append(f"Problemas musculares: {health_problems.get('muscularDetails')}")
-        else:
-            health_issues.append("Problemas musculares")
-    if health_problems.get('respiratory', False):
-        if health_problems.get('respiratoryDetails'):
-            health_issues.append(f"Problemas respiratórios: {health_problems.get('respiratoryDetails')}")
-        else:
-            health_issues.append("Problemas respiratórios")
-    if health_problems.get('cardiac', False):
-        if health_problems.get('cardiacDetails'):
-            health_issues.append(f"Problemas cardíacos: {health_problems.get('cardiacDetails')}")
-        else:
-            health_issues.append("Problemas cardíacos")
-    if health_problems.get('joint', False):
-        if health_problems.get('jointDetails'):
-            health_issues.append(f"Problemas articulares: {health_problems.get('jointDetails')}")
-        else:
-            health_issues.append("Problemas articulares")
+    # Problemas de saúde
+    has_musculoskeletal = questionnaire_data.get('has_musculoskeletal_problems', False)
+    has_respiratory = questionnaire_data.get('has_respiratory_problems', False)
+    has_cardiac = questionnaire_data.get('has_cardiac_problems', False)
+    previous_injuries = questionnaire_data.get('previous_injuries', [])
     
-    # Processar lesões
-    injuries = []
-    if injury_history.get('hasInjuries', False) and injury_history.get('injuryDetails'):
-        injuries.append(injury_history.get('injuryDetails'))
+    # Formatar listas para o prompt
+    preferred_str = ", ".join(preferred_exercises) if preferred_exercises else "Nenhuma preferência específica"
+    avoid_str = ", ".join(exercises_to_avoid) if exercises_to_avoid else "Nenhuma restrição"
+    days_str = ", ".join(available_days) if available_days else "Flexível"
+    injuries_str = ", ".join(previous_injuries) if previous_injuries else "Nenhuma"
     
-    # Definir equipamentos baseado no tipo de treino
-    equipment_available = "academia completa com todos os equipamentos" if workout_type == 'academia' else "apenas o peso corporal (sem equipamentos)"
-    
-    health_text = "Nenhum problema de saúde relatado" if not health_issues else "; ".join(health_issues)
-    injury_text = "Nenhuma lesão relatada" if not injuries else "; ".join(injuries)
-    preferences_text = "Nenhuma preferência específica" if not exercise_preferences else ", ".join(exercise_preferences)
-    
-    # Ajustar intensidade baseado no nível
-    intensity_guide = {
-        'iniciante': "exercícios básicos, baixa intensidade, foco na técnica correta",
-        'intermediario': "exercícios moderados, intensidade média, progressão gradual",
-        'avancado': "exercícios desafiadores, alta intensidade, variações avançadas"
-    }
-    
-    workout_location = "em casa" if workout_type == 'casa' else "na academia"
-    
-    prompt = f"""Crie um PLANO DE TREINO personalizado para {days_per_week} dias por semana ({workout_location}).
+    # Restrições de saúde
+    health_restrictions = []
+    if has_musculoskeletal:
+        health_restrictions.append("problemas musculoesqueléticos")
+    if has_respiratory:
+        health_restrictions.append("problemas respiratórios") 
+    if has_cardiac:
+        health_restrictions.append("problemas cardíacos")
+    health_str = ", ".join(health_restrictions) if health_restrictions else "Nenhuma restrição de saúde"
 
-PERFIL DO CLIENTE:
-- Nível de condicionamento: {fitness_level} ({intensity_guide.get(fitness_level, "moderado")})
-- Problemas de saúde: {health_text}
-- Histórico de lesões: {injury_text}
-- Preferências de exercícios: {preferences_text}
-- Local de treino: {workout_type}
-- Equipamentos disponíveis: {equipment_available}
-- Frequência: {days_per_week} dias por semana
-- Dias da semana: {', '.join(selected_days) if selected_days else 'Não especificado'}
+    # Definir exercícios específicos por tipo
+    if workout_type == "home":
+        equipment_instructions = """
+🏠 TREINO EM CASA - EQUIPAMENTOS LIMITADOS:
+EXERCÍCIOS PERMITIDOS APENAS:
+- Flexões: normal, inclinada, declinada, diamante
+- Agachamentos: livre, búlgaro, jump squat, avanço
+- Pranchas: normal, lateral, dinâmica
+- Abdominais: crunch, bicicleta, mountain climber
+- Polichinelos, burpees, lunges, ponte de glúteos
+- Rosca direta com halteres leves, desenvolvimento com halteres
+- Remada curvada com halteres, elevação lateral
 
-DIRETRIZES IMPORTANTES:
-- SEMPRE considere os problemas de saúde e lesões para EVITAR exercícios contraindicados
-- Para problemas cardíacos/respiratórios: exercícios de baixa intensidade, monitoramento constante
-- Para problemas articulares: evitar impacto, priorizar mobilidade e fortalecimento
-- Para lesões: modificações específicas ou exercícios alternativos
-- Nível {fitness_level}: {intensity_guide.get(fitness_level, "moderado")}
+EXERCÍCIOS ABSOLUTAMENTE PROIBIDOS:
+❌ Supino (qualquer tipo)
+❌ Pull-ups, barra fixa
+❌ Leg press, máquinas
+❌ Equipamentos pesados
+❌ Barras olímpicas
+❌ Crucifixo (substitua por flexões)
 
-ESTRUTURA DO TREINO:
-- Aquecimento (5-10 min): preparação do corpo
-- Treino principal (20-40 min): exercícios específicos por grupo muscular
-- Alongamento (5-10 min): relaxamento e flexibilidade
+REGRA CRÍTICA: Se for CASA, use APENAS peso corporal + halteres leves!
+"""
+    else:
+        equipment_instructions = """
+🏢 TREINO NA ACADEMIA - EQUIPAMENTOS COMPLETOS:
+- Máquinas de musculação profissionais
+- Supino livre e máquina
+- Leg press, cadeira extensora
+- Barras olímpicas, halteres variados
+- Cabos, polias, esteiras, bicicletas
+- Todos os equipamentos disponíveis
+"""
 
-{"TREINO EM CASA (sem equipamentos):" if workout_type == 'casa' else "TREINO NA ACADEMIA:"}
-{"- Use apenas peso corporal, exercícios funcionais" if workout_type == 'casa' else "- Use equipamentos disponíveis: halteres, barras, máquinas, etc."}
-{"- Foque em: flexões, agachamentos, pranchas, burpees, etc." if workout_type == 'casa' else "- Foque em: exercícios compostos e isolados com equipamentos"}
+    prompt = f"""Sou o Coach Atlas, especialista em treinos brasileiros. Crie um plano de treino personalizado para 1 SEMANA.
 
-FORMATO JSON OBRIGATÓRIO:
-{{"workout_type":"{workout_type}","days_per_week":{days_per_week},"fitness_level":"{fitness_level}","health_considerations":"{health_text}","workout_days":[{{"day_name":"Dia 1","muscle_groups":["peitoral","tríceps"],"exercises":[{{"name":"Flexão de braço","sets":3,"reps":"8-12","rest":"60s","instructions":"Mantenha o corpo reto, desça até quase tocar o peito no chão","modifications":"Se necessário, apoie os joelhos"}},{{"name":"Flexão diamante","sets":2,"reps":"5-8","rest":"60s","instructions":"Forme um diamante com as mãos, foque no tríceps","modifications":"Versão mais fácil: flexão normal"}}],"warm_up":[{{"name":"Rotação de braços","duration":"30s","instructions":"Movimentos circulares com os braços"}},{{"name":"Alongamento dinâmico","duration":"1min","instructions":"Movimentos suaves para aquecer"}}],"cool_down":[{{"name":"Alongamento de peito","duration":"30s","instructions":"Estique os braços para trás"}},{{"name":"Alongamento de tríceps","duration":"30s","instructions":"Puxe o cotovelo atrás da cabeça"}}]}},{{"day_name":"Dia 2","muscle_groups":["pernas","glúteos"],"exercises":[...],"warm_up":[...],"cool_down":[...]}}]}}
+📊 PERFIL COMPLETO:
+- Idade: {age} anos | Peso: {weight}kg | Altura: {height}cm
+- Objetivo: {objective} | Nível de condicionamento: {fitness_level}
+- Tipo de treino: {workout_type} | Dias por semana: {days_per_week}
+- Duração por sessão: {session_duration} minutos
+- Dias disponíveis: {days_str}
 
-REGRAS ESPECÍFICAS:
-1. SEGURANÇA PRIMEIRO: Adapte exercícios para limitações de saúde
-2. PROGRESSÃO: Adeque intensidade ao nível {fitness_level}
-3. VARIEDADE: Inclua diferentes tipos de exercícios
-4. PRATICIDADE: {'Exercícios que podem ser feitos em casa' if workout_type == 'casa' else 'Use equipamentos da academia de forma eficiente'}
-5. DIAS: Crie plano para exatamente {days_per_week} dias diferentes
-6. GRUPOS MUSCULARES: Distribua de forma equilibrada
-7. MODIFICAÇÕES: Sempre inclua adaptações para iniciantes/limitações
+💪 PREFERÊNCIAS E RESTRIÇÕES:
+- Exercícios preferidos: {preferred_str}
+- Exercícios para evitar: {avoid_str}
+- Lesões anteriores: {injuries_str}
+- Restrições de saúde: {health_str}
 
-IMPORTANTE: 
-- Se há problemas cardíacos/respiratórios: intensidade baixa, pausas frequentes
-- Se há problemas articulares: evitar impacto, foco em mobilidade
-- Se há lesões: exercícios alternativos seguros
-- Nível {fitness_level}: ajuste séries, repetições e dificuldade adequadamente
+🎯 REGRAS OBRIGATÓRIAS:
+1. Treinar TODOS os grupos musculares antes de repetir
+2. Respeitar {days_per_week} dias de treino por semana
+3. Sessões de {session_duration} minutos cada
+4. Alternar grupos musculares adequadamente
+5. Incluir exercícios compostos e isolados
+6. Adaptar para nível {fitness_level}
+7. CRÍTICO: Tipo de treino é "{workout_type}" - RESPEITE RIGOROSAMENTE!
 
-Retorne APENAS o JSON do plano completo, sem explicações."""
+{equipment_instructions}
 
-    print(f"[DEBUG] Chamando OpenAI para treino com prompt de {len(prompt)} chars")
-    
+DISTRIBUIÇÃO BALANCEADA (exemplo):
+- Segunda: Peito + Tríceps
+- Terça: Pernas + Glúteos
+- Quarta: Costas + Bíceps  
+- Quinta: Descanso ativo
+- Sexta: Ombros + Abdômen
+- Sábado: Cardio + Flexibilidade
+- Dia 7: Descanso
+
+IMPORTANTE: Use EXATAMENTE a estrutura JSON abaixo com 'days' (não 'workout_schedule'):
+
+{{
+    "week": 1,
+    "days": [
+        {{
+            "day": 1,
+            "muscle_groups": ["Peito", "Tríceps"],
+            "exercises": [
+                {{"name": "Flexão de braços", "sets": 3, "reps": "10-12", "rest": "45s"}},
+                {{"name": "Flexão diamante", "sets": 3, "reps": "8-10", "rest": "60s"}}
+            ]
+        }}
+    ]
+}}"""
+
+    # Adicionar instrução final muito clara
+    prompt += """
+
+ATENÇÃO: O JSON deve ter a chave 'days', NÃO 'workout_schedule'. 
+Estrutura obrigatória: {"week": 1, "days": [...]}
+Não altere esta estrutura!"""
+
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o",
             messages=[{"role": "user", "content": prompt}],
             response_format={"type": "json_object"},
             temperature=0.7,
-            max_tokens=4000
+            max_tokens=2000
         )
         
-        print(f"[DEBUG] OpenAI respondeu com sucesso para treino")
-        
-        import json
-        import re
-        
-        # Pega a resposta
         content = response.choices[0].message.content
-        print(f"[DEBUG] Workout content length: {len(content)}")
+        result = json.loads(content)
         
-        # Remove possíveis markdown ou texto extra
-        content = re.sub(r'^```json\s*', '', content)
-        content = re.sub(r'\s*```$', '', content)
-        content = content.strip()
+        # CORREÇÃO: Converter workout_schedule para days se necessário
+        if 'workout_schedule' in result and 'days' not in result:
+            result['days'] = result.pop('workout_schedule')
+            print("[AI_SERVICE] ✅ Convertido 'workout_schedule' para 'days'")
         
-        # Tenta fazer parse
-        try:
-            result = json.loads(content)
-            print(f"[DEBUG] Workout JSON parseado com sucesso. Keys: {list(result.keys()) if isinstance(result, dict) else 'Not dict'}")
-            return result
-        except json.JSONDecodeError as e:
-            print(f"[DEBUG] Erro ao parsear workout JSON: {e}")
-            # Se falhar, salva para debug
-            with open('error_workout_response.txt', 'w', encoding='utf-8') as f:
-                f.write(f"ERRO: {e}\n\n")
-                f.write(f"POSIÇÃO: linha {e.lineno}, coluna {e.colno}, char {e.pos}\n\n")
-                f.write("RESPOSTA:\n")
-                f.write(content)
-            raise Exception(f"Erro ao parsear JSON do treino da OpenAI. Detalhes salvos em error_workout_response.txt: {e}")
-            
+        return result
+        
     except Exception as e:
-        print(f"[DEBUG] Erro geral na chamada OpenAI para treino: {e}")
+        print(f"[DEBUG] Erro na geração do treino: {e}")
         raise
-
-def generate_workout_plan(user_profile, questionnaire_data):
-    """
-    Gera um plano de treino personalizado baseado no perfil do usuário e questionário
-    """
-    try:
-        print(f"[AI_SERVICE] ===== INÍCIO DEBUG TREINO =====")
-        print(f"[AI_SERVICE] Gerando plano de treino para usuário...")
-        print(f"[AI_SERVICE] 📊 Dados do questionário COMPLETO: {questionnaire_data}")
-        print(f"[AI_SERVICE] 👤 Perfil do usuário COMPLETO: {user_profile}")
-        
-        # Extrair dados específicos para validação
-        days_per_week = questionnaire_data.get('days_per_week', 3)
-        available_days = questionnaire_data.get('available_days', [])
-        workout_type = questionnaire_data.get('workout_type', 'casa')
-        session_duration = questionnaire_data.get('session_duration', 60)
-        
-        print(f"[AI_SERVICE] 🔍 DADOS EXTRAÍDOS:")
-        print(f"[AI_SERVICE] - days_per_week: {days_per_week} (tipo: {type(days_per_week)})")
-        print(f"[AI_SERVICE] - available_days: {available_days}")
-        print(f"[AI_SERVICE] - workout_type: {workout_type}")
-        print(f"[AI_SERVICE] - session_duration: {session_duration}")
-        
-        if days_per_week != 4:
-            print(f"[AI_SERVICE] ⚠️ PROBLEMA: days_per_week deveria ser 4 mas é {days_per_week}")
-        
-        # Construir o prompt personalizado para treino
-        workout_prompt = f"""
-        Você é um personal trainer especializado. 
-        
-        ATENÇÃO CRÍTICA: O usuário quer treinar EXATAMENTE {days_per_week} DIAS POR SEMANA.
-        NÃO CRIE MENOS DIAS. NÃO SUGIRA MENOS DIAS. CRIE EXATAMENTE {days_per_week} DIAS.
-        
-        PERFIL DO USUÁRIO:
-        - Nome: {user_profile.get('name', 'Não informado')}
-        - Idade: {user_profile.get('age', 'Não informado')} anos
-        - Peso: {user_profile.get('weight', 'Não informado')} kg
-        - Altura: {user_profile.get('height', 'Não informado')} cm
-        - Sexo: {user_profile.get('gender', 'Não informado')}
-        - Objetivo: Emagrecimento
-        
-        QUESTIONÁRIO DE TREINO:
-        - Problemas musculoesqueléticos: {questionnaire_data.get('has_musculoskeletal_problems', False)} - {questionnaire_data.get('musculoskeletal_details', 'Não informado')}
-        - Problemas respiratórios: {questionnaire_data.get('has_respiratory_problems', False)} - {questionnaire_data.get('respiratory_details', 'Não informado')}
-        - Problemas cardíacos: {questionnaire_data.get('has_cardiac_problems', False)} - {questionnaire_data.get('cardiac_details', 'Não informado')}
-        - Lesões anteriores: {questionnaire_data.get('previous_injuries', [])}
-        - Nível de condicionamento: {questionnaire_data.get('fitness_level', 'Não informado')}
-        - Preferências de exercício: {questionnaire_data.get('preferred_exercises', [])}
-        - Exercícios a evitar: {questionnaire_data.get('exercises_to_avoid', [])}
-        - Tipo de treino: {workout_type}
-        - DIAS POR SEMANA: {days_per_week} (OBRIGATÓRIO RESPEITAR)
-        - Duração da sessão: {session_duration} minutos
-        - Dias disponíveis: {available_days}
-        
-        REGRAS OBRIGATÓRIAS:
-        1. ⚠️ CRIAR EXATAMENTE {days_per_week} DIAS DE TREINO - NÃO MENOS, NÃO MAIS
-        2. Tipo de local: {"Academia" if workout_type == "gym" else "Casa"}
-        3. Respeitar limitações de saúde e lesões anteriores
-        4. Incluir aquecimento e alongamento em cada dia
-        5. Duração: {session_duration} minutos por sessão
-        6. Usar preferencialmente os dias: {', '.join(available_days) if available_days else 'Qualquer dia'}
-        7. Focar em exercícios preferidos: {', '.join(questionnaire_data.get('preferred_exercises', []))}
-        8. ⚠️ SE O USUÁRIO QUER {days_per_week} DIAS, VOCÊ DEVE CRIAR {days_per_week} ENTRADAS NO CRONOGRAMA
-        
-        FORMATO DE RESPOSTA:
-        ⚠️ CRÍTICO: Você DEVE criar EXATAMENTE {days_per_week} entradas no array workout_schedule.
-        
-        Exemplo para {days_per_week} dias:
-        {{
-            "plan_name": "Plano de Treino {workout_type.title()} - {days_per_week} Dias",
-            "plan_summary": "Plano de {days_per_week} dias por semana focado em emagrecimento e condicionamento físico",
-            "workout_schedule": [
-                {{
-                    "day": "{available_days[0] if available_days else 'Dia 1'}",
-                    "focus": "Treino A - Peito, Ombros e Tríceps",
-                    "exercises": [
-                        {{
-                            "name": "Flexão de Braços",
-                            "sets": "3",
-                            "reps": "10-15",
-                            "rest": "60 segundos",
-                            "instructions": "Mantenha o corpo alinhado, desça controladamente",
-                            "equipment": "Peso corporal"
-                        }}
-                    ]
-                }},
-                {{
-                    "day": "{available_days[1] if len(available_days) > 1 else 'Dia 2'}",
-                    "focus": "Treino B - Costas e Bíceps",
-                    "exercises": [
-                        {{
-                            "name": "Puxada na Barra",
-                            "sets": "3",
-                            "reps": "8-12",
-                            "rest": "90 segundos", 
-                            "instructions": "Puxe com controle, focando nas costas",
-                            "equipment": "Barra fixa"
-                        }}
-                    ]
-                }}
-                // ⚠️ CONTINUE ATÉ COMPLETAR TODOS OS {days_per_week} DIAS
-            ],
-            "important_notes": [
-                "Respeitar problemas respiratórios (asma) - intensidade moderada",
-                "Cuidado com lesões no ombro - evitar sobrecarga",
-                "Descanso adequado entre as séries"
-            ],
-            "progression_tips": "Aumente gradualmente a intensidade a cada 2 semanas"
-        }}
-        
-        ⚠️ VALIDAÇÃO FINAL: 
-        - Conte as entradas em workout_schedule
-        - DEVE ter exatamente {days_per_week} entradas
-        - Se tiver menos, ADICIONE mais dias
-        - Se tiver mais, REMOVA dias extras
-        
-        IMPORTANTE: 
-        1. Retorne APENAS o JSON válido, sem texto adicional antes ou depois
-        2. Certifique-se de que todas as strings estão entre aspas duplas
-        3. Escape caracteres especiais (aspas, quebras de linha) nas strings
-        4. Não inclua comentários ou explicações no JSON
-        5. Termine todas as strings e feche todas as chaves corretamente
-        """
-        
-        print(f"[AI_SERVICE] 📝 PROMPT COMPLETO ENVIADO:")
-        print(f"[AI_SERVICE] {workout_prompt}")
-        print(f"[AI_SERVICE] ===== FIM DO PROMPT =====")
-        print(f"[AI_SERVICE] 🚀 Enviando para IA agora...")
-        
-        try:
-            # Gerar resposta usando o serviço de IA
-            messages = [{"role": "user", "content": workout_prompt}]
-            ai_response = get_ai_response(messages, user_profile)
-            
-            print(f"[AI_SERVICE] Resposta da IA recebida: {ai_response[:200]}...")
-            
-            # Validar se a resposta tem o número correto de dias
-            try:
-                parsed_response = json.loads(ai_response)
-                workout_schedule = parsed_response.get('workout_schedule', [])
-                actual_days = len(workout_schedule)
-                
-                print(f"[AI_SERVICE] 📊 Dias solicitados: {days_per_week}, Dias criados: {actual_days}")
-                
-                if actual_days != days_per_week:
-                    print(f"[AI_SERVICE] ⚠️ ERRO: IA criou {actual_days} dias mas usuário quer {days_per_week} dias!")
-                    
-                    # Tentar corrigir automaticamente
-                    if actual_days < days_per_week:
-                        print(f"[AI_SERVICE] 🔧 Tentando regenerar com prompt mais específico...")
-                        
-                        # Prompt mais agressivo
-                        strict_prompt = f"""
-                        INSTRUÇÃO CRÍTICA: Crie um plano com EXATAMENTE {days_per_week} dias de treino.
-                        
-                        O usuário quer {days_per_week} dias por semana de treino.
-                        Você DEVE criar {days_per_week} entradas no array workout_schedule.
-                        
-                        Dados: {questionnaire_data}
-                        
-                        Retorne apenas um JSON válido com {days_per_week} dias no workout_schedule.
-                        """
-                        
-                        strict_messages = [{"role": "user", "content": strict_prompt}]
-                        ai_response = get_ai_response(strict_messages, user_profile)
-                        
-                        print(f"[AI_SERVICE] 🔄 Resposta corrigida: {ai_response[:200]}...")
-            
-            except json.JSONDecodeError:
-                print("[AI_SERVICE] ⚠️ Resposta não é JSON válido, mas retornando assim mesmo")
-            
-            return ai_response
-            
-        except Exception as e:
-            print(f"Erro ao gerar plano de treino: {str(e)}")
-            raise Exception(f"Erro na geração do treino: {str(e)}")
-
-    except Exception as e:
-        print(f"Erro geral no serviço de treino: {str(e)}")
-        raise Exception(f"Erro no serviço de treino: {str(e)}")

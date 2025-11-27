@@ -12,7 +12,9 @@ router = APIRouter(prefix="/meal-plan", tags=["Meal Plan"])
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_meal_plan(current_user = Depends(get_current_user)):
     """Gera e salva novo plano alimentar usando IA"""
+    print(f"[DEBUG] ===== FUNÇÃO CREATE_MEAL_PLAN INICIADA =====")
     user_id = current_user['id']
+    print(f"[DEBUG] User ID recebido: {user_id}")
     
     # Busca perfil do usuário no banco
     with db.get_db_cursor() as cursor:
@@ -41,12 +43,46 @@ def create_meal_plan(current_user = Depends(get_current_user)):
         'dietary_preferences': []    # Por enquanto vazio
     }
     
+    # Buscar planos anteriores para evitar repetições
+    print(f"[DEBUG] ===== BUSCANDO PLANOS ANTERIORES =====")
+    print(f"[DEBUG] User ID para busca: {user_id}")
+    previous_plans = []
+    with db.get_db_cursor() as cursor:
+        print(f"[DEBUG] Executando query para buscar planos anteriores...")
+        cursor.execute("""
+            SELECT plan_data, plan_name, created_at
+            FROM saved_meal_plans 
+            WHERE user_id = %s 
+            ORDER BY created_at DESC 
+            LIMIT 3
+        """, (user_id,))
+        print(f"[DEBUG] Query executada com sucesso")
+        
+        previous_plans_rows = cursor.fetchall()
+        for row in previous_plans_rows:
+            previous_plans.append({
+                'plan_name': row['plan_name'],
+                'plan_data': row['plan_data'],
+                'created_at': row['created_at'].isoformat()
+            })
+    
+    print(f"[DEBUG] Encontrados {len(previous_plans)} planos anteriores")
+    
+    # Debug detalhado dos planos anteriores
+    if previous_plans:
+        print(f"[DEBUG] ===== PLANOS ANTERIORES ENCONTRADOS =====")
+        for i, plan in enumerate(previous_plans):
+            print(f"[DEBUG] Plano {i+1}: {plan['plan_name']} (criado em {plan['created_at']})")
+            print(f"[DEBUG] Tipo dos dados: {type(plan['plan_data'])}")
+    else:
+        print(f"[DEBUG] Nenhum plano anterior encontrado - será o primeiro plano")
+    
     # Gera plano com IA e salva no banco
     try:
         print(f"[DEBUG] Gerando plano para usuário {user_id}")
         print(f"[DEBUG] Perfil: {user_profile}")
         
-        ai_plan = generate_meal_plan(user_profile)
+        ai_plan = generate_meal_plan(user_profile, previous_plans)
         
         print(f"[DEBUG] Plano gerado com sucesso")
         print(f"[DEBUG] Tipo do plano: {type(ai_plan)}")
@@ -62,7 +98,8 @@ def create_meal_plan(current_user = Depends(get_current_user)):
                 "SELECT COALESCE(MAX(plan_number), 0) + 1 as next_number FROM saved_meal_plans WHERE user_id = %s",
                 (user_id,)
             )
-            next_number = cursor.fetchone()['next_number']
+            result = cursor.fetchone()
+            next_number = result[0] if result else 1
             
             # Inserir o plano
             plan_name = f"Plano Alimentar {next_number:02d}"
@@ -72,7 +109,7 @@ def create_meal_plan(current_user = Depends(get_current_user)):
                 RETURNING id
             """, (user_id, next_number, plan_name, json.dumps(ai_plan)))
             
-            plan_id = cursor.fetchone()['id']
+            plan_id = cursor.fetchone()[0]  # pg8000 retorna lista, não dict
             print(f"[DEBUG] Plano salvo com ID: {plan_id}, nome: {plan_name}")
         
         return {

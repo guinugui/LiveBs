@@ -28,26 +28,60 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
     try {
       print('[WORKOUT_DETAILS] 📋 Dados do plano: ${widget.plan.planName}');
       print('[WORKOUT_DETAILS] 📊 workoutData length: ${widget.plan.workoutData.length}');
-      print('[WORKOUT_DETAILS] 📄 workoutData content: ${widget.plan.workoutData}');
+      print('[WORKOUT_DETAILS] 📊 workoutData tipo: ${widget.plan.workoutData.runtimeType}');
+      print('[WORKOUT_DETAILS] 📄 workoutData content (300 chars): ${widget.plan.workoutData.substring(0, widget.plan.workoutData.length > 300 ? 300 : widget.plan.workoutData.length)}');
       
       if (widget.plan.workoutData.isNotEmpty && widget.plan.workoutData != '{}') {
-        String jsonString = widget.plan.workoutData;
+        String rawData = widget.plan.workoutData;
         
-        print('[WORKOUT_DETAILS] 🔧 Tentando corrigir JSON malformado do PostgreSQL...');
-        
-        // Converter formato PostgreSQL para JSON válido
-        jsonString = _convertPostgreSQLToJson(jsonString);
-        
+        // PRIMEIRO: Tentar JSON parse direto (backend corrigido deve enviar JSON string válido)
         try {
-          _workoutData = json.decode(jsonString);
-        } catch (e) {
-          print('[WORKOUT_DETAILS] 🔄 Parse direto falhou, tentando método alternativo...');
+          print('[WORKOUT_DETAILS] 🎯 Tentando JSON parse direto...');
+          _workoutData = json.decode(rawData);
+          print('[WORKOUT_DETAILS] ✅ JSON parse direto bem-sucedido!');
           
-          // Se ainda não funcionar, tentar extrair dados manualmente
-          _workoutData = _extractDataManually(widget.plan.workoutData);
+          // Verificar se workout_schedule existe
+          if (_workoutData != null && _workoutData!['workout_schedule'] != null) {
+            var schedule = _workoutData!['workout_schedule'] as List<dynamic>;
+            print('[WORKOUT_DETAILS] 🎉 SUCESSO: ${schedule.length} dias encontrados no workout_schedule!');
+            
+            // Log detalhado de cada dia
+            for (int i = 0; i < schedule.length; i++) {
+              var day = schedule[i];
+              if (day is Map && day['exercises'] is List) {
+                var exercises = day['exercises'] as List;
+                print('[WORKOUT_DETAILS] 📅 Dia ${i + 1} (${day['day']}): ${exercises.length} exercícios');
+              }
+            }
+            return; // Sucesso! Não precisa tentar outros métodos
+          } else {
+            print('[WORKOUT_DETAILS] ⚠️ workout_schedule não encontrado no JSON válido');
+          }
+        } catch (e) {
+          print('[WORKOUT_DETAILS] ❌ JSON parse direto falhou: $e');
         }
         
-        print('[WORKOUT_DETAILS] ✅ Parse bem-sucedido: ${_workoutData?.keys}');
+        // SEGUNDO: Tentar converter formato PostgreSQL
+        print('[WORKOUT_DETAILS] 🔧 Tentando conversão PostgreSQL para JSON...');
+        try {
+          String jsonString = _convertPostgreSQLToJson(rawData);
+          _workoutData = json.decode(jsonString);
+          print('[WORKOUT_DETAILS] ✅ Conversão PostgreSQL bem-sucedida');
+          
+          if (_workoutData != null && _workoutData!['workout_schedule'] != null) {
+            var schedule = _workoutData!['workout_schedule'] as List<dynamic>;
+            print('[WORKOUT_DETAILS] 🎉 ${schedule.length} dias encontrados após conversão PostgreSQL!');
+            return;
+          }
+        } catch (e) {
+          print('[WORKOUT_DETAILS] ❌ Conversão PostgreSQL falhou: $e');
+        }
+        
+        // TERCEIRO: Método de extração manual como último recurso
+        print('[WORKOUT_DETAILS] 🔧 Usando método de extração manual...');
+        _workoutData = _extractDataManually(rawData);
+        
+        print('[WORKOUT_DETAILS] ✅ Extração manual concluída');
       } else {
         print('[WORKOUT_DETAILS] ❌ workoutData vazio ou inválido');
       }
@@ -314,11 +348,8 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
               
               const SizedBox(height: 16),
               
-              // Lista de Exercícios
-              if (dayData['exercises'] != null)
-                ...((dayData['exercises'] as List<dynamic>).map((exercise) {
-                  return _buildExerciseCard(exercise);
-                }).toList()),
+              // NOVO: Mini Manual Didático
+              _buildSimpleWorkoutGuide(dayData),
             ],
           ),
         ),
@@ -326,101 +357,146 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
     }).toList();
   }
 
-  Widget _buildExerciseCard(Map<String, dynamic> exercise) {
+  Widget _buildSimpleWorkoutGuide(Map<String, dynamic> dayData) {
+    String focus = dayData['focus']?.toString() ?? '';
+    Map<String, dynamic> guide = _generateWorkoutGuide(focus);
+    
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue[200]!),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Nome do exercício
-          Text(
-            exercise['name'] ?? 'Exercício',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          
-          const SizedBox(height: 8),
-          
-          // Informações do exercício (séries, reps, descanso)
-          Wrap(
-            spacing: 16,
-            runSpacing: 8,
+          Row(
             children: [
-              if (exercise['sets'] != null)
-                _buildExerciseInfo(Icons.repeat, 'Séries', exercise['sets']),
-              if (exercise['reps'] != null)
-                _buildExerciseInfo(Icons.fitness_center, 'Reps', exercise['reps']),
-              if (exercise['rest'] != null)
-                _buildExerciseInfo(Icons.timer, 'Descanso', exercise['rest']),
+              Icon(Icons.fitness_center, color: Colors.blue[700], size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'Mini Manual do Treino',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue[700],
+                ),
+              ),
             ],
           ),
-          
-          // Instruções
-          if (exercise['instructions'] != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.info_outline, size: 16, color: Colors.blue),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      exercise['instructions'],
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
+          const SizedBox(height: 16),
+          Text(
+            guide['instructions'],
+            style: const TextStyle(fontSize: 14, height: 1.5),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Grupos Musculares:',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.green[700],
             ),
-          ],
-          
-          // Equipamento
-          if (exercise['equipment'] != null) ...[
-            const SizedBox(height: 8),
-            Row(
+          ),
+          const SizedBox(height: 8),
+          Column(
+            children: guide['muscle_groups'].map<Widget>((group) => 
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  children: [
+                    Icon(Icons.arrow_right, color: Colors.green[600], size: 16),
+                    const SizedBox(width: 4),
+                    Expanded(child: Text(group, style: const TextStyle(fontSize: 13))),
+                  ],
+                ),
+              )
+            ).toList(),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.orange[100],
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.build, size: 16, color: Colors.grey),
+                Icon(Icons.warning, color: Colors.orange[700], size: 16),
                 const SizedBox(width: 8),
-                Text(
-                  'Equipamento: ${exercise['equipment']}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
+                Expanded(
+                  child: Text(
+                    guide['safety_tips'],
+                    style: const TextStyle(fontSize: 12, height: 1.4),
                   ),
                 ),
               ],
             ),
-          ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildExerciseInfo(IconData icon, String label, String value) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: Colors.orange),
-        const SizedBox(width: 4),
-        Text(
-          '$label: $value',
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-        ),
-      ],
-    );
+  Map<String, dynamic> _generateWorkoutGuide(String focus) {
+    String lowerFocus = focus.toLowerCase();
+    
+    if (lowerFocus.contains('peito') || lowerFocus.contains('trícep')) {
+      return {
+        'instructions': 'Foque no desenvolvimento do peitoral e tríceps! Faça 3-4 exercícios de peito (como supino, crucifixo) e 2-3 de tríceps. Use cargas que permitam 8-12 repetições com boa execução.',
+        'muscle_groups': [
+          'Peitoral maior e menor',
+          'Tríceps braquial',
+          'Deltóide anterior (auxiliar)',
+        ],
+        'safety_tips': 'Mantenha boa postura, controle a descida do peso e evite trancar completamente os cotovelos. Aguarde 4 horas antes de praticar esportes.',
+      };
+    } else if (lowerFocus.contains('costa') || lowerFocus.contains('bícep')) {
+      return {
+        'instructions': 'Trabalhe as costas e bíceps! Faça 3-4 exercícios de costa (como puxada, remada) e 2-3 de bíceps. Foque na retração das escápulas e no controle do movimento.',
+        'muscle_groups': [
+          'Latíssimo do dorso',
+          'Rombóides e trapézio',
+          'Bíceps braquial',
+          'Músculos posteriores do ombro',
+        ],
+        'safety_tips': 'Mantenha o core contraído, evite usar o impulso e concentre-se na contração dos músculos alvo. Aguarde 4 horas antes de praticar esportes.',
+      };
+    } else if (lowerFocus.contains('perna') || lowerFocus.contains('inferior')) {
+      return {
+        'instructions': 'Dia das pernas! Trabalhe quadríceps, posteriores e glúteos. Faça 2-3 exercícios compostos (agachamento, leg press) e 2-3 exercícios isolados.',
+        'muscle_groups': [
+          'Quadríceps femoral',
+          'Isquiotibiais (posteriores)',
+          'Glúteos (máximo, médio)',
+          'Panturrilhas',
+        ],
+        'safety_tips': 'Mantenha joelhos alinhados, desça até onde a flexibilidade permitir e use amplitude completa. Aguarde 4 horas antes de praticar esportes.',
+      };
+    } else if (lowerFocus.contains('ombro') || lowerFocus.contains('deltóide')) {
+      return {
+        'instructions': 'Foque no desenvolvimento dos ombros! Faça 3-4 exercícios variados (desenvolvimento, elevações laterais e posteriores). Use cargas moderadas com foco na técnica.',
+        'muscle_groups': [
+          'Deltóide anterior, medial e posterior',
+          'Trapézio superior',
+          'Manguito rotador (estabilização)',
+        ],
+        'safety_tips': 'Evite movimentos bruscos, mantenha ombros longe das orelhas e não force amplitude excessiva. Aguarde 4 horas antes de praticar esportes.',
+      };
+    } else {
+      // Treino geral ou não identificado
+      return {
+        'instructions': 'Treino completo! Trabalhe os principais grupos musculares de forma equilibrada. Priorize movimentos compostos e mantenha boa execução em todos os exercícios.',
+        'muscle_groups': [
+          'Músculos do core (abdome e lombar)',
+          'Membros superiores',
+          'Membros inferiores',
+        ],
+        'safety_tips': 'Faça aquecimento adequado, mantenha hidratação e respeite seus limites. Aguarde 4 horas antes de praticar esportes.',
+      };
+    }
   }
 
   Widget _buildSectionTitle(String title) {
@@ -453,62 +529,54 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
 
   String _convertPostgreSQLToJson(String pgString) {
     try {
-      // Converter formato PostgreSQL para JSON válido
+      print('[WORKOUT_DETAILS] 🔧 Iniciando conversão PostgreSQL para JSON...');
+      print('[WORKOUT_DETAILS] 📝 Entrada (primeiros 500 chars): ${pgString.substring(0, pgString.length > 500 ? 500 : pgString.length)}');
+      
+      // Se já é um JSON válido, retornar como está
+      try {
+        json.decode(pgString);
+        print('[WORKOUT_DETAILS] ✅ Já é JSON válido!');
+        return pgString;
+      } catch (e) {
+        print('[WORKOUT_DETAILS] 🔄 Não é JSON válido, tentando converter...');
+      }
+      
       String jsonString = pgString;
       
-      // Adicionar aspas duplas nas chaves (exceto quando já tem aspas)
+      // Normalizar espaços e quebras de linha
+      jsonString = jsonString.replaceAll(RegExp(r'\s+'), ' ');
+      
+      // Adicionar aspas duplas nas chaves
       jsonString = jsonString.replaceAllMapped(
-        RegExp(r'([a-zA-Z_][a-zA-Z0-9_]*):'),
+        RegExp(r'(\w+)\s*:'),
         (match) => '"${match.group(1)}":',
       );
       
-      // Adicionar aspas duplas em valores string (não números, booleanos ou arrays/objetos)
+      // Corrigir valores de string
       jsonString = jsonString.replaceAllMapped(
-        RegExp(r': ([^"{\[\]0-9true false][^,}\]]*[^,}\]\s])'),
+        RegExp(r':\s*([^"\[\{][^,\]\}]*?)(?=[,\]\}])'),
         (match) {
           String value = match.group(1)!.trim();
-          // Se já tem aspas ou é um número/boolean, não alterar
-          if (value.startsWith('"') || 
-              value.startsWith('[') || 
-              value.startsWith('{') ||
-              RegExp(r'^\d+(\.\d+)?$').hasMatch(value) ||
+          // Se for número, boolean ou null, não adicionar aspas
+          if (RegExp(r'^[\d.]+$').hasMatch(value) ||
               value == 'true' || 
               value == 'false' ||
-              value == 'null') {
-            return match.group(0)!;
+              value == 'null' ||
+              value.startsWith('[') ||
+              value.startsWith('{')) {
+            return ': $value';
           }
           return ': "$value"';
         },
       );
       
-      // Corrigir arrays
-      jsonString = jsonString.replaceAllMapped(
-        RegExp(r'\[([^\]]*)\]'),
-        (match) {
-          String content = match.group(1)!;
-          if (content.trim().isEmpty) return '[]';
-          
-          // Separar itens do array e adicionar aspas se necessário
-          List<String> items = content.split(',').map((item) {
-            String trimmed = item.trim();
-            if (trimmed.startsWith('"') || 
-                RegExp(r'^\d+(\.\d+)?$').hasMatch(trimmed) ||
-                trimmed == 'true' || 
-                trimmed == 'false' ||
-                trimmed == 'null') {
-              return trimmed;
-            }
-            return '"$trimmed"';
-          }).toList();
-          
-          return '[${items.join(', ')}]';
-        },
-      );
+      // Limpar possíveis aspas duplas desnecessárias
+      jsonString = jsonString.replaceAll('""', '"');
       
-      print('[WORKOUT_DETAILS] 🔄 JSON corrigido: ${jsonString.substring(0, 200)}...');
+      print('[WORKOUT_DETAILS] ✅ JSON convertido (primeiros 500 chars): ${jsonString.substring(0, jsonString.length > 500 ? 500 : jsonString.length)}');
       return jsonString;
     } catch (e) {
-      print('[WORKOUT_DETAILS] ❌ Erro na conversão: $e');
+      print('[WORKOUT_DETAILS] ❌ Erro na conversão PostgreSQL: $e');
       return pgString;
     }
   }
@@ -526,61 +594,132 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
   Map<String, dynamic> _extractDataManually(String rawData) {
     try {
       print('[WORKOUT_DETAILS] 🛠️ Extraindo dados manualmente...');
+      print('[WORKOUT_DETAILS] 📏 Tamanho dos dados: ${rawData.length} chars');
       
-      // Extrair dados básicos com regex
-      final planNameMatch = RegExp(r'plan_name:\s*([^,}]+)').firstMatch(rawData);
-      final planSummaryMatch = RegExp(r'plan_summary:\s*([^,}]+)').firstMatch(rawData);
-      final progressionTipsMatch = RegExp(r'progression_tips:\s*([^,}]+)').firstMatch(rawData);
+      // Primeiro, tentar extrair usando JSON decode direto
+      try {
+        var decoded = json.decode(rawData);
+        if (decoded['workout_schedule'] != null) {
+          List<Map<String, dynamic>> workoutSchedule = List<Map<String, dynamic>>.from(decoded['workout_schedule']);
+          print('[WORKOUT_DETAILS] ✅ JSON decode direto funcionou! ${workoutSchedule.length} dias extraídos');
+          return {
+            'plan_name': decoded['plan_name'] ?? widget.plan.planName,
+            'plan_summary': decoded['plan_summary'] ?? 'Resumo não disponível',
+            'workout_schedule': workoutSchedule,
+            'important_notes': List<String>.from(decoded['important_notes'] ?? []),
+            'progression_tips': decoded['progression_tips'] ?? 'Aumente gradualmente'
+          };
+        }
+      } catch (e) {
+        print('[WORKOUT_DETAILS] 🔄 JSON decode falhou: $e');
+      }
+      
+      // Se JSON direto falhou, usar método manual mais robusto
+      print('[WORKOUT_DETAILS] 🔧 Tentando extração manual avançada...');
+      
+      // Extrair dados básicos com regex melhoradas
+      final planNameMatch = RegExp(r'plan_name["\s]*:\s*["\s]*([^",}]+)').firstMatch(rawData);
+      final planSummaryMatch = RegExp(r'plan_summary["\s]*:\s*["\s]*([^",}]+)').firstMatch(rawData);
+      final progressionTipsMatch = RegExp(r'progression_tips["\s]*:\s*["\s]*([^",}]+)').firstMatch(rawData);
       
       // Extrair notas importantes
       List<String> importantNotes = [];
-      final notesMatch = RegExp(r'important_notes:\s*\[([^\]]+)\]').firstMatch(rawData);
+      final notesMatch = RegExp(r'important_notes["\s]*:\s*\[([^\]]*)\]', dotAll: true).firstMatch(rawData);
       if (notesMatch != null) {
         String notesStr = notesMatch.group(1)!;
-        importantNotes = notesStr.split(',').map((note) {
-          String clean = note.trim();
-          if (clean.startsWith('"') && clean.endsWith('"')) {
-            clean = clean.substring(1, clean.length - 1);
-          }
-          return clean;
-        }).toList();
+        // Dividir por vírgulas respeitando aspas
+        importantNotes = notesStr.split(',')
+            .map((note) => _cleanString(note.trim()))
+            .where((note) => note.isNotEmpty)
+            .toList();
       }
       
-      // Extrair cronograma de treinos
+      // Extrair cronograma de treinos - método mais robusto
       List<Map<String, dynamic>> workoutSchedule = [];
-      final scheduleMatches = RegExp(r'\{day:\s*([^,]+),\s*focus:\s*([^,]+),\s*exercises:\s*\[([^\]]+)\]').allMatches(rawData);
       
-      for (var match in scheduleMatches) {
-        String day = _cleanString(match.group(1)?.trim() ?? '');
-        String focus = _cleanString(match.group(2)?.trim() ?? '');
-        String exercisesStr = match.group(3) ?? '';
+      // Encontrar todos os blocos de dias usando regex
+      final dayPattern = RegExp(r'\{[^{}]*day[^{}]*?exercises[^{}]*?\[[^\]]*?\][^{}]*?\}', dotAll: true);
+      final dayMatches = dayPattern.allMatches(rawData);
+      
+      print('[WORKOUT_DETAILS] 🔍 Encontrados ${dayMatches.length} blocos de dias potenciais');
+      
+      for (var dayMatch in dayMatches) {
+        String dayBlock = dayMatch.group(0)!;
+        print('[WORKOUT_DETAILS] 📋 Processando bloco: ${dayBlock.substring(0, dayBlock.length > 100 ? 100 : dayBlock.length)}...');
         
-        // Extrair exercícios
-        List<Map<String, dynamic>> exercises = [];
-        final exerciseMatches = RegExp(r'\{name:\s*([^,]+),\s*reps:\s*([^,]+),\s*rest:\s*([^,]+),\s*sets:\s*([^,]+),\s*equipment:\s*([^,]+),\s*instructions:\s*([^}]+)\}').allMatches(exercisesStr);
+        // Extrair informações do dia
+        final dayName = RegExp(r'day["\s]*:\s*["\s]*([^",}]+)').firstMatch(dayBlock)?.group(1)?.trim();
+        final focus = RegExp(r'focus["\s]*:\s*["\s]*([^",}]+)').firstMatch(dayBlock)?.group(1)?.trim();
         
-        for (var exMatch in exerciseMatches) {
-          exercises.add({
-            'name': _cleanString(exMatch.group(1)?.trim() ?? ''),
-            'reps': _cleanString(exMatch.group(2)?.trim() ?? ''),
-            'rest': _cleanString(exMatch.group(3)?.trim() ?? ''),
-            'sets': _cleanString(exMatch.group(4)?.trim() ?? ''),
-            'equipment': _cleanString(exMatch.group(5)?.trim() ?? ''),
-            'instructions': _cleanString(exMatch.group(6)?.trim() ?? ''),
-          });
-        }
-        
-        if (day.isNotEmpty && focus.isNotEmpty) {
+        if (dayName != null) {
+          print('[WORKOUT_DETAILS] ✅ Dia encontrado: $dayName');
+          
+          // Extrair exercícios deste dia
+          List<Map<String, dynamic>> exercises = [];
+          
+          // Encontrar a seção de exercícios
+          final exercisesMatch = RegExp(r'exercises["\s]*:\s*\[(.*?)\]', multiLine: true, dotAll: true).firstMatch(dayBlock);
+          if (exercisesMatch != null) {
+            String exercisesStr = exercisesMatch.group(1)!;
+            print('[WORKOUT_DETAILS] 🏋️ Processando exercícios: ${exercisesStr.length} chars');
+            
+            // Extrair cada exercício individual
+            final exerciseBlocks = RegExp(r'\{[^{}]*\}', multiLine: true).allMatches(exercisesStr);
+            
+            for (var exBlock in exerciseBlocks) {
+              String exerciseStr = exBlock.group(0)!;
+              
+              // Extrair campos do exercício
+              final nameMatch = RegExp(r'name["\s]*:\s*["\s]*([^",}]+)').firstMatch(exerciseStr);
+              
+              if (nameMatch != null) {
+                final setsMatch = RegExp(r'sets["\s]*:\s*["\s]*([^",}]+)').firstMatch(exerciseStr);
+                final repsMatch = RegExp(r'reps["\s]*:\s*["\s]*([^",}]+)').firstMatch(exerciseStr);
+                final restMatch = RegExp(r'rest["\s]*:\s*["\s]*([^",}]+)').firstMatch(exerciseStr);
+                final instructionsMatch = RegExp(r'instructions["\s]*:\s*["\s]*([^",}]+)').firstMatch(exerciseStr);
+                final equipmentMatch = RegExp(r'equipment["\s]*:\s*["\s]*([^",}]+)').firstMatch(exerciseStr);
+                
+                Map<String, dynamic> exercise = {
+                  'name': _cleanString(nameMatch.group(1)!),
+                  'sets': setsMatch != null ? _cleanString(setsMatch.group(1)!) : '3',
+                  'reps': repsMatch != null ? _cleanString(repsMatch.group(1)!) : '10-15',
+                  'rest': restMatch != null ? _cleanString(restMatch.group(1)!) : '60 segundos',
+                  'instructions': instructionsMatch != null ? _cleanString(instructionsMatch.group(1)!) : 'Execute conforme orientação',
+                  'equipment': equipmentMatch != null ? _cleanString(equipmentMatch.group(1)!) : 'Peso corporal',
+                };
+                
+                exercises.add(exercise);
+                print('[WORKOUT_DETAILS] 💪 Exercício: ${exercise['name']}');
+              }
+            }
+          }
+          
           workoutSchedule.add({
-            'day': day,
-            'focus': focus,
+            'day': _cleanString(dayName),
+            'focus': focus != null ? _cleanString(focus) : 'Treino completo',
             'exercises': exercises,
           });
+          
+          print('[WORKOUT_DETAILS] 📋 Dia $dayName: ${exercises.length} exercícios extraídos');
         }
       }
       
-      print('[WORKOUT_DETAILS] 📊 Extraídos ${workoutSchedule.length} dias de treino');
-      print('[WORKOUT_DETAILS] 📝 Extraídas ${importantNotes.length} notas importantes');
+      print('[WORKOUT_DETAILS] 📊 Total extraído: ${workoutSchedule.length} dias de treino');
+      print('[WORKOUT_DETAILS] 📝 Total extraído: ${importantNotes.length} notas importantes');
+      
+      // Debug detalhado
+      for (int i = 0; i < workoutSchedule.length; i++) {
+        var day = workoutSchedule[i];
+        var exercises = day['exercises'] as List<dynamic>;
+        print('[WORKOUT_DETAILS] 📅 ${day['day']}: ${exercises.length} exercícios');
+        for (int j = 0; j < exercises.length && j < 3; j++) {
+          var exercise = exercises[j] as Map<String, dynamic>;
+          print('[WORKOUT_DETAILS]    ${j + 1}. ${exercise['name']}');
+        }
+        if (exercises.length > 3) {
+          print('[WORKOUT_DETAILS]    ... e mais ${exercises.length - 3} exercícios');
+        }
+      }
       
       return {
         'plan_name': _cleanString(planNameMatch?.group(1) ?? widget.plan.planName),
@@ -594,7 +733,7 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
       return {
         'plan_name': widget.plan.planName,
         'plan_summary': 'Erro ao carregar dados',
-        'workout_schedule': [],
+        'workout_schedule': <Map<String, dynamic>>[],
         'important_notes': ['Erro ao carregar dados do treino'],
         'progression_tips': 'Recarregue o treino'
       };
