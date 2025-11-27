@@ -218,18 +218,10 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        plan.planName,
+                        plan.workoutType == 'home' ? 'Casa' : 'Academia',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${plan.daysPerWeek} dias/semana • ${plan.workoutType == 'home' ? 'Casa' : 'Academia'}',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
                         ),
                       ),
                     ],

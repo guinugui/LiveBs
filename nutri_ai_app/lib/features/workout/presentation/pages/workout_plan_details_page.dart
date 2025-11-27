@@ -216,7 +216,7 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
           ],
 
           // Cronograma de Treinos
-          if (_workoutData!['workout_schedule'] != null) ...[
+          if (_workoutData!['days'] != null || _workoutData!['workout_schedule'] != null) ...[
             _buildSectionTitle('Cronograma de Treinos'),
             const SizedBox(height: 12),
             ..._buildWorkoutSchedule(),
@@ -346,60 +346,137 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
   }
 
   List<Widget> _buildWorkoutSchedule() {
-    final schedule = _workoutData!['days'] as List<dynamic>;
+    // Verificar se existe 'days' ou 'workout_schedule'
+    List<dynamic> schedule;
+    if (_workoutData!['days'] != null) {
+      schedule = _workoutData!['days'] as List<dynamic>;
+    } else if (_workoutData!['workout_schedule'] != null) {
+      schedule = _workoutData!['workout_schedule'] as List<dynamic>;
+    } else {
+      print('[WORKOUT_DETAILS] ❌ Nenhuma estrutura de cronograma encontrada!');
+      return [
+        _buildCard(
+          child: const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'Nenhum cronograma de treino encontrado.',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ),
+        ),
+      ];
+    }
 
-    return schedule.map((dayData) {
+    // Filtrar apenas os dias que devem ser mostrados baseado no daysPerWeek do usuário
+    int maxDays = widget.plan.daysPerWeek;
+    List<dynamic> filteredSchedule = schedule.take(maxDays).toList();
+
+    return filteredSchedule.asMap().entries.map((entry) {
+      int index = entry.key;
+      var dayData = entry.value;
+      
+      // Cores alternadas: par = cinza claro, ímpar = branco
+      Color cardBackgroundColor = index % 2 == 0 ? Colors.grey[100]! : Colors.white;
+      
       return Padding(
         padding: const EdgeInsets.only(bottom: 16),
-        child: _buildCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Dia e Foco
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.orange[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Dia ${dayData['day']?.toString() ?? 'N/A'}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
-                      ),
-                    ),
-                    if (dayData['focus'] != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        dayData['focus']?.toString() ?? '',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                      ),
-                    ],
-                  ],
-                ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: cardBackgroundColor,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 4,
+                offset: const Offset(0, 2),
               ),
-
-              const SizedBox(height: 16),
-
-              // NOVO: Mini Manual Didático
-              _buildSimpleWorkoutGuide(dayData),
             ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Dia e Foco - com label simplificado
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[50],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Dia ${dayData['day']?.toString() ?? (index + 1).toString()}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange,
+                            ),
+                          ),
+                          // Label simplificado
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: widget.plan.workoutType == 'home' 
+                                  ? Colors.blue[100] 
+                                  : Colors.orange[100],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              widget.plan.workoutType == 'home' ? 'Casa' : 'Academia',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: widget.plan.workoutType == 'home'
+                                    ? Colors.blue[700]
+                                    : Colors.orange[700],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (dayData['focus'] != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          dayData['focus']?.toString() ?? '',
+                          style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Guia do Treino
+                _buildWorkoutGuide(dayData),
+                
+                const SizedBox(height: 16),
+
+                // Lista de Exercícios do Dia
+                _buildDayExercises(dayData),
+              ],
+            ),
           ),
         ),
       );
     }).toList();
   }
 
-  Widget _buildSimpleWorkoutGuide(Map<String, dynamic> dayData) {
+  Widget _buildWorkoutGuide(Map<String, dynamic> dayData) {
+    String dayName = dayData['day']?.toString() ?? 'Dia';
     String focus = dayData['focus']?.toString() ?? '';
-    Map<String, dynamic> guide = _generateWorkoutGuide(focus);
-
+    
+    // Verificar se é treino de casa ou academia baseado no tipo do plano
+    bool isHomeWorkout = widget.plan.workoutType == 'home';
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -412,10 +489,10 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
         children: [
           Row(
             children: [
-              Icon(Icons.fitness_center, color: Colors.blue[700], size: 24),
+              Icon(Icons.info_outline, color: Colors.blue[700], size: 24),
               const SizedBox(width: 8),
               Text(
-                'Mini Manual do Treino',
+                'Guia',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -425,141 +502,138 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
             ],
           ),
           const SizedBox(height: 16),
+          
+          // Nome do dia
           Text(
-            guide['instructions'],
-            style: const TextStyle(fontSize: 14, height: 1.5),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Grupos Musculares:',
+            dayName,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               color: Colors.green[700],
             ),
           ),
           const SizedBox(height: 8),
-          Column(
-            children: guide['muscle_groups']
-                .map<Widget>(
-                  (group) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.arrow_right,
-                          color: Colors.green[600],
-                          size: 16,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            group?.toString() ?? '',
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.orange[100],
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.warning, color: Colors.orange[700], size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    guide['safety_tips'],
-                    style: const TextStyle(fontSize: 12, height: 1.4),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          
+          if (isHomeWorkout) ...[
+            // Para treino em casa: mostrar exercícios específicos
+            _buildHomeWorkoutGuide(dayData),
+          ] else ...[
+            // Para academia: mostrar grupos musculares e quantidades
+            _buildGymWorkoutGuide(focus),
+          ],
         ],
       ),
     );
   }
 
-  Map<String, dynamic> _generateWorkoutGuide(String focus) {
-    String lowerFocus = focus.toLowerCase();
-
-    if (lowerFocus.contains('peito') || lowerFocus.contains('trícep')) {
-      return {
-        'instructions':
-            'Foque no desenvolvimento do peitoral e tríceps! Faça 3-4 exercícios de peito (como supino, crucifixo) e 2-3 de tríceps. Use cargas que permitam 8-12 repetições com boa execução.',
-        'muscle_groups': [
-          'Peitoral maior e menor',
-          'Tríceps braquial',
-          'Deltóide anterior (auxiliar)',
-        ],
-        'safety_tips':
-            'Mantenha boa postura, controle a descida do peso e evite trancar completamente os cotovelos. Aguarde 4 horas antes de praticar esportes.',
-      };
-    } else if (lowerFocus.contains('costa') || lowerFocus.contains('bícep')) {
-      return {
-        'instructions':
-            'Trabalhe as costas e bíceps! Faça 3-4 exercícios de costa (como puxada, remada) e 2-3 de bíceps. Foque na retração das escápulas e no controle do movimento.',
-        'muscle_groups': [
-          'Latíssimo do dorso',
-          'Rombóides e trapézio',
-          'Bíceps braquial',
-          'Músculos posteriores do ombro',
-        ],
-        'safety_tips':
-            'Mantenha o core contraído, evite usar o impulso e concentre-se na contração dos músculos alvo. Aguarde 4 horas antes de praticar esportes.',
-      };
-    } else if (lowerFocus.contains('perna') ||
-        lowerFocus.contains('inferior')) {
-      return {
-        'instructions':
-            'Dia das pernas! Trabalhe quadríceps, posteriores e glúteos. Faça 2-3 exercícios compostos (agachamento, leg press) e 2-3 exercícios isolados.',
-        'muscle_groups': [
-          'Quadríceps femoral',
-          'Isquiotibiais (posteriores)',
-          'Glúteos (máximo, médio)',
-          'Panturrilhas',
-        ],
-        'safety_tips':
-            'Mantenha joelhos alinhados, desça até onde a flexibilidade permitir e use amplitude completa. Aguarde 4 horas antes de praticar esportes.',
-      };
-    } else if (lowerFocus.contains('ombro') ||
-        lowerFocus.contains('deltóide')) {
-      return {
-        'instructions':
-            'Foque no desenvolvimento dos ombros! Faça 3-4 exercícios variados (desenvolvimento, elevações laterais e posteriores). Use cargas moderadas com foco na técnica.',
-        'muscle_groups': [
-          'Deltóide anterior, medial e posterior',
-          'Trapézio superior',
-          'Manguito rotador (estabilização)',
-        ],
-        'safety_tips':
-            'Evite movimentos bruscos, mantenha ombros longe das orelhas e não force amplitude excessiva. Aguarde 4 horas antes de praticar esportes.',
-      };
-    } else {
-      // Treino geral ou não identificado
-      return {
-        'instructions':
-            'Treino completo! Trabalhe os principais grupos musculares de forma equilibrada. Priorize movimentos compostos e mantenha boa execução em todos os exercícios.',
-        'muscle_groups': [
-          'Músculos do core (abdome e lombar)',
-          'Membros superiores',
-          'Membros inferiores',
-        ],
-        'safety_tips':
-            'Faça aquecimento adequado, mantenha hidratação e respeite seus limites. Aguarde 4 horas antes de praticar esportes.',
-      };
+  Widget _buildHomeWorkoutGuide(Map<String, dynamic> dayData) {
+    List<String> homeExercises = [
+      'Flexão de braços',
+      'Abdominal',
+      'Polichinelo', 
+      'Agachamento',
+      'Prancha',
+      'Burpee',
+      'Mountain Climber',
+      'Caminhada'
+    ];
+    
+    // Tentar pegar exercícios dos dados reais se existirem
+    if (dayData['exercises'] != null) {
+      List<dynamic> exercises = dayData['exercises'] as List<dynamic>;
+      List<String> exerciseNames = exercises
+          .map((ex) => ex['name']?.toString() ?? '')
+          .where((name) => name.isNotEmpty)
+          .take(6) // Máximo 6 exercícios
+          .toList();
+      
+      if (exerciseNames.isNotEmpty) {
+        homeExercises = exerciseNames;
+      }
     }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: homeExercises.take(6).map((exercise) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Row(
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: Colors.green[600],
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              exercise,
+              style: const TextStyle(fontSize: 14, height: 1.4),
+            ),
+          ],
+        ),
+      )).toList(),
+    );
   }
+
+  Widget _buildGymWorkoutGuide(String focus) {
+    print('[DEBUG] Focus recebido: "$focus"'); // Debug
+    String focusLower = focus.toLowerCase();
+    
+    // Mapeamento mais abrangente para detectar grupos musculares
+    Map<String, String> gymGuides = {
+      'peito': 'Peito e Tríceps\n• 3 exercícios para peito\n• 2 exercícios para tríceps',
+      'tricep': 'Peito e Tríceps\n• 3 exercícios para peito\n• 2 exercícios para tríceps',
+      'costas': 'Costas e Bíceps\n• 4 exercícios para costas\n• 2 exercícios para bíceps',
+      'costa': 'Costas e Bíceps\n• 4 exercícios para costas\n• 2 exercícios para bíceps',
+      'bicep': 'Costas e Bíceps\n• 4 exercícios para costas\n• 2 exercícios para bíceps',
+      'pernas': 'Pernas e Glúteos\n• 4 exercícios para pernas\n• 2 exercícios para glúteos',
+      'perna': 'Pernas e Glúteos\n• 4 exercícios para pernas\n• 2 exercícios para glúteos',
+      'quadricep': 'Pernas e Glúteos\n• 4 exercícios para pernas\n• 2 exercícios para glúteos',
+      'gluteo': 'Pernas e Glúteos\n• 4 exercícios para pernas\n• 2 exercícios para glúteos',
+      'ombros': 'Ombros e Core\n• 3 exercícios para ombros\n• 2 exercícios para core',
+      'ombro': 'Ombros e Core\n• 3 exercícios para ombros\n• 2 exercícios para core',
+      'deltoid': 'Ombros e Core\n• 3 exercícios para ombros\n• 2 exercícios para core',
+      'corpo': 'Corpo Inteiro\n• 2 exercícios superiores\n• 2 exercícios inferiores\n• 1 exercício cardio',
+      'full': 'Corpo Inteiro\n• 2 exercícios superiores\n• 2 exercícios inferiores\n• 1 exercício cardio',
+      'cardio': 'Cardio e Core\n• 3 exercícios de cardio\n• 2 exercícios de core',
+      'abdom': 'Core e Abdômen\n• 4 exercícios para core\n• 2 exercícios funcionais',
+      // Adicionar mais opções baseadas nos dados que você mostrou
+      'treino a': 'Peito e Tríceps\n• 3 exercícios para peito\n• 2 exercícios para tríceps',
+      'treino b': 'Costas e Bíceps\n• 4 exercícios para costas\n• 2 exercícios para bíceps',
+      'treino c': 'Pernas e Glúteos\n• 4 exercícios para pernas\n• 2 exercícios para glúteos',
+    };
+    
+    String guideText = 'Peito e Tríceps\n• 3 exercícios para peito\n• 2 exercícios para tríceps'; // Default para academia
+    
+    // Tentar encontrar o guia específico
+    for (String key in gymGuides.keys) {
+      if (focusLower.contains(key)) {
+        guideText = gymGuides[key]!;
+        print('[DEBUG] Match encontrado: $key -> ${gymGuides[key]}');
+        break;
+      }
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: guideText.split('\n').map((line) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Text(
+          line,
+          style: TextStyle(
+            fontSize: 14,
+            height: 1.4,
+            fontWeight: line.startsWith('•') ? FontWeight.normal : FontWeight.w600,
+            color: line.startsWith('•') ? Colors.grey[700] : Colors.green[700],
+          ),
+        ),
+      )).toList(),
+    );
+  }
+
+
 
   Widget _buildSectionTitle(String title) {
     return Text(
@@ -876,5 +950,183 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
         'progression_tips': 'Recarregue o treino',
       };
     }
+  }
+
+  Widget _buildDayExercises(Map<String, dynamic> dayData) {
+    // Verificar se há exercícios no dia
+    if (dayData['exercises'] == null) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Text(
+          'Nenhum exercício específico encontrado para este dia.',
+          style: TextStyle(fontSize: 14, color: Colors.grey),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    List<dynamic> exercises = dayData['exercises'] as List<dynamic>;
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.green[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.green[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.list_alt, color: Colors.green[700], size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'Exercícios do Dia (${exercises.length})',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green[700],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // Lista de exercícios
+          ...exercises.asMap().entries.map((entry) {
+            int index = entry.key;
+            Map<String, dynamic> exercise = entry.value as Map<String, dynamic>;
+            
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green[300]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Nome do exercício
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.green[600],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${index + 1}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          exercise['name']?.toString() ?? 'Exercício ${index + 1}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 8),
+                  
+                  // Detalhes do exercício
+                  if (exercise['sets'] != null || exercise['reps'] != null) ...[
+                    Row(
+                      children: [
+                        if (exercise['sets'] != null) ...[
+                          Icon(Icons.repeat, size: 16, color: Colors.grey[600]),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${exercise['sets']} séries',
+                            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                          ),
+                        ],
+                        if (exercise['sets'] != null && exercise['reps'] != null)
+                          const SizedBox(width: 16),
+                        if (exercise['reps'] != null) ...[
+                          Icon(Icons.fitness_center, size: 16, color: Colors.grey[600]),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${exercise['reps']} rep.',
+                            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  
+                  // Equipamento
+                  if (exercise['equipment'] != null) ...[
+                    Row(
+                      children: [
+                        Icon(Icons.build, size: 16, color: Colors.orange[600]),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            'Equipamento: ${exercise['equipment']}',
+                            style: TextStyle(fontSize: 12, color: Colors.orange[700]),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  
+                  // Instruções
+                  if (exercise['instructions'] != null) ...[
+                    Text(
+                      'Como fazer:',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.blue[700],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      exercise['instructions']?.toString() ?? '',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[700], height: 1.4),
+                    ),
+                  ],
+                  
+                  // Descanso
+                  if (exercise['rest'] != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.timer, size: 14, color: Colors.purple[600]),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Descanso: ${exercise['rest']}',
+                          style: TextStyle(fontSize: 11, color: Colors.purple[600]),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
   }
 }
