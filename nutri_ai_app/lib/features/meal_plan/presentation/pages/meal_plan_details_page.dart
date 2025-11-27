@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
 import '../../services/direct_meal_plan_service.dart';
 
 class MealPlanDetailsPage extends StatefulWidget {
@@ -115,42 +114,56 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
       return const Center(child: Text('Dados não encontrados'));
     }
 
-    // Verificar estrutura dos dados
-    List<dynamic> meals = [];
+    print('🔍 [DEBUG] Estrutura completa dos dados: ${planData.toString()}');
+
+    // Estrutura real: { plan_data: { days: [ { day: 1, meals: [ {type: "breakfast", ...}, ... ] } ] } }
+    List<dynamic>? mealsList;
     
-    if (planData!.containsKey('meals')) {
-      meals = planData!['meals'] as List<dynamic>;
-    } else if (planData!.containsKey('plan_content')) {
-      final planContent = planData!['plan_content'];
-      
-      if (planContent is Map && planContent.containsKey('meals')) {
-        meals = planContent['meals'] as List<dynamic>;
-      } else if (planContent is Map && planContent.containsKey('days')) {
-        final days = planContent['days'] as List<dynamic>;
-        if (days.isNotEmpty && days[0] is Map && days[0].containsKey('meals')) {
-          meals = days[0]['meals'] as List<dynamic>;
-        }
-      } else if (planContent is String) {
-        try {
-          final decoded = json.decode(planContent);
-          if (decoded is Map) {
-            if (decoded.containsKey('meals')) {
-              meals = decoded['meals'] as List<dynamic>;
-            } else if (decoded.containsKey('days')) {
-              final days = decoded['days'] as List<dynamic>;
-              if (days.isNotEmpty && days[0] is Map && days[0].containsKey('meals')) {
-                meals = days[0]['meals'] as List<dynamic>;
-              }
-            }
+    try {
+      // O backend retorna: { plan_data: { days: [ { day: 1, meals: [...] } ] } }
+      if (planData!.containsKey('plan_data')) {
+        final planContent = planData!['plan_data'];
+        print('🔍 [DEBUG] plan_data encontrado: ${planContent.runtimeType}');
+        
+        if (planContent is Map && planContent.containsKey('days')) {
+          final days = planContent['days'] as List<dynamic>;
+          print('🔍 [DEBUG] days encontrado: ${days.length} dias');
+          
+          if (days.isNotEmpty && days[0] is Map && days[0].containsKey('meals')) {
+            mealsList = days[0]['meals'] as List<dynamic>;
+            print('🔍 [DEBUG] meals encontrado: ${mealsList.length} refeições');
           }
-        } catch (e) {
-          print('Erro ao decodificar JSON: $e');
         }
       }
+      
+      // Fallback: se não encontrou acima, verificar outras estruturas possíveis
+      if (mealsList == null) {
+        if (planData!.containsKey('meals')) {
+          mealsList = planData!['meals'] as List<dynamic>;
+        } else if (planData!.containsKey('days')) {
+          final days = planData!['days'] as List<dynamic>;
+          if (days.isNotEmpty && days[0] is Map && days[0].containsKey('meals')) {
+            mealsList = days[0]['meals'] as List<dynamic>;
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ [ERROR] Erro ao processar estrutura de dados: $e');
     }
     
-    if (meals.isEmpty) {
-      return const Center(child: Text('Nenhuma refeição encontrada'));
+    if (mealsList == null || mealsList.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.orange[300]),
+            const SizedBox(height: 16),
+            const Text('Nenhuma refeição encontrada'),
+            const SizedBox(height: 8),
+            Text('Estrutura de dados: ${planData.toString()}'),
+          ],
+        ),
+      );
     }
 
     return SingleChildScrollView(
@@ -204,8 +217,8 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
           ),
           const SizedBox(height: 24),
 
-          // Meals
-          ...meals.map<Widget>((meal) => _buildMealCard(meal)).toList(),
+          // Meals - agora usando mealsList
+          ...mealsList.map<Widget>((meal) => _buildMealCard(meal)).toList(),
         ],
       ),
     );

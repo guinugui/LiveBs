@@ -7,9 +7,9 @@ from psycopg2.extras import RealDictCursor
 try:
     conn = psycopg2.connect(
         host='localhost',
-        database='nutri_ai_app',
+        database='livebs_db',
         user='postgres',
-        password='postgres'
+        password='admin'
     )
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     

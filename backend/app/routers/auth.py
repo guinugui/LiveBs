@@ -71,8 +71,8 @@ def register(user: UserRegister):
         # Cria usuário
         password_hash = get_password_hash(user.password)
         cursor.execute(
-            f\"\"\"INSERT INTO users (email, password_hash, name) 
-               VALUES ({db.get_param_placeholder()}, {db.get_param_placeholder()}, {db.get_param_placeholder()}) RETURNING id, email, name, created_at\"\"\",
+            f"""INSERT INTO users (email, password_hash, name) 
+               VALUES ({db.get_param_placeholder()}, {db.get_param_placeholder()}, {db.get_param_placeholder()}) RETURNING id, email, name, created_at""",
             (user.email.lower().strip(), password_hash, user.name.strip())
         )
         new_user = cursor.fetchone()

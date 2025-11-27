@@ -57,7 +57,7 @@ def create_profile(profile: ProfileCreate, current_user = Depends(get_current_us
             'activity_level': profile.activity_level
         })
         
-        # Cria perfil
+        # Cria perfil com goal incluído
         cursor.execute(
             """INSERT INTO profiles (user_id, weight, height, age, gender, target_weight, 
                                      activity_level, goal, daily_calories)
@@ -95,7 +95,7 @@ def get_profile(current_user = Depends(get_current_user)):
     with db.get_db_cursor() as cursor:
         cursor.execute(
             """SELECT id, user_id, weight, height, age, gender, target_weight, 
-                      activity_level, goal, daily_calories
+                      activity_level, daily_calories, goal
                FROM profiles WHERE user_id = %s""",
             (user_id,)
         )
@@ -125,6 +125,7 @@ def get_profile(current_user = Depends(get_current_user)):
     
     return {
         **profile,
+        'goal': profile.get('goal', 'weight_loss'),  # Valor padrão se não existir
         'bmi': bmi,
         'dietary_restrictions': restrictions,
         'dietary_preferences': preferences
