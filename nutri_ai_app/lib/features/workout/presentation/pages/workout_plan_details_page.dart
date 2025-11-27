@@ -40,11 +40,21 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
           _workoutData = json.decode(rawData);
           print('[WORKOUT_DETAILS] ✅ JSON parse direto bem-sucedido!');
           
-          // Verificar se workout_schedule existe
-          if (_workoutData != null && _workoutData!['workout_schedule'] != null) {
-            var schedule = _workoutData!['workout_schedule'] as List<dynamic>;
-            print('[WORKOUT_DETAILS] 🎉 SUCESSO: ${schedule.length} dias encontrados no workout_schedule!');
-            
+          // Verificar se days ou workout_schedule existe (days é a estrutura correta)
+          List<dynamic>? schedule;
+          
+          if (_workoutData != null && _workoutData!['days'] != null) {
+            schedule = _workoutData!['days'] as List<dynamic>;
+            print('[WORKOUT_DETAILS] 🎉 SUCESSO: ${schedule.length} dias encontrados em days!');
+          } else if (_workoutData != null && _workoutData!['workout_schedule'] != null) {
+            schedule = _workoutData!['workout_schedule'] as List<dynamic>;
+            print('[WORKOUT_DETAILS] 🎉 SUCESSO: ${schedule.length} dias encontrados no workout_schedule (legado)!');
+            // Converter para days para padronizar
+            _workoutData!['days'] = schedule;
+            _workoutData!.remove('workout_schedule');
+          }
+          
+          if (schedule != null) {
             // Log detalhado de cada dia
             for (int i = 0; i < schedule.length; i++) {
               var day = schedule[i];
@@ -55,7 +65,7 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
             }
             return; // Sucesso! Não precisa tentar outros métodos
           } else {
-            print('[WORKOUT_DETAILS] ⚠️ workout_schedule não encontrado no JSON válido');
+            print('[WORKOUT_DETAILS] ⚠️ Nem days nem workout_schedule encontrados no JSON válido');
           }
         } catch (e) {
           print('[WORKOUT_DETAILS] ❌ JSON parse direto falhou: $e');
@@ -304,7 +314,7 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
   }
 
   List<Widget> _buildWorkoutSchedule() {
-    final schedule = _workoutData!['workout_schedule'] as List<dynamic>;
+    final schedule = _workoutData!['days'] as List<dynamic>;
     
     return schedule.map((dayData) {
       return Padding(
@@ -325,7 +335,7 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      dayData['day'] ?? 'Dia do Treino',
+                      'Dia ${dayData['day']?.toString() ?? 'N/A'}',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -335,7 +345,7 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
                     if (dayData['focus'] != null) ...[
                       const SizedBox(height: 4),
                       Text(
-                        dayData['focus'],
+                        dayData['focus']?.toString() ?? '',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[700],
@@ -408,7 +418,7 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
                   children: [
                     Icon(Icons.arrow_right, color: Colors.green[600], size: 16),
                     const SizedBox(width: 4),
-                    Expanded(child: Text(group, style: const TextStyle(fontSize: 13))),
+                    Expanded(child: Text(group?.toString() ?? '', style: const TextStyle(fontSize: 13))),
                   ],
                 ),
               )
