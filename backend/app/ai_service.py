@@ -263,12 +263,22 @@ REGRA CRÍTICA: Se for CASA, use APENAS peso corporal + halteres leves!
 - Todos os equipamentos disponíveis
 """
 
+    # Determinar o nome e tipo específico do plano baseado no workout_type
+    if workout_type == "home":
+        plan_type_name = "Treino em Casa"
+        environment_focus = "CASA - SEM EQUIPAMENTOS DE ACADEMIA"
+    else:
+        plan_type_name = "Treino na Academia"  
+        environment_focus = "ACADEMIA - COM EQUIPAMENTOS PROFISSIONAIS"
+
     prompt = f"""Sou o Coach Atlas, especialista em treinos brasileiros. Crie um plano de treino personalizado para 1 SEMANA.
+
+🎯 TIPO DE TREINO OBRIGATÓRIO: {environment_focus}
 
 📊 PERFIL COMPLETO:
 - Idade: {age} anos | Peso: {weight}kg | Altura: {height}cm
 - Objetivo: {objective} | Nível de condicionamento: {fitness_level}
-- Tipo de treino: {workout_type} | Dias por semana: {days_per_week}
+- Tipo de treino: {workout_type} ({plan_type_name}) | Dias por semana: {days_per_week}
 - Duração por sessão: {session_duration} minutos
 - Dias disponíveis: {days_str}
 
@@ -299,9 +309,15 @@ DISTRIBUIÇÃO BALANCEADA (exemplo):
 - Dia 7: Descanso
 
 IMPORTANTE: Use EXATAMENTE a estrutura JSON abaixo com 'days' (não 'workout_schedule'):
+- O plan_name DEVE refletir o tipo de treino: "{plan_type_name}"
+- O plan_summary DEVE mencionar o ambiente de treino
+- NUNCA misture tipos de treino no mesmo plano
 
 {{
     "week": 1,
+    "plan_name": "{plan_type_name} - Semana 1",
+    "plan_summary": "Plano de {plan_type_name.lower()} personalizado para {days_per_week} dias por semana",
+    "workout_type": "{workout_type}",
     "days": [
         {{
             "day": 1,
@@ -314,12 +330,17 @@ IMPORTANTE: Use EXATAMENTE a estrutura JSON abaixo com 'days' (não 'workout_sch
     ]
 }}"""
 
-    # Adicionar instrução final muito clara
-    prompt += """
+    # Adicionar instrução final muito clara e simples
+    prompt += f"""
 
-ATENÇÃO: O JSON deve ter a chave 'days', NÃO 'workout_schedule'. 
-Estrutura obrigatória: {"week": 1, "days": [...]}
-Não altere esta estrutura!"""
+REGRAS CRÍTICAS FINAIS:
+1. JSON deve ter 'days', NÃO 'workout_schedule'
+2. plan_name deve ser "{plan_type_name} - Semana 1"
+3. workout_type deve ser "{workout_type}"
+4. TREINO {workout_type.upper()}: {"SEM equipamentos de academia" if workout_type == "home" else "COM equipamentos completos"}
+
+Estrutura JSON OBRIGATÓRIA:
+{{"week": 1, "plan_name": "{plan_type_name} - Semana 1", "workout_type": "{workout_type}", "days": [...]}}"""
 
     try:
         response = client.chat.completions.create(
@@ -337,6 +358,23 @@ Não altere esta estrutura!"""
         if 'workout_schedule' in result and 'days' not in result:
             result['days'] = result.pop('workout_schedule')
             print("[AI_SERVICE] ✅ Convertido 'workout_schedule' para 'days'")
+        
+        # VALIDAÇÃO E CORREÇÃO AUTOMÁTICA: Garantir tipo e nome corretos
+        if workout_type == "home":
+            # Sempre corrigir para treino em casa
+            result['plan_name'] = f"Treino em Casa - Semana 1"
+            result['plan_summary'] = f"Plano de treino em casa personalizado para {days_per_week} dias por semana"
+            print(f"[AI_SERVICE] ✅ Nome padronizado para treino em casa")
+        else:
+            # Sempre corrigir para treino na academia
+            result['plan_name'] = f"Treino na Academia - Semana 1" 
+            result['plan_summary'] = f"Plano de treino na academia personalizado para {days_per_week} dias por semana"
+            print(f"[AI_SERVICE] ✅ Nome padronizado para treino na academia")
+        
+        # Garantir que workout_type está no resultado
+        result['workout_type'] = workout_type
+        
+        print(f"[AI_SERVICE] 🎯 Plano final: {result['plan_name']} (tipo: {workout_type})")
         
         return result
         

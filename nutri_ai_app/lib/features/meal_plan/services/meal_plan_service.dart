@@ -5,7 +5,7 @@ import '../models/meal_plan.dart';
 import '../../../core/network/api_service.dart';
 
 class MealPlanService {
-  static const String baseUrl = 'http://192.168.0.85:8000';
+  static const String baseUrl = 'http://192.168.0.85:8001';
   final ApiService _apiService = ApiService();
 
   /// Gera e salva um novo plano alimentar
@@ -23,7 +23,7 @@ class MealPlanService {
       print('[DEBUG] MealPlanService: Chamando getSavedMealPlans...');
       final response = await _apiService.getSavedMealPlans();
       print('[DEBUG] MealPlanService: Response recebida: $response');
-      
+
       if (response['plans'] != null) {
         final plans = List<Map<String, dynamic>>.from(response['plans']);
         print('[DEBUG] MealPlanService: ${plans.length} planos encontrados');

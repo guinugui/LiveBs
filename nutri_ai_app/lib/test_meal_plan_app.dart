@@ -9,10 +9,7 @@ class TestMealPlanApp extends StatelessWidget {
     return MaterialApp(
       title: 'Teste Plano Alimentar',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-        useMaterial3: true,
-      ),
+      theme: ThemeData(primarySwatch: Colors.green, useMaterial3: true),
       home: const TestHomePage(),
     );
   }
@@ -33,11 +30,7 @@ class TestHomePage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.restaurant_menu,
-              size: 100,
-              color: Colors.green,
-            ),
+            const Icon(Icons.restaurant_menu, size: 100, color: Colors.green),
             const SizedBox(height: 32),
             const Text(
               'App de Nutrição IA',
@@ -50,10 +43,7 @@ class TestHomePage extends StatelessWidget {
             const SizedBox(height: 16),
             const Text(
               'Teste da funcionalidade de planos alimentares',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 48),

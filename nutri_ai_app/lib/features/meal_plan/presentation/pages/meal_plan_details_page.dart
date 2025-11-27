@@ -74,8 +74,8 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.green))
           : errorMessage != null
-              ? _buildErrorState()
-              : _buildContent(),
+          ? _buildErrorState()
+          : _buildContent(),
     );
   }
 
@@ -118,31 +118,35 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
 
     // Estrutura real: { plan_data: { days: [ { day: 1, meals: [ {type: "breakfast", ...}, ... ] } ] } }
     List<dynamic>? mealsList;
-    
+
     try {
       // O backend retorna: { plan_data: { days: [ { day: 1, meals: [...] } ] } }
       if (planData!.containsKey('plan_data')) {
         final planContent = planData!['plan_data'];
         print('🔍 [DEBUG] plan_data encontrado: ${planContent.runtimeType}');
-        
+
         if (planContent is Map && planContent.containsKey('days')) {
           final days = planContent['days'] as List<dynamic>;
           print('🔍 [DEBUG] days encontrado: ${days.length} dias');
-          
-          if (days.isNotEmpty && days[0] is Map && days[0].containsKey('meals')) {
+
+          if (days.isNotEmpty &&
+              days[0] is Map &&
+              days[0].containsKey('meals')) {
             mealsList = days[0]['meals'] as List<dynamic>;
             print('🔍 [DEBUG] meals encontrado: ${mealsList.length} refeições');
           }
         }
       }
-      
+
       // Fallback: se não encontrou acima, verificar outras estruturas possíveis
       if (mealsList == null) {
         if (planData!.containsKey('meals')) {
           mealsList = planData!['meals'] as List<dynamic>;
         } else if (planData!.containsKey('days')) {
           final days = planData!['days'] as List<dynamic>;
-          if (days.isNotEmpty && days[0] is Map && days[0].containsKey('meals')) {
+          if (days.isNotEmpty &&
+              days[0] is Map &&
+              days[0].containsKey('meals')) {
             mealsList = days[0]['meals'] as List<dynamic>;
           }
         }
@@ -150,7 +154,7 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
     } catch (e) {
       print('❌ [ERROR] Erro ao processar estrutura de dados: $e');
     }
-    
+
     if (mealsList == null || mealsList.isEmpty) {
       return Center(
         child: Column(
@@ -228,11 +232,11 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
     final meal = mealData as Map<String, dynamic>;
     final mealName = meal['name']?.toString() ?? 'Refeição';
     final mealTime = meal['time']?.toString() ?? '';
-    
+
     String title;
     IconData icon;
     Color color;
-    
+
     // Determinar ícone e cor baseado no nome da refeição
     String lowerName = mealName.toLowerCase();
     if (lowerName.contains('café') || lowerName.contains('manhã')) {
@@ -306,7 +310,11 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Row(
                       children: [
-                        const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                        const Icon(
+                          Icons.access_time,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           mealTime,
@@ -328,8 +336,9 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
   }
 
   Widget _buildAllFoods(List<dynamic>? foods) {
-    if (foods == null || foods.isEmpty) return const Text('Nenhum alimento encontrado');
-    
+    if (foods == null || foods.isEmpty)
+      return const Text('Nenhum alimento encontrado');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -360,7 +369,11 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Row(
                     children: [
-                      const Icon(Icons.circle, size: 8, color: Colors.deepOrange),
+                      const Icon(
+                        Icons.circle,
+                        size: 8,
+                        color: Colors.deepOrange,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(

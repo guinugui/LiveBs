@@ -79,17 +79,31 @@ def create_workout_plan(workout_data: dict, current_user = Depends(get_current_u
             print(f"📋 Estrutura: {list(ai_response.keys()) if isinstance(ai_response, dict) else 'Não é dict'}")
             
             # Adaptar estrutura da resposta OpenAI para formato esperado pelo banco
-            if isinstance(ai_response, dict) and 'days' in ai_response:
-                week_number = ai_response.get('week', 1)
+            if isinstance(ai_response, dict):
+                # Obter dados do AI ou usar fallbacks
+                workout_type_final = ai_response.get('workout_type', combined_data.get('workout_type', 'home'))
+                
+                # GARANTIR nome correto baseado no tipo
+                if workout_type_final == "home":
+                    plan_name_correct = "Treino em Casa - Semana 1"
+                    plan_summary_correct = f"Plano de treino em casa personalizado para {combined_data.get('days_per_week', 3)} dias por semana"
+                    print(f"[WORKOUT_API] 🏠 CASA: Aplicando nome '{plan_name_correct}'")
+                else:
+                    plan_name_correct = "Treino na Academia - Semana 1"  
+                    plan_summary_correct = f"Plano de treino na academia personalizado para {combined_data.get('days_per_week', 3)} dias por semana"
+                    print(f"[WORKOUT_API] 🏋️ ACADEMIA: Aplicando nome '{plan_name_correct}'")
+                
+                # Construir estrutura final
                 workout_plan = {
-                    "plan_name": f"Plano de Treino Semanal {week_number}",
-                    "plan_summary": f"Treino personalizado para {combined_data.get('days_per_week', 4)} dias por semana",
-                    "workout_schedule": ai_response.get('days', []),
-                    "week": week_number,
+                    "plan_name": plan_name_correct,
+                    "plan_summary": plan_summary_correct,
+                    "days": ai_response.get('days', ai_response.get('workout_schedule', [])),  # Aceitar ambos
+                    "week": ai_response.get('week', 1),
                     "fitness_level": combined_data.get('fitness_level', 'intermediario'),
                     "session_duration": combined_data.get('session_duration', 45),
-                    "workout_type": combined_data.get('workout_type', 'home')
+                    "workout_type": workout_type_final
                 }
+                print(f"[WORKOUT_API] ✅ Plano padronizado: {workout_plan['plan_name']} (tipo: {workout_plan['workout_type']})")
             else:
                 raise ValueError("Estrutura de resposta inválida da OpenAI")
             

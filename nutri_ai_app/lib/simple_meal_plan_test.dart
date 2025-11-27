@@ -14,10 +14,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Teste Meal Plan',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-        useMaterial3: true,
-      ),
+      theme: ThemeData(primarySwatch: Colors.green, useMaterial3: true),
       home: const MealPlanTestPage(),
     );
   }
@@ -34,8 +31,8 @@ class _MealPlanTestPageState extends State<MealPlanTestPage> {
   List<Map<String, dynamic>> _plans = [];
   bool _isLoading = false;
   bool _isCreating = false;
-  
-  static const String baseUrl = 'http://192.168.0.85:8000';
+
+  static const String baseUrl = 'http://192.168.0.85:8001';
   static const String userEmail = 'gui@gmail.com';
   static const String userPassword = '123123';
 
@@ -48,27 +45,24 @@ class _MealPlanTestPageState extends State<MealPlanTestPage> {
   /// 🔍 BUSCA PLANOS SALVOS
   Future<void> _loadPlans() async {
     setState(() => _isLoading = true);
-    
+
     try {
       print('🔍 Buscando planos para: $userEmail');
-      
+
       // 1. Login
       final loginResponse = await http.post(
         Uri.parse('$baseUrl/auth/login'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'email': userEmail,
-          'password': userPassword,
-        }),
+        body: json.encode({'email': userEmail, 'password': userPassword}),
       );
-      
+
       if (loginResponse.statusCode != 200) {
         throw Exception('Login falhou: ${loginResponse.body}');
       }
-      
+
       final loginData = json.decode(loginResponse.body);
       final token = loginData['access_token'];
-      
+
       // 2. Buscar planos
       final plansResponse = await http.get(
         Uri.parse('$baseUrl/meal-plan'),
@@ -77,21 +71,20 @@ class _MealPlanTestPageState extends State<MealPlanTestPage> {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       if (plansResponse.statusCode != 200) {
         throw Exception('Erro ao buscar planos: ${plansResponse.body}');
       }
-      
+
       final plansData = json.decode(plansResponse.body);
       final plans = List<Map<String, dynamic>>.from(plansData['plans'] ?? []);
-      
+
       setState(() {
         _plans = plans;
         _isLoading = false;
       });
-      
+
       _showSnackBar('${plans.length} planos encontrados', Colors.green);
-      
     } catch (e) {
       print('❌ Erro ao buscar planos: $e');
       setState(() => _isLoading = false);
@@ -102,27 +95,24 @@ class _MealPlanTestPageState extends State<MealPlanTestPage> {
   /// ➕ CRIAR NOVO PLANO
   Future<void> _createPlan() async {
     setState(() => _isCreating = true);
-    
+
     try {
       print('🚀 Criando novo plano...');
-      
+
       // 1. Login
       final loginResponse = await http.post(
         Uri.parse('$baseUrl/auth/login'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'email': userEmail,
-          'password': userPassword,
-        }),
+        body: json.encode({'email': userEmail, 'password': userPassword}),
       );
-      
+
       if (loginResponse.statusCode != 200) {
         throw Exception('Login falhou');
       }
-      
+
       final loginData = json.decode(loginResponse.body);
       final token = loginData['access_token'];
-      
+
       // 2. Criar plano
       final createResponse = await http.post(
         Uri.parse('$baseUrl/meal-plan/generate'),
@@ -131,20 +121,20 @@ class _MealPlanTestPageState extends State<MealPlanTestPage> {
           'Authorization': 'Bearer $token',
         },
       );
-      
-      if (createResponse.statusCode != 200 && createResponse.statusCode != 201) {
+
+      if (createResponse.statusCode != 200 &&
+          createResponse.statusCode != 201) {
         throw Exception('Erro ao criar plano: ${createResponse.body}');
       }
-      
+
       final result = json.decode(createResponse.body);
-      
+
       setState(() => _isCreating = false);
-      
+
       _showSnackBar('${result['plan_name']} criado!', Colors.green);
-      
+
       // Recarregar lista
       await _loadPlans();
-      
     } catch (e) {
       print('❌ Erro ao criar plano: $e');
       setState(() => _isCreating = false);
@@ -154,44 +144,46 @@ class _MealPlanTestPageState extends State<MealPlanTestPage> {
 
   /// 🗑️ DELETAR PLANO
   Future<void> _deletePlan(String planId, String planName) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar'),
-        content: Text('Deletar "$planName"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+    final confirmed =
+        await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Confirmar'),
+            content: Text('Deletar "$planName"?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text(
+                  'Deletar',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Deletar', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    ) ?? false;
-    
+        ) ??
+        false;
+
     if (!confirmed) return;
-    
+
     try {
       // 1. Login
       final loginResponse = await http.post(
         Uri.parse('$baseUrl/auth/login'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'email': userEmail,
-          'password': userPassword,
-        }),
+        body: json.encode({'email': userEmail, 'password': userPassword}),
       );
-      
+
       if (loginResponse.statusCode != 200) {
         throw Exception('Login falhou');
       }
-      
+
       final loginData = json.decode(loginResponse.body);
       final token = loginData['access_token'];
-      
+
       // 2. Deletar
       final deleteResponse = await http.delete(
         Uri.parse('$baseUrl/meal-plan/$planId'),
@@ -200,16 +192,15 @@ class _MealPlanTestPageState extends State<MealPlanTestPage> {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       if (deleteResponse.statusCode != 200) {
         throw Exception('Erro ao deletar');
       }
-      
+
       _showSnackBar('$planName deletado!', Colors.green);
-      
+
       // Recarregar
       await _loadPlans();
-      
     } catch (e) {
       _showSnackBar('Erro ao deletar: $e', Colors.red);
     }
@@ -233,10 +224,7 @@ class _MealPlanTestPageState extends State<MealPlanTestPage> {
         backgroundColor: Colors.green[600],
         foregroundColor: Colors.white,
         actions: [
-          IconButton(
-            onPressed: _loadPlans,
-            icon: const Icon(Icons.refresh),
-          ),
+          IconButton(onPressed: _loadPlans, icon: const Icon(Icons.refresh)),
         ],
       ),
       body: _buildBody(),
@@ -272,7 +260,7 @@ class _MealPlanTestPageState extends State<MealPlanTestPage> {
         ),
       );
     }
-    
+
     if (_plans.isEmpty) {
       return const Center(
         child: Column(
@@ -290,7 +278,7 @@ class _MealPlanTestPageState extends State<MealPlanTestPage> {
         ),
       );
     }
-    
+
     return RefreshIndicator(
       onRefresh: _loadPlans,
       child: ListView.builder(
@@ -298,10 +286,11 @@ class _MealPlanTestPageState extends State<MealPlanTestPage> {
         itemCount: _plans.length,
         itemBuilder: (context, index) {
           final plan = _plans[index];
-          final planName = plan['plan_name']?.toString() ?? 'Plano ${index + 1}';
+          final planName =
+              plan['plan_name']?.toString() ?? 'Plano ${index + 1}';
           final planId = plan['id']?.toString() ?? '';
           final createdAt = plan['created_at']?.toString() ?? '';
-          
+
           return Card(
             margin: const EdgeInsets.only(bottom: 12),
             child: ListTile(
@@ -309,7 +298,10 @@ class _MealPlanTestPageState extends State<MealPlanTestPage> {
                 backgroundColor: Colors.green[600],
                 child: Text(
                   '${index + 1}',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               title: Text(

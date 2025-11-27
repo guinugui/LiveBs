@@ -47,7 +47,7 @@ Sempre responda em português do Brasil.''',
       final response = await _dio.post(
         '/chat/completions',
         data: {
-          'model': 'gpt-4o-mini',
+          'model': 'gpt-4o',
           'messages': messages,
           'temperature': 0.7,
           'max_tokens': 500,
@@ -99,7 +99,7 @@ Formato JSON:
       final response = await _dio.post(
         '/chat/completions',
         data: {
-          'model': 'gpt-4o-mini',
+          'model': 'gpt-4o',
           'messages': [
             {
               'role': 'system',

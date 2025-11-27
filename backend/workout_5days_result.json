@@ -1,0 +1,242 @@
+{
+    "plan_name": "Plano de Treino Casa - 5 Dias",
+    "plan_summary": "Plano de 5 dias por semana focado em emagrecimento e condicionamento físico",
+    "workout_schedule": [
+        {
+            "day": "Segunda",
+            "focus": "Treino A - Peito, Ombros e Tríceps",
+            "exercises": [
+                {
+                    "name": "Flexão de Braços",
+                    "sets": "3",
+                    "reps": "10-15",
+                    "rest": "60 segundos",
+                    "instructions": "Mantenha o corpo alinhado, desça controladamente",
+                    "equipment": "Peso corporal"
+                },
+                {
+                    "name": "Flexão Diamante",
+                    "sets": "2",
+                    "reps": "8-12",
+                    "rest": "60 segundos",
+                    "instructions": "Forme diamante com as mãos, foque no tríceps",
+                    "equipment": "Peso corporal"
+                },
+                {
+                    "name": "Elevação Lateral com Garrafas",
+                    "sets": "3",
+                    "reps": "12-15",
+                    "rest": "45 segundos",
+                    "instructions": "Eleve os braços lateralmente até a altura do ombro",
+                    "equipment": "Garrafas de água"
+                },
+                {
+                    "name": "Mergulho em Cadeira",
+                    "sets": "3",
+                    "reps": "8-12",
+                    "rest": "60 segundos",
+                    "instructions": "Use cadeira estável, trabalhe o tríceps",
+                    "equipment": "Cadeira"
+                },
+                {
+                    "name": "Prancha com Toque no Ombro",
+                    "sets": "2",
+                    "reps": "10 cada lado",
+                    "rest": "45 segundos",
+                    "instructions": "Mantenha o core estável durante o movimento",
+                    "equipment": "Peso corporal"
+                }
+            ]
+        },
+        {
+            "day": "Terça",
+            "focus": "Treino B - Costas e Bíceps",
+            "exercises": [
+                {
+                    "name": "Puxada na Barra",
+                    "sets": "3",
+                    "reps": "8-12",
+                    "rest": "90 segundos",
+                    "instructions": "Puxe com controle, focando nas costas",
+                    "equipment": "Barra fixa"
+                },
+                {
+                    "name": "Remada Invertida",
+                    "sets": "3",
+                    "reps": "10-15",
+                    "rest": "60 segundos",
+                    "instructions": "Use mesa ou barra baixa, corpo reto",
+                    "equipment": "Mesa/barra"
+                },
+                {
+                    "name": "Superman",
+                    "sets": "3",
+                    "reps": "12-15",
+                    "rest": "45 segundos",
+                    "instructions": "Eleve peito e pernas do chão simultaneamente",
+                    "equipment": "Peso corporal"
+                },
+                {
+                    "name": "Rosca Bíceps com Garrafas",
+                    "sets": "3",
+                    "reps": "12-15",
+                    "rest": "45 segundos",
+                    "instructions": "Movimento controlado, focando no bíceps",
+                    "equipment": "Garrafas de água"
+                },
+                {
+                    "name": "Rosca Martelo com Garrafas",
+                    "sets": "2",
+                    "reps": "10-12",
+                    "rest": "45 segundos",
+                    "instructions": "Palmas voltadas uma para a outra",
+                    "equipment": "Garrafas de água"
+                }
+            ]
+        },
+        {
+            "day": "Quarta",
+            "focus": "Treino C - Pernas e Abdômen",
+            "exercises": [
+                {
+                    "name": "Agachamento",
+                    "sets": "3",
+                    "reps": "12-15",
+                    "rest": "60 segundos",
+                    "instructions": "Mantenha o peito erguido e desça até os joelhos",
+                    "equipment": "Peso corporal"
+                },
+                {
+                    "name": "Agachamento Sumô",
+                    "sets": "3",
+                    "reps": "12-15",
+                    "rest": "60 segundos",
+                    "instructions": "Pés mais afastados, foque na parte interna das coxas",
+                    "equipment": "Peso corporal"
+                },
+                {
+                    "name": "Prancha Lateral",
+                    "sets": "3",
+                    "reps": "30 segundos cada lado",
+                    "rest": "45 segundos",
+                    "instructions": "Mantenha o corpo reto e estável",
+                    "equipment": "Peso corporal"
+                },
+                {
+                    "name": "Elevação de Panturrilha",
+                    "sets": "3",
+                    "reps": "15-20",
+                    "rest": "30 segundos",
+                    "instructions": "Suba na ponta dos pés e desça lentamente",
+                    "equipment": "Peso corporal"
+                },
+                {
+                    "name": "Cadeira Abdutora",
+                    "sets": "3",
+                    "reps": "12-15",
+                    "rest": "60 segundos",
+                    "instructions": "Abra as pernas com controle, foque nos glúteos",
+                    "equipment": "Peso corporal"
+                }
+            ]
+        },
+        {
+            "day": "Quinta",
+            "focus": "Treino D - Cardio e Core",
+            "exercises": [
+                {
+                    "name": "Burpee",
+                    "sets": "3",
+                    "reps": "8-10",
+                    "rest": "90 segundos",
+                    "instructions": "Movimento completo, mantenha a forma",
+                    "equipment": "Peso corporal"
+                },
+                {
+                    "name": "Mountain Climbers",
+                    "sets": "3",
+                    "reps": "30 segundos",
+                    "rest": "60 segundos",
+                    "instructions": "Acelere o movimento, mantenha o core ativo",
+                    "equipment": "Peso corporal"
+                },
+                {
+                    "name": "Abdominais",
+                    "sets": "3",
+                    "reps": "15-20",
+                    "rest": "45 segundos",
+                    "instructions": "Mantenha a lombar no chão, suba o tronco",
+                    "equipment": "Peso corporal"
+                },
+                {
+                    "name": "Prancha",
+                    "sets": "3",
+                    "reps": "30 segundos",
+                    "rest": "45 segundos",
+                    "instructions": "Corpo reto, foque na respiração",
+                    "equipment": "Peso corporal"
+                },
+                {
+                    "name": "High Knees",
+                    "sets": "3",
+                    "reps": "30 segundos",
+                    "rest": "60 segundos",
+                    "instructions": "Corra no lugar elevando os joelhos",
+                    "equipment": "Peso corporal"
+                }
+            ]
+        },
+        {
+            "day": "Sexta",
+            "focus": "Treino E - Corpo Total",
+            "exercises": [
+                {
+                    "name": "Circuito de Agachamento e Flexão",
+                    "sets": "3",
+                    "reps": "10-12 de cada",
+                    "rest": "90 segundos",
+                    "instructions": "Intercale agachamentos e flexões sem parar",
+                    "equipment": "Peso corporal"
+                },
+                {
+                    "name": "Lunge",
+                    "sets": "3",
+                    "reps": "10 cada perna",
+                    "rest": "60 segundos",
+                    "instructions": "Dê um passo à frente, joelho alinhado",
+                    "equipment": "Peso corporal"
+                },
+                {
+                    "name": "Flexão com os Joelhos no Chão",
+                    "sets": "3",
+                    "reps": "10-15",
+                    "rest": "60 segundos",
+                    "instructions": "Flexão adaptada para iniciantes",
+                    "equipment": "Peso corporal"
+                },
+                {
+                    "name": "Ponte",
+                    "sets": "3",
+                    "reps": "12-15",
+                    "rest": "60 segundos",
+                    "instructions": "Levante os quadris, contraia os glúteos",
+                    "equipment": "Peso corporal"
+                },
+                {
+                    "name": "Burpee de Baixa Intensidade",
+                    "sets": "2",
+                    "reps": "5-8",
+                    "rest": "90 segundos",
+                    "instructions": "Versão mais leve do burpee, mantenha o controle",
+                    "equipment": "Peso corporal"
+                }
+            ]
+        }
+    ],
+    "important_notes": [
+        "Respeitar problemas respiratórios (asma) - intensidade moderada",
+        "Cuidado com lesões no ombro - evitar sobrecarga",
+        "Descanso adequado entre as séries"
+    ],
+    "progression_tips": "Aumente gradualmente a intensidade a cada 2 semanas"
+}

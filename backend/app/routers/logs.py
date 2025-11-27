@@ -21,7 +21,12 @@ def log_weight(weight_log: WeightLogCreate, current_user = Depends(get_current_u
         )
         log = cursor.fetchone()
     
-    return log
+    return {
+        "id": log[0],
+        "weight": float(log[1]),
+        "logged_at": log[2],
+        "notes": log[3]
+    }
 
 @router.get("/weight", response_model=list[WeightLogResponse])
 def get_weight_logs(
@@ -42,7 +47,12 @@ def get_weight_logs(
         )
         logs = cursor.fetchall()
     
-    return logs
+    return [{
+        "id": log[0],
+        "weight": float(log[1]),
+        "logged_at": log[2],
+        "notes": log[3]
+    } for log in logs]
 
 # Water Logs
 @router.post("/water", response_model=WaterLogResponse, status_code=status.HTTP_201_CREATED)
@@ -59,7 +69,11 @@ def log_water(water_log: WaterLogCreate, current_user = Depends(get_current_user
         )
         log = cursor.fetchone()
     
-    return log
+    return {
+        "id": log[0],
+        "amount": float(log[1]),
+        "logged_at": log[2]
+    }
 
 @router.get("/water/today", response_model=dict)
 def get_today_water(current_user = Depends(get_current_user)):
@@ -98,7 +112,11 @@ def get_water_logs(
         )
         logs = cursor.fetchall()
     
-    return logs
+    return [{
+        "id": log[0],
+        "amount": float(log[1]),
+        "logged_at": log[2]
+    } for log in logs]
 
 # Meal Logs
 @router.post("/meal", response_model=MealLogResponse, status_code=status.HTTP_201_CREATED)
@@ -116,7 +134,14 @@ def log_meal(meal_log: MealLogCreate, current_user = Depends(get_current_user)):
         )
         log = cursor.fetchone()
     
-    return log
+    return {
+        "id": log[0],
+        "meal_name": log[1],
+        "calories": log[2],
+        "photo_url": log[3],
+        "logged_at": log[4],
+        "notes": log[5]
+    }
 
 @router.get("/meal/today", response_model=dict)
 def get_today_calories(current_user = Depends(get_current_user)):
@@ -155,4 +180,11 @@ def get_meal_logs(
         )
         logs = cursor.fetchall()
     
-    return logs
+    return [{
+        "id": log[0],
+        "meal_name": log[1],
+        "calories": log[2],
+        "photo_url": log[3],
+        "logged_at": log[4],
+        "notes": log[5]
+    } for log in logs]

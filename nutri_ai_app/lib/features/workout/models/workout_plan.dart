@@ -23,10 +23,10 @@ class WorkoutPlan {
     // Tentar extrair workoutType e daysPerWeek dos dados do treino
     String workoutType = 'home';
     int daysPerWeek = 3;
-    
+
     try {
       String workoutDataString = json['workout_data']?.toString() ?? '{}';
-      
+
       // Tentar extrair workout_schedule para contar os dias
       RegExp scheduleRegex = RegExp(r'workout_schedule:\s*\[([^\]]+)\]');
       Match? scheduleMatch = scheduleRegex.firstMatch(workoutDataString);
@@ -36,9 +36,11 @@ class WorkoutPlan {
         RegExp dayRegex = RegExp(r'\{day:');
         Iterable<Match> dayMatches = dayRegex.allMatches(scheduleContent);
         daysPerWeek = dayMatches.length;
-        print('[WORKOUT_PLAN] 📊 Dias encontrados no workoutData: $daysPerWeek');
+        print(
+          '[WORKOUT_PLAN] 📊 Dias encontrados no workoutData: $daysPerWeek',
+        );
       }
-      
+
       // Extrair workout_type de forma mais precisa
       // Primeiro: tentar encontrar no plan_name
       String planName = json['plan_name']?.toString().toLowerCase() ?? '';
@@ -51,22 +53,29 @@ class WorkoutPlan {
       } else {
         // Segundo: procurar nos dados do workout
         String lowerData = workoutDataString.toLowerCase();
-        if (lowerData.contains('gym') || lowerData.contains('academia') || 
-            lowerData.contains('halteres') || lowerData.contains('máquinas') || 
+        if (lowerData.contains('gym') ||
+            lowerData.contains('academia') ||
+            lowerData.contains('halteres') ||
+            lowerData.contains('máquinas') ||
             lowerData.contains('equipamentos')) {
           workoutType = 'gym';
-          print('[WORKOUT_PLAN] 🏋️ Tipo detectado pelos dados: GYM (equipamentos)');
-        } else if (lowerData.contains('casa') || lowerData.contains('home') || 
-                   lowerData.contains('peso corporal') || lowerData.contains('flexão')) {
+          print(
+            '[WORKOUT_PLAN] 🏋️ Tipo detectado pelos dados: GYM (equipamentos)',
+          );
+        } else if (lowerData.contains('casa') ||
+            lowerData.contains('home') ||
+            lowerData.contains('peso corporal') ||
+            lowerData.contains('flexão')) {
           workoutType = 'home';
-          print('[WORKOUT_PLAN] 🏠 Tipo detectado pelos dados: Casa (peso corporal)');
+          print(
+            '[WORKOUT_PLAN] 🏠 Tipo detectado pelos dados: Casa (peso corporal)',
+          );
         } else {
           // Padrão: assumir gym se não conseguir detectar
           workoutType = 'gym';
           print('[WORKOUT_PLAN] ⚙️ Tipo padrão aplicado: GYM');
         }
       }
-      
     } catch (e) {
       print('[WORKOUT_PLAN] ⚠️ Erro ao extrair dados: $e');
       // Manter valores padrão
@@ -86,11 +95,11 @@ class WorkoutPlan {
 
   static DateTime _parseDateTime(dynamic value) {
     if (value == null) return DateTime.now();
-    
+
     if (value is DateTime) {
       return value;
     }
-    
+
     if (value is String) {
       try {
         return DateTime.parse(value);
@@ -99,7 +108,7 @@ class WorkoutPlan {
         return DateTime.now();
       }
     }
-    
+
     if (value is int) {
       try {
         // Assume que é timestamp em milliseconds
@@ -113,7 +122,7 @@ class WorkoutPlan {
         }
       }
     }
-    
+
     // Para qualquer outro tipo, retorna a data atual
     return DateTime.now();
   }

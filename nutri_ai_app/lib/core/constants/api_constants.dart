@@ -1,4 +1,4 @@
-const String kApiBaseUrl = 'http://192.168.0.85:8000';
+const String kApiBaseUrl = 'http://192.168.0.85:8001';
 
 // Endpoints
 const String kAuthRegisterEndpoint = '/auth/register';

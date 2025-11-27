@@ -9,32 +9,33 @@ class MealPlanPageFixed extends StatefulWidget {
   State<MealPlanPageFixed> createState() => _MealPlanPageFixedState();
 }
 
-class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProviderStateMixin {
+class _MealPlanPageFixedState extends State<MealPlanPageFixed>
+    with TickerProviderStateMixin {
   List<Map<String, dynamic>> _savedPlans = [];
   bool _isLoading = true;
   bool _isCreating = false;
-  
+
   // Credenciais do usuário logado
   static const String _userEmail = 'gui@gmail.com';
   static const String _userPassword = '123123';
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    
+
     // Configurar animações
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-    
+
     // Buscar planos ao inicializar
     _loadMealPlans();
   }
@@ -48,38 +49,44 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
   /// 🔍 BUSCA TODOS OS PLANOS DO USUÁRIO NO BANCO DE DADOS
   Future<void> _loadMealPlans() async {
     setState(() => _isLoading = true);
-    
+
     try {
       print('🔍 [MEAL_PLANS] Buscando planos para: $_userEmail');
-      
-      final plans = await DirectMealPlanService.fetchPlansDirectly(_userEmail, _userPassword);
-      
+
+      final plans = await DirectMealPlanService.fetchPlansDirectly(
+        _userEmail,
+        _userPassword,
+      );
+
       print('📊 [MEAL_PLANS] ${plans.length} planos encontrados');
-      
+
       // Ordenar por data de criação (mais recente primeiro)
       plans.sort((a, b) {
-        final dateA = DateTime.tryParse(a['created_at']?.toString() ?? '') ?? DateTime.now();
-        final dateB = DateTime.tryParse(b['created_at']?.toString() ?? '') ?? DateTime.now();
+        final dateA =
+            DateTime.tryParse(a['created_at']?.toString() ?? '') ??
+            DateTime.now();
+        final dateB =
+            DateTime.tryParse(b['created_at']?.toString() ?? '') ??
+            DateTime.now();
         return dateB.compareTo(dateA);
       });
-      
+
       setState(() {
         _savedPlans = plans;
         _isLoading = false;
       });
-      
+
       _animationController.forward();
-      
+
       // Log dos planos encontrados
       for (int i = 0; i < plans.length; i++) {
         final plan = plans[i];
         print('📋 [PLAN_${i + 1}] ${plan['plan_name']} (${plan['id']})');
       }
-      
     } catch (e) {
       print('❌ [ERROR] Erro ao buscar planos: $e');
       setState(() => _isLoading = false);
-      
+
       if (mounted) {
         _showErrorSnackBar('Erro ao carregar planos: $e');
       }
@@ -89,22 +96,24 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
   /// ➕ CRIAR NOVO PLANO ALIMENTAR
   Future<void> _createNewMealPlan() async {
     setState(() => _isCreating = true);
-    
+
     try {
       print('🚀 [CREATE] Criando novo plano alimentar...');
-      
-      final result = await DirectMealPlanService.createPlanDirectly(_userEmail, _userPassword);
-      
+
+      final result = await DirectMealPlanService.createPlanDirectly(
+        _userEmail,
+        _userPassword,
+      );
+
       print('✅ [CREATE] Plano criado: ${result['plan_name']}');
-      
+
       // Mostrar sucesso
       if (mounted) {
         _showSuccessSnackBar('${result['plan_name']} criado com sucesso!');
       }
-      
+
       // Recarregar lista
       await _loadMealPlans();
-      
     } catch (e) {
       print('❌ [CREATE_ERROR] Erro ao criar plano: $e');
       if (mounted) {
@@ -119,25 +128,28 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
   Future<void> _deleteMealPlan(Map<String, dynamic> plan) async {
     final planId = plan['id']?.toString() ?? '';
     final planName = plan['plan_name']?.toString() ?? 'Plano';
-    
+
     // Confirmar deleção
     final confirmed = await _showDeleteConfirmation(planName);
     if (!confirmed) return;
-    
+
     try {
       print('🗑️ [DELETE] Deletando: $planName ($planId)');
-      
-      await DirectMealPlanService.deletePlanDirectly(_userEmail, _userPassword, planId);
-      
+
+      await DirectMealPlanService.deletePlanDirectly(
+        _userEmail,
+        _userPassword,
+        planId,
+      );
+
       print('✅ [DELETE] Plano deletado com sucesso');
-      
+
       if (mounted) {
         _showSuccessSnackBar('$planName deletado!');
       }
-      
+
       // Recarregar lista
       await _loadMealPlans();
-      
     } catch (e) {
       print('❌ [DELETE_ERROR] Erro ao deletar: $e');
       if (mounted) {
@@ -150,7 +162,7 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
   void _viewPlanDetails(Map<String, dynamic> plan) {
     final planId = plan['id']?.toString() ?? '';
     final planName = plan['plan_name']?.toString() ?? 'Plano';
-    
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => MealPlanDetailsPage(
@@ -213,11 +225,11 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
         ),
       );
     }
-    
+
     if (_savedPlans.isEmpty) {
       return _buildEmptyState();
     }
-    
+
     return _buildPlansList();
   }
 
@@ -264,7 +276,7 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
             const SizedBox(height: 40),
             ElevatedButton.icon(
               onPressed: _isCreating ? null : _createNewMealPlan,
-              icon: _isCreating 
+              icon: _isCreating
                   ? const SizedBox(
                       width: 16,
                       height: 16,
@@ -278,7 +290,10 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green[600],
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -304,7 +319,7 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
             if (index == 0) {
               return _buildListHeader();
             }
-            
+
             final plan = _savedPlans[index - 1];
             return _buildPlanCard(plan, index - 1);
           },
@@ -368,14 +383,12 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
     final planName = plan['plan_name']?.toString() ?? 'Plano sem nome';
     final planNumber = plan['plan_number']?.toString() ?? '0';
     final createdAt = plan['created_at']?.toString() ?? '';
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Card(
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: InkWell(
           onTap: () => _viewPlanDetails(plan),
           borderRadius: BorderRadius.circular(16),
@@ -414,7 +427,7 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
                   ),
                 ),
                 const SizedBox(width: 16),
-                
+
                 // Informações do plano
                 Expanded(
                   child: Column(
@@ -440,7 +453,11 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(Icons.visibility, size: 16, color: Colors.grey[600]),
+                          Icon(
+                            Icons.visibility,
+                            size: 16,
+                            color: Colors.grey[600],
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             'Toque para ver detalhes',
@@ -454,7 +471,7 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
                     ],
                   ),
                 ),
-                
+
                 // Menu de ações
                 PopupMenuButton<String>(
                   onSelected: (value) {
@@ -502,7 +519,10 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
           : const Icon(Icons.add, color: Colors.white),
       label: Text(
         _isCreating ? 'Criando...' : 'Novo Plano',
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -520,9 +540,7 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
         ),
         backgroundColor: Colors.green[600],
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         duration: const Duration(seconds: 3),
       ),
     );
@@ -541,9 +559,7 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
         ),
         backgroundColor: Colors.red[600],
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         duration: const Duration(seconds: 5),
       ),
     );
@@ -555,7 +571,7 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
       final date = DateTime.parse(dateString);
       final now = DateTime.now();
       final difference = now.difference(date);
-      
+
       if (difference.inDays == 0) {
         return 'hoje às ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
       } else if (difference.inDays == 1) {
@@ -579,23 +595,29 @@ class _MealPlanPageFixedState extends State<MealPlanPageFixed> with TickerProvid
   /// ❓ CONFIRMAÇÃO DE DELEÇÃO
   Future<bool> _showDeleteConfirmation(String planName) async {
     return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar Deleção'),
-        content: Text('Tem certeza que deseja deletar "$planName"?'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancelar', style: TextStyle(color: Colors.grey[600])),
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Confirmar Deleção'),
+            content: Text('Tem certeza que deseja deletar "$planName"?'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(
+                  'Cancelar',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Deletar'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Deletar'),
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 }
