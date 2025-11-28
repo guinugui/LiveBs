@@ -29,7 +29,8 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> _loadChatHistory() async {
     try {
-      final history = await ApiService().getChatHistory();
+      // Carrega máximo 20 mensagens do histórico
+      final history = await ApiService().getChatHistory(limit: 20);
 
       if (mounted) {
         setState(() {
@@ -55,6 +56,12 @@ class _ChatPageState extends State<ChatPage> {
                 time: DateTime.parse(msg['created_at']),
               ),
             );
+          }
+          
+          // Garantir que não exceda 20 mensagens mesmo no carregamento
+          if (_messages.length > 20) {
+            _messages.removeRange(0, _messages.length - 20);
+            print('[NUTRI] 🔄 Histórico truncado para 20 mensagens no carregamento');
           }
 
           _isLoading = false;
@@ -87,6 +94,14 @@ class _ChatPageState extends State<ChatPage> {
       _messages.add(
         ChatBubble(message: userMessage, isUser: true, time: DateTime.now()),
       );
+      
+      // Lógica de limitação: máximo 20 mensagens
+      // Quando chegar a 21, remove a primeira (mais antiga)
+      if (_messages.length > 20) {
+        _messages.removeAt(0);
+        print('[NUTRI] 🗂️ Mensagem mais antiga removida. Total: ${_messages.length}');
+      }
+      
       _isSending = true;
     });
 
@@ -102,6 +117,13 @@ class _ChatPageState extends State<ChatPage> {
               time: DateTime.parse(response['created_at']),
             ),
           );
+          
+          // Aplicar limitação novamente após resposta do bot
+          if (_messages.length > 20) {
+            _messages.removeAt(0);
+            print('[NUTRI] 🗂️ Mensagem mais antiga removida após resposta. Total: ${_messages.length}');
+          }
+          
           _isSending = false;
         });
       }
@@ -116,6 +138,13 @@ class _ChatPageState extends State<ChatPage> {
               time: DateTime.now(),
             ),
           );
+          
+          // Aplicar limitação mesmo em caso de erro
+          if (_messages.length > 20) {
+            _messages.removeAt(0);
+            print('[NUTRI] 🗂️ Mensagem mais antiga removida após erro. Total: ${_messages.length}');
+          }
+          
           _isSending = false;
         });
         ScaffoldMessenger.of(
@@ -147,13 +176,18 @@ class _ChatPageState extends State<ChatPage> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                return _buildMessageBubble(message);
-              },
+            child: Container(
+              color: Theme.of(context).brightness == Brightness.dark 
+                  ? Colors.black 
+                  : Colors.grey.shade50,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final message = _messages[index];
+                  return _buildMessageBubble(message);
+                },
+              ),
             ),
           ),
           _buildMessageInput(),
@@ -170,8 +204,12 @@ class _ChatPageState extends State<ChatPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: message.isUser
-              ? const Color(0xFF6C63FF)
-              : Colors.grey.shade200,
+              ? (Theme.of(context).brightness == Brightness.dark 
+                  ? Colors.grey.shade600 
+                  : const Color(0xFF6C63FF))
+              : (Theme.of(context).brightness == Brightness.dark 
+                  ? Colors.grey.shade700 
+                  : Colors.grey.shade200),
           borderRadius: BorderRadius.circular(16),
         ),
         constraints: BoxConstraints(
@@ -185,16 +223,58 @@ class _ChatPageState extends State<ChatPage> {
           : MarkdownBody(
               data: message.message,
               styleSheet: MarkdownStyleSheet(
-                p: TextStyle(color: Colors.black87, fontSize: 14),
-                h1: TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.bold),
-                h2: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold),
-                h3: TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.bold),
-                listBullet: TextStyle(color: Colors.black87, fontSize: 14),
-                strong: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
-                em: TextStyle(color: Colors.black87, fontStyle: FontStyle.italic),
+                p: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.grey.shade100 
+                      : Colors.black87, 
+                  fontSize: 14
+                ),
+                h1: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.grey.shade100 
+                      : Colors.black87, 
+                  fontSize: 18, 
+                  fontWeight: FontWeight.bold
+                ),
+                h2: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.grey.shade100 
+                      : Colors.black87, 
+                  fontSize: 16, 
+                  fontWeight: FontWeight.bold
+                ),
+                h3: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.grey.shade100 
+                      : Colors.black87, 
+                  fontSize: 14, 
+                  fontWeight: FontWeight.bold
+                ),
+                listBullet: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.grey.shade100 
+                      : Colors.black87, 
+                  fontSize: 14
+                ),
+                strong: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.grey.shade100 
+                      : Colors.black87, 
+                  fontWeight: FontWeight.bold
+                ),
+                em: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.grey.shade100 
+                      : Colors.black87, 
+                  fontStyle: FontStyle.italic
+                ),
                 code: TextStyle(
-                  backgroundColor: Colors.grey.shade300,
-                  color: Colors.black87,
+                  backgroundColor: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.grey.shade600 
+                      : Colors.grey.shade300,
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.grey.shade100 
+                      : Colors.black87,
                   fontFamily: 'monospace',
                 ),
               ),
@@ -207,7 +287,9 @@ class _ChatPageState extends State<ChatPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark 
+            ? Colors.grey.shade900 
+            : Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -226,6 +308,10 @@ class _ChatPageState extends State<ChatPage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
+                filled: true,
+                fillColor: Theme.of(context).brightness == Brightness.dark 
+                    ? Colors.grey.shade800 
+                    : Colors.grey.shade100,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
@@ -235,12 +321,21 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
           const SizedBox(width: 8),
-          IconButton(
-            onPressed: _sendMessage,
-            icon: const Icon(Icons.send),
-            style: IconButton.styleFrom(
-              backgroundColor: const Color(0xFF6C63FF),
-              foregroundColor: Colors.white,
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark 
+                  ? Colors.grey.shade600 
+                  : Theme.of(context).primaryColor,
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              onPressed: _sendMessage,
+              icon: const Icon(Icons.arrow_forward),
+              style: IconButton.styleFrom(
+                foregroundColor: Colors.white,
+              ),
             ),
           ),
         ],
