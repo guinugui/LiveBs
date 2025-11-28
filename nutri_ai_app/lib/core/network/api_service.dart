@@ -13,8 +13,9 @@ class ApiService {
   Future<void> initialize() async {
     _dio = Dio(BaseOptions(
       baseUrl: kApiBaseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 60), // Increased for AI requests
+      sendTimeout: const Duration(seconds: 30),
       headers: {
         'Content-Type': 'application/json',
       },
@@ -231,6 +232,10 @@ class ApiService {
     final response = await _dio.post(
       kPersonalEndpoint,
       data: {'message': message},
+      options: Options(
+        receiveTimeout: const Duration(seconds: 90), // Extra timeout for AI generation
+        sendTimeout: const Duration(seconds: 30),
+      ),
     );
     print('[API] ✅ Resposta do servidor: ${response.statusCode} - ${response.data}');
     return response.data;
@@ -324,5 +329,29 @@ class ApiService {
   Future<Map<String, dynamic>> getCaloriesToday() async {
     final response = await _dio.get(kMealTodayEndpoint);
     return response.data;
+  }
+
+  // ==================== WORKOUT PLANS ====================
+
+  Future<Map<String, dynamic>> saveWorkoutPlan(Map<String, dynamic> workoutData) async {
+    final response = await _dio.post(
+      '/workout-plan/',
+      data: workoutData,
+    );
+    return response.data;
+  }
+
+  Future<List<dynamic>> getWorkoutPlans() async {
+    final response = await _dio.get('/workout-plan/');
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> getWorkoutPlanDetails(String planId) async {
+    final response = await _dio.get('/workout-plan/$planId');
+    return response.data;
+  }
+
+  Future<void> deleteWorkoutPlan(String planId) async {
+    await _dio.delete('/workout-plan/$planId');
   }
 }

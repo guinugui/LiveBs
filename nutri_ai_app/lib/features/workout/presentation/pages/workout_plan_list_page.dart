@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/network/api_service.dart';
 import '../../models/workout_plan.dart';
 import '../../services/workout_plan_service.dart';
-import 'workout_questionnaire_page.dart';
 import 'workout_plan_details_page.dart';
+import 'ai_workout_generator_page.dart';
 
 class WorkoutPlanListPage extends StatefulWidget {
   const WorkoutPlanListPage({super.key});
@@ -42,12 +43,21 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
   }
 
   Future<void> _loadWorkoutPlans() async {
-    if (_userEmail == null || _userPassword == null) return;
-    
     setState(() => _isLoading = true);
     
     try {
-      final plans = await WorkoutPlanService.fetchWorkoutPlans(_userEmail!, _userPassword!);
+      final apiService = ApiService();
+      final plansData = await apiService.getWorkoutPlans();
+      
+      final plans = <WorkoutPlan>[];
+      for (final planData in plansData) {
+        try {
+          final workoutPlan = WorkoutPlan.fromJson(planData);
+          plans.add(workoutPlan);
+        } catch (e) {
+          print('Erro ao converter plano: $e');
+        }
+      }
       
       setState(() {
         _workoutPlans = plans;
@@ -62,7 +72,7 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
   Future<void> _createNewWorkoutPlan() async {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => const WorkoutQuestionnairePage(),
+        builder: (context) => const AIWorkoutGeneratorPage(),
       ),
     ).then((_) => _loadWorkoutPlans());
   }
@@ -155,8 +165,8 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
             const SizedBox(height: 32),
             ElevatedButton.icon(
               onPressed: _createNewWorkoutPlan,
-              icon: const Icon(Icons.smart_toy),
-              label: const Text('Criar com Personal Virtual'),
+              icon: const Icon(Icons.fitness_center),
+              label: const Text('Gerar Treino com IA'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
                 foregroundColor: Colors.white,

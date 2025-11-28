@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/network/api_service.dart';
 
 
+
 class VirtualTrainerPage extends StatefulWidget {
   const VirtualTrainerPage({super.key});
 

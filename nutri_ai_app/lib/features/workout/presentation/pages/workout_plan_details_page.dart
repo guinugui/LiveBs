@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../models/workout_plan.dart';
 import 'dart:convert';
 
@@ -24,61 +25,64 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
   void _parseWorkoutData() {
     try {
       print('[WORKOUT_DETAILS] 📋 Dados do plano: ${widget.plan.planName}');
-      print(
-        '[WORKOUT_DETAILS] 📊 workoutData length: ${widget.plan.workoutData.length}',
-      );
-      print(
-        '[WORKOUT_DETAILS] 📊 workoutData tipo: ${widget.plan.workoutData.runtimeType}',
-      );
-      print(
-        '[WORKOUT_DETAILS] 📄 workoutData content (300 chars): ${widget.plan.workoutData.substring(0, widget.plan.workoutData.length > 300 ? 300 : widget.plan.workoutData.length)}',
-      );
+      print('[WORKOUT_DETAILS] 📊 workoutData length: ${widget.plan.workoutData.length}');
+      print('[WORKOUT_DETAILS] 📊 workoutData tipo: ${widget.plan.workoutData.runtimeType}');
+      
+      String dataPreview = widget.plan.workoutData.length > 300 
+        ? widget.plan.workoutData.substring(0, 300) 
+        : widget.plan.workoutData;
+      print('[WORKOUT_DETAILS] 📄 workoutData preview: $dataPreview');
 
-      if (widget.plan.workoutData.isNotEmpty &&
-          widget.plan.workoutData != '{}') {
+      if (widget.plan.workoutData.isNotEmpty && widget.plan.workoutData != '{}') {
         String rawData = widget.plan.workoutData;
+        
+        // Verificar se é markdown (começa com #, *, ou tem formatação típica)
+        bool isMarkdown = rawData.contains('##') || 
+                         rawData.contains('**') || 
+                         rawData.contains('📅') ||
+                         rawData.contains('###') ||
+                         rawData.startsWith('# ') ||
+                         rawData.contains('💪') ||
+                         rawData.contains('🎯') ||
+                         rawData.contains('- **') ||
+                         (rawData.contains('**DIVISÃO') || rawData.contains('**ORIENTAÇÃO'));
+        
+        if (isMarkdown) {
+          print('[WORKOUT_DETAILS] 📝 Detectado formato markdown');
+          _workoutData = {'markdown_content': rawData};
+          setState(() => _isLoading = false);
+          return;
+        }
 
-        // PRIMEIRO: Tentar JSON parse direto (backend corrigido deve enviar JSON string válido)
+        // PRIMEIRO: Tentar JSON parse direto
         try {
           print('[WORKOUT_DETAILS] 🎯 Tentando JSON parse direto...');
           _workoutData = json.decode(rawData);
           print('[WORKOUT_DETAILS] ✅ JSON parse direto bem-sucedido!');
 
-          // Verificar se days ou workout_schedule existe (days é a estrutura correta)
+          // Verificar se days ou workout_schedule existe
           List<dynamic>? schedule;
 
           if (_workoutData != null && _workoutData!['days'] != null) {
             schedule = _workoutData!['days'] as List<dynamic>;
-            print(
-              '[WORKOUT_DETAILS] 🎉 SUCESSO: ${schedule.length} dias encontrados em days!',
-            );
-          } else if (_workoutData != null &&
-              _workoutData!['workout_schedule'] != null) {
+            print('[WORKOUT_DETAILS] 🎉 SUCESSO: ${schedule.length} dias encontrados em days!');
+          } else if (_workoutData != null && _workoutData!['workout_schedule'] != null) {
             schedule = _workoutData!['workout_schedule'] as List<dynamic>;
-            print(
-              '[WORKOUT_DETAILS] 🎉 SUCESSO: ${schedule.length} dias encontrados no workout_schedule (legado)!',
-            );
-            // Converter para days para padronizar
+            print('[WORKOUT_DETAILS] 🎉 SUCESSO: ${schedule.length} dias encontrados no workout_schedule!');
             _workoutData!['days'] = schedule;
             _workoutData!.remove('workout_schedule');
           }
 
           if (schedule != null) {
-            // Log detalhado de cada dia
             for (int i = 0; i < schedule.length; i++) {
               var day = schedule[i];
               if (day is Map && day['exercises'] is List) {
                 var exercises = day['exercises'] as List;
-                print(
-                  '[WORKOUT_DETAILS] 📅 Dia ${i + 1} (${day['day']}): ${exercises.length} exercícios',
-                );
+                print('[WORKOUT_DETAILS] 📅 Dia ${i + 1} (${day['day']}): ${exercises.length} exercícios');
               }
             }
-            return; // Sucesso! Não precisa tentar outros métodos
-          } else {
-            print(
-              '[WORKOUT_DETAILS] ⚠️ Nem days nem workout_schedule encontrados no JSON válido',
-            );
+            setState(() => _isLoading = false);
+            return;
           }
         } catch (e) {
           print('[WORKOUT_DETAILS] ❌ JSON parse direto falhou: $e');
@@ -193,6 +197,56 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
   }
 
   Widget _buildWorkoutDetails() {
+    // Se for conteúdo markdown, exibir com markdown
+    if (_workoutData!.containsKey('markdown_content')) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Cabeçalho do Plano
+            _buildPlanHeader(),
+            const SizedBox(height: 24),
+            
+            // Conteúdo Markdown
+            _buildCard(
+              child: Markdown(
+                data: _workoutData!['markdown_content'],
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                styleSheet: MarkdownStyleSheet(
+                  h1: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                  h2: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                  h3: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                  p: const TextStyle(
+                    fontSize: 16,
+                    height: 1.5,
+                  ),
+                  strong: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(

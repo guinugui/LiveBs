@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/network/api_service.dart';
-import '../../../workout/presentation/pages/workout_questionnaire_page.dart';
+
 import '../../../workout/presentation/pages/workout_plan_list_page.dart';
+import '../../../workout/presentation/pages/ai_workout_generator_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -293,7 +294,7 @@ class _HomePageState extends State<HomePage> {
                             onPressed: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) => const WorkoutQuestionnairePage(),
+                                  builder: (context) => const AIWorkoutGeneratorPage(),
                                 ),
                               );
                             },
