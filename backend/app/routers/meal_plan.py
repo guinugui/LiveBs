@@ -93,13 +93,54 @@ def create_meal_plan(current_user = Depends(get_current_user)):
         
         # Salvar o plano no banco de dados
         with db.get_db_cursor() as cursor:
-            # Descobrir o próximo número do plano
+            # Verificar quantos planos o usuário já tem
             cursor.execute(
-                "SELECT COALESCE(MAX(plan_number), 0) + 1 as next_number FROM saved_meal_plans WHERE user_id = %s",
+                "SELECT COUNT(*) FROM saved_meal_plans WHERE user_id = %s",
                 (user_id,)
             )
             result = cursor.fetchone()
-            next_number = result[0] if result else 1
+            # Tratamento robusta para tupla ou dict
+            if result:
+                if isinstance(result, dict):
+                    plan_count = result.get('count', result.get('COUNT(*)', 0))
+                else:
+                    plan_count = result[0]
+            else:
+                plan_count = 0
+            
+            # Se já tem 10 ou mais planos, deletar o mais antigo
+            if plan_count >= 10:
+                print(f"[DEBUG] Usuário tem {plan_count} planos, deletando o mais antigo...")
+                # Buscar o ID do plano mais antigo
+                cursor.execute(
+                    "SELECT id FROM saved_meal_plans WHERE user_id = %s ORDER BY created_at ASC LIMIT 1",
+                    (user_id,)
+                )
+                oldest_plan = cursor.fetchone()
+                if oldest_plan:
+                    if isinstance(oldest_plan, dict):
+                        oldest_plan_id = oldest_plan['id']
+                    else:
+                        oldest_plan_id = oldest_plan[0]
+                    cursor.execute(
+                        "DELETE FROM saved_meal_plans WHERE id = %s",
+                        (oldest_plan_id,)
+                    )
+                    print(f"[DEBUG] Plano mais antigo deletado (ID: {oldest_plan_id})")
+            
+            # Descobrir o próximo número do plano
+            cursor.execute(
+                "SELECT COALESCE(MAX(plan_number), 0) + 1 FROM saved_meal_plans WHERE user_id = %s",
+                (user_id,)
+            )
+            result = cursor.fetchone()
+            if result:
+                if isinstance(result, dict):
+                    next_number = list(result.values())[0] if result else 1
+                else:
+                    next_number = result[0]
+            else:
+                next_number = 1
             
             # Inserir o plano
             plan_name = f"Plano Alimentar {next_number:02d}"

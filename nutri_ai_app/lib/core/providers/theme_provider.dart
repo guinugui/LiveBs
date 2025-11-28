@@ -28,9 +28,8 @@ class ThemeProvider extends ChangeNotifier {
   
   Future<void> _loadThemeFromPrefs() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final isDark = prefs.getBool('isDarkMode') ?? false;
-      _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+      // Sempre inicia no modo claro, independente da preferência salva
+      _themeMode = ThemeMode.light;
       notifyListeners();
     } catch (e) {
       print('Erro ao carregar tema: $e');
