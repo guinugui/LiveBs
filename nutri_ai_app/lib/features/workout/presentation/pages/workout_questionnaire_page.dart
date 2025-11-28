@@ -124,7 +124,7 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('✅ ${workoutPlan.planName} criado com sucesso!'),
-            backgroundColor: Colors.green,
+            backgroundColor: Theme.of(context).primaryColor,
           ),
         );
       }

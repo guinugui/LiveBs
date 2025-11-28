@@ -279,8 +279,8 @@ class _ProgressPageState extends State<ProgressPage>
                           Container(
                             width: 8,
                             height: 8,
-                            decoration: const BoxDecoration(
-                              color: Colors.green,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor,
                               shape: BoxShape.circle,
                             ),
                           ),

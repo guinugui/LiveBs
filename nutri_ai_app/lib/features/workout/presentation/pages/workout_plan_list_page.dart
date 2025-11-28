@@ -93,7 +93,7 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meus Treinos'),
-        backgroundColor: Colors.green.shade400,
+        backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -108,7 +108,7 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const CircularProgressIndicator(color: Colors.green),
+                  const CircularProgressIndicator(),
                   SizedBox(height: 16),
                   Text(
                     'Carregando planos de treino...',
@@ -122,7 +122,7 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
               : _buildPlansList(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _isLoading ? null : _createNewWorkoutPlan,
-        backgroundColor: Colors.green.shade400,
+        backgroundColor: Theme.of(context).primaryColor,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
           'Novo Treino',
@@ -168,7 +168,7 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
               icon: const Icon(Icons.fitness_center),
               label: const Text('Gerar Treino com IA'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green.shade400,
+                backgroundColor: Theme.of(context).primaryColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
@@ -213,12 +213,16 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.grey.withOpacity(0.1)
+                        : Theme.of(context).primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     plan.workoutType == 'home' ? Icons.home : Icons.fitness_center,
-                    color: Colors.green.shade400,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.grey 
+                        : Theme.of(context).primaryColor,
                     size: 24,
                   ),
                 ),
@@ -333,7 +337,7 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('✅ "${plan.planName}" deletado!'),
-              backgroundColor: Colors.green,
+              backgroundColor: Theme.of(context).primaryColor,
             ),
           );
         }

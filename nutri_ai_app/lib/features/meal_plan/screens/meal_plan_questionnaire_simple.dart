@@ -151,7 +151,7 @@ class _MealPlanQuestionnaireScreenState extends State<MealPlanQuestionnaireScree
               child: ElevatedButton(
                 onPressed: _generatePlan,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),

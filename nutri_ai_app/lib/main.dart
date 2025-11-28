@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart' as provider;
 import 'core/network/supabase_service.dart';
 import 'core/network/api_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
+import 'core/providers/theme_provider.dart';
+import 'core/providers/language_provider.dart';
+import 'core/localization/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,7 +27,15 @@ void main() async {
     debugPrint('Erro ao inicializar Supabase: $e');
   }
 
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(
+    provider.MultiProvider(
+      providers: [
+        provider.ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        provider.ChangeNotifierProvider(create: (_) => LanguageProvider()),
+      ],
+      child: const ProviderScope(child: MyApp()),
+    ),
+  );
 }
 
 class MyApp extends ConsumerWidget {
@@ -32,11 +45,30 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
 
-    return MaterialApp.router(
-      title: 'LiveBs',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme(),
-      routerConfig: router,
+    return provider.Consumer2<ThemeProvider, LanguageProvider>(
+      builder: (context, themeProvider, languageProvider, child) {
+        return MaterialApp.router(
+          title: 'LiveBs',
+          debugShowCheckedModeBanner: false,
+          
+          // Temas
+          theme: AppTheme.lightTheme(),
+          darkTheme: AppTheme.darkTheme(),
+          themeMode: themeProvider.themeMode,
+          
+          // Localização
+          locale: languageProvider.locale,
+          supportedLocales: LanguageProvider.supportedLocales,
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          
+          routerConfig: router,
+        );
+      },
     );
   }
 }

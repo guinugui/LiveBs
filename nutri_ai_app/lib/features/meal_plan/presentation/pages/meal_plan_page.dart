@@ -224,7 +224,9 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).brightness == Brightness.dark 
+          ? Colors.black 
+          : Colors.grey[50],
       appBar: _buildAppBar(),
       body: _buildBody(),
       floatingActionButton: _buildCreateButton(),
@@ -241,7 +243,7 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
           color: Colors.white,
         ),
       ),
-      backgroundColor: Colors.green[600],
+      backgroundColor: Theme.of(context).primaryColor,
       elevation: 0,
       actions: [
         IconButton(
@@ -273,7 +275,7 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.green[600]!),
+            valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
             strokeWidth: 3,
           ),
           const SizedBox(height: 24),
@@ -311,13 +313,13 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.green[50],
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.green[50],
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
                   Icons.restaurant_menu,
                   size: 64,
-                  color: Colors.green[400],
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.green[400],
                 ),
               ),
               const SizedBox(height: 32),
@@ -400,14 +402,18 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.green[400]!, Colors.green[600]!],
+          colors: Theme.of(context).brightness == Brightness.dark 
+              ? [Colors.grey.shade700, Colors.grey.shade800]
+              : [Colors.green[400]!, Colors.green[600]!],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.3),
+            color: (Theme.of(context).brightness == Brightness.dark 
+                ? Colors.grey 
+                : Colors.green).withOpacity(0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -482,14 +488,18 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
                   height: 60,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Colors.green[400]!, Colors.green[600]!],
+                      colors: Theme.of(context).brightness == Brightness.dark 
+                          ? [Colors.grey.shade600, Colors.grey.shade700]
+                          : [Colors.green[400]!, Colors.green[600]!],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.green.withOpacity(0.3),
+                        color: (Theme.of(context).brightness == Brightness.dark 
+                            ? Colors.grey 
+                            : Colors.green).withOpacity(0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -586,7 +596,7 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
   Widget _buildCreateButton() {
     return FloatingActionButton.extended(
       onPressed: _isCreating || _isLoading ? null : _createNewMealPlan,
-      backgroundColor: Colors.green[600],
+      backgroundColor: Theme.of(context).primaryColor,
       icon: _isCreating 
           ? const SizedBox(
               width: 20,
@@ -655,7 +665,7 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
             Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: Colors.green[600],
+        backgroundColor: Theme.of(context).primaryColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),

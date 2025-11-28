@@ -61,7 +61,7 @@ class _MealPlanDetailsPageState extends State<MealPlanDetailsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.planName),
-        backgroundColor: Colors.green,
+        backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
         actions: [
           IconButton(

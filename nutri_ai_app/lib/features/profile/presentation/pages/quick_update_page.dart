@@ -62,7 +62,7 @@ class _QuickUpdatePageState extends State<QuickUpdatePage> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Dados atualizados com sucesso!'), backgroundColor: Colors.green),
+          SnackBar(content: const Text('Dados atualizados com sucesso!'), backgroundColor: Theme.of(context).primaryColor),
         );
         context.pop();
       }

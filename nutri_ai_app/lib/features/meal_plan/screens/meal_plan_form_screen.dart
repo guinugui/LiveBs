@@ -79,9 +79,9 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Plano alimentar gerado com sucesso!'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('Plano alimentar gerado com sucesso!'),
+            backgroundColor: Theme.of(context).primaryColor,
           ),
         );
         

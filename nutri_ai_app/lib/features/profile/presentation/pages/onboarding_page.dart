@@ -144,9 +144,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Perfil criado com sucesso!'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('Perfil criado com sucesso!'),
+            backgroundColor: Theme.of(context).primaryColor,
           ),
         );
         context.go('/home');

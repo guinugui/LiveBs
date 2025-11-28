@@ -186,7 +186,7 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
           'Personal Virtual',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.green.shade400,
+        backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -219,7 +219,7 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isBot ? Colors.grey.shade200 : Colors.green.shade400,
+          color: isBot ? Colors.grey.shade200 : Theme.of(context).primaryColor,
           borderRadius: BorderRadius.circular(16),
         ),
         constraints: BoxConstraints(
@@ -281,7 +281,7 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
             },
             icon: const Icon(Icons.send),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.green.shade400,
+              backgroundColor: Theme.of(context).primaryColor,
               foregroundColor: Colors.white,
             ),
           ),

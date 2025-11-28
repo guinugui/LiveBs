@@ -13,6 +13,7 @@ import '../../features/meal_plan/presentation/pages/meal_plan_page.dart';
 import '../../features/meal_plan/screens/meal_plan_form_screen.dart';
 import '../../features/home/presentation/pages/virtual_trainer_page.dart';
 import '../../features/profile/presentation/pages/quick_update_page.dart';
+import '../../features/profile/presentation/pages/settings_page.dart';
 import '../../features/workout/presentation/pages/ai_workout_generator_page.dart';
 import '../../features/workout/presentation/pages/workout_plan_list_page.dart';
 
@@ -101,6 +102,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/workout-plans',
         name: 'workout-plans',
         builder: (context, state) => const WorkoutPlanListPage(),
+      ),
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (context, state) => const SettingsPage(),
       ),
     ],
   );

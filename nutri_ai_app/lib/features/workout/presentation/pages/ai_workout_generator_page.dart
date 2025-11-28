@@ -54,7 +54,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
           'Gerador de Treino IA',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.green.shade400,
+        backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -71,7 +71,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
           child: LinearProgressIndicator(
             value: (_currentPage + 1) / 3,
             backgroundColor: Colors.grey.shade300,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.green.shade400),
+            valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
           ),
         ),
         
@@ -97,8 +97,8 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                   child: OutlinedButton(
                     onPressed: _previousPage,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.green.shade400,
-                      side: BorderSide(color: Colors.green.shade400),
+                      foregroundColor: Theme.of(context).primaryColor,
+                      side: BorderSide(color: Theme.of(context).primaryColor),
                     ),
                     child: const Text('Voltar'),
                   ),
@@ -108,7 +108,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _nextPage,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade400,
+                    backgroundColor: Theme.of(context).primaryColor,
                     foregroundColor: Colors.white,
                   ),
                   child: _isLoading 
@@ -273,7 +273,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                       max: 6,
                       divisions: 4,
                       label: '$_daysPerWeek dias',
-                      activeColor: Colors.green.shade400,
+                      activeColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey : Theme.of(context).primaryColor,
                       onChanged: (value) => setState(() => _daysPerWeek = value.round()),
                     ),
                   ],
@@ -291,7 +291,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                       max: 120,
                       divisions: 9,
                       label: '$_minutesPerDay min',
-                      activeColor: Colors.green.shade400,
+                      activeColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey : Theme.of(context).primaryColor,
                       onChanged: (value) => setState(() => _minutesPerDay = value.round()),
                     ),
                   ],
@@ -331,9 +331,9 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.green.shade50,
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.shade200),
+                border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,7 +342,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                     '📋 Resumo da Configuração',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.green.shade600,
+                      color: Theme.of(context).primaryColor,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -408,7 +408,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
           
           // Exercícios do Dia section
           Card(
-            color: Colors.green.shade50,
+            color: Theme.of(context).primaryColor.withOpacity(0.1),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -416,14 +416,14 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.fitness_center, color: Colors.green.shade700),
+                      Icon(Icons.fitness_center, color: Theme.of(context).primaryColor),
                       const SizedBox(width: 8),
                       Text(
                         'Exercícios da Semana ($_daysPerWeek)',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.green.shade700,
+                          color: Theme.of(context).primaryColor,
                         ),
                       ),
                     ],
@@ -438,9 +438,9 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.green.shade200),
+                        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -451,7 +451,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                                 width: 24,
                                 height: 24,
                                 decoration: BoxDecoration(
-                                  color: Colors.green.shade600,
+                                  color: Theme.of(context).primaryColor,
                                   shape: BoxShape.circle,
                                 ),
                                 child: Center(
@@ -529,8 +529,8 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                 child: OutlinedButton(
                   onPressed: () => setState(() => _workoutPlan = null),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.green.shade400,
-                    side: BorderSide(color: Colors.green.shade400),
+                    foregroundColor: Theme.of(context).primaryColor,
+                    side: BorderSide(color: Theme.of(context).primaryColor),
                   ),
                   child: const Text('Gerar Novo'),
                 ),
@@ -540,7 +540,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                 child: ElevatedButton(
                   onPressed: _saveWorkout,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade400,
+                    backgroundColor: Theme.of(context).primaryColor,
                     foregroundColor: Colors.white,
                   ),
                   child: const Text('Salvar Treino'),
@@ -875,10 +875,10 @@ Sempre responder organizado no formato:
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Treino salvo com sucesso! Confira em "Meus Treinos".'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
+          SnackBar(
+            content: const Text('✅ Treino salvo com sucesso! Confira em "Meus Treinos".'),
+            backgroundColor: Theme.of(context).primaryColor,
+            duration: const Duration(seconds: 3),
           ),
         );
         
