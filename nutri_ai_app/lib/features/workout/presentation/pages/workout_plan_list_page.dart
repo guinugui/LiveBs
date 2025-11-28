@@ -93,7 +93,7 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meus Treinos'),
-        backgroundColor: Colors.orange,
+        backgroundColor: Colors.green.shade400,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -108,7 +108,7 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(color: Colors.orange),
+                  const CircularProgressIndicator(color: Colors.green),
                   SizedBox(height: 16),
                   Text(
                     'Carregando planos de treino...',
@@ -122,7 +122,7 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
               : _buildPlansList(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _isLoading ? null : _createNewWorkoutPlan,
-        backgroundColor: Colors.orange,
+        backgroundColor: Colors.green.shade400,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
           'Novo Treino',
@@ -168,7 +168,7 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
               icon: const Icon(Icons.fitness_center),
               label: const Text('Gerar Treino com IA'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
+                backgroundColor: Colors.green.shade400,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
@@ -213,12 +213,12 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: plan.workoutType == 'home' ? Colors.blue[100] : Colors.orange[100],
+                    color: Colors.green.shade50,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     plan.workoutType == 'home' ? Icons.home : Icons.fitness_center,
-                    color: plan.workoutType == 'home' ? Colors.blue : Colors.orange,
+                    color: Colors.green.shade400,
                     size: 24,
                   ),
                 ),

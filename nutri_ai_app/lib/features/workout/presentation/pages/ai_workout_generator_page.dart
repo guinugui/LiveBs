@@ -54,7 +54,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
           'Gerador de Treino IA',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.orange.shade600,
+        backgroundColor: Colors.green.shade400,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -71,7 +71,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
           child: LinearProgressIndicator(
             value: (_currentPage + 1) / 3,
             backgroundColor: Colors.grey.shade300,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.orange.shade600),
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.green.shade400),
           ),
         ),
         
@@ -97,8 +97,8 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                   child: OutlinedButton(
                     onPressed: _previousPage,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.orange.shade600,
-                      side: BorderSide(color: Colors.orange.shade600),
+                      foregroundColor: Colors.green.shade400,
+                      side: BorderSide(color: Colors.green.shade400),
                     ),
                     child: const Text('Voltar'),
                   ),
@@ -108,7 +108,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _nextPage,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange.shade600,
+                    backgroundColor: Colors.green.shade400,
                     foregroundColor: Colors.white,
                   ),
                   child: _isLoading 
@@ -273,7 +273,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                       max: 6,
                       divisions: 4,
                       label: '$_daysPerWeek dias',
-                      activeColor: Colors.orange.shade600,
+                      activeColor: Colors.green.shade400,
                       onChanged: (value) => setState(() => _daysPerWeek = value.round()),
                     ),
                   ],
@@ -287,11 +287,11 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                     const Text('Minutos por dia:', style: TextStyle(fontWeight: FontWeight.w500)),
                     Slider(
                       value: _minutesPerDay.toDouble(),
-                      min: 20,
-                      max: 90,
-                      divisions: 7,
+                      min: 30,
+                      max: 120,
+                      divisions: 9,
                       label: '$_minutesPerDay min',
-                      activeColor: Colors.orange.shade600,
+                      activeColor: Colors.green.shade400,
                       onChanged: (value) => setState(() => _minutesPerDay = value.round()),
                     ),
                   ],
@@ -331,9 +331,9 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
+                color: Colors.green.shade50,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange.shade200),
+                border: Border.all(color: Colors.green.shade200),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,7 +342,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                     '📋 Resumo da Configuração',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.orange.shade700,
+                      color: Colors.green.shade600,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -529,8 +529,8 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                 child: OutlinedButton(
                   onPressed: () => setState(() => _workoutPlan = null),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.orange.shade600,
-                    side: BorderSide(color: Colors.orange.shade600),
+                    foregroundColor: Colors.green.shade400,
+                    side: BorderSide(color: Colors.green.shade400),
                   ),
                   child: const Text('Gerar Novo'),
                 ),
@@ -540,7 +540,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                 child: ElevatedButton(
                   onPressed: _saveWorkout,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange.shade600,
+                    backgroundColor: Colors.green.shade400,
                     foregroundColor: Colors.white,
                   ),
                   child: const Text('Salvar Treino'),

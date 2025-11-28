@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/network/api_service.dart';
 
-import '../../../workout/presentation/pages/workout_plan_list_page.dart';
-import '../../../workout/presentation/pages/ai_workout_generator_page.dart';
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -14,7 +11,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _isLoading = true;
-  String _userName = '';
   double _currentWeight = 0.0;
   double _targetWeight = 0.0;
   double _height = 0.0;
@@ -92,10 +88,10 @@ class _HomePageState extends State<HomePage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('+ 500ml de água registrado!'),
-            backgroundColor: Colors.blue,
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: const Text('+ 500ml de água registrado!'),
+            backgroundColor: Colors.green.shade400,
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -128,28 +124,6 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Greeting Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Olá! 👋',
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Como você está se sentindo hoje?',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
             // Banner de atualização semanal
             if (_needsUpdate)
               Card(
@@ -235,110 +209,133 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
+            const SizedBox(height: 20),
+
+            // === SEÇÃO CHATS ===
+            Text(
+              '💬 Assistentes Virtuais',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
+              ),
+            ),
             const SizedBox(height: 12),
 
-            // Seção Personal Virtual
-            Card(
-              color: Colors.orange.shade50,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.shade600,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.smart_toy,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Personal Virtual 🤖',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.orange.shade900,
-                                ),
+            // Chat Nutri e Chat Personal
+            Row(
+              children: [
+                // Chat Nutri
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => context.push('/chat'),
+                    child: Card(
+                      color: Colors.green.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade400,
+                                borderRadius: BorderRadius.circular(50),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Crie seu plano de treino personalizado',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.orange.shade700,
-                                ),
+                              child: const Icon(
+                                Icons.restaurant,
+                                color: Colors.white,
+                                size: 28,
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Chat Nutri',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade700,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Dúvidas sobre\nalimentos',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.green.shade600,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const AIWorkoutGeneratorPage(),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.fitness_center, size: 20),
-                            label: const Text('Gerar Treino'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange.shade600,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const WorkoutPlanListPage(),
-                                ),
-                              );
-                            },
-                            icon: Icon(Icons.list, color: Colors.orange.shade600, size: 20),
-                            label: Text(
-                              'Meus Treinos',
-                              style: TextStyle(color: Colors.orange.shade600),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: Colors.orange.shade600),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
+                const SizedBox(width: 12),
+                // Chat Personal
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => context.push('/progress'),
+                    child: Card(
+                      color: Colors.green.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade400,
+                                borderRadius: BorderRadius.circular(50),
+                              ),
+                              child: const Icon(
+                                Icons.fitness_center,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Chat Personal',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade700,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Treinos e\nexercícios',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.green.shade600,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // === SEÇÃO HIDRATAÇÃO ===
+            Text(
+              '💧 Hidratação Diária',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
               ),
             ),
             const SizedBox(height: 12),
 
             // Seção de Hidratação
             Card(
-              color: Colors.blue.shade50,
+              color: Colors.green.shade50,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -351,7 +348,7 @@ class _HomePageState extends State<HomePage> {
                           children: [
                             Icon(
                               Icons.water_drop,
-                              color: Colors.blue.shade700,
+                              color: Colors.green.shade600,
                               size: 28,
                             ),
                             const SizedBox(width: 8),
@@ -360,7 +357,7 @@ class _HomePageState extends State<HomePage> {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.blue.shade900,
+                                color: Colors.green.shade700,
                               ),
                             ),
                           ],
@@ -370,7 +367,7 @@ class _HomePageState extends State<HomePage> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade700,
+                            color: Colors.green.shade600,
                           ),
                         ),
                       ],
@@ -383,9 +380,9 @@ class _HomePageState extends State<HomePage> {
                       child: LinearProgressIndicator(
                         value: _waterConsumed / _waterGoal,
                         minHeight: 12,
-                        backgroundColor: Colors.blue.shade100,
+                        backgroundColor: Colors.green.shade100,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.blue.shade600,
+                          Colors.green.shade400,
                         ),
                       ),
                     ),
@@ -407,7 +404,7 @@ class _HomePageState extends State<HomePage> {
                         icon: const Icon(Icons.add),
                         label: const Text('Adicionar 500ml'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade600,
+                          backgroundColor: Colors.green.shade400,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           disabledBackgroundColor: Colors.grey.shade300,
@@ -418,38 +415,205 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // Conteúdo Principal
+            // === SEÇÃO TREINOS ===
             Text(
-              'Resumo do Dia',
-              style: Theme.of(context).textTheme.headlineMedium,
+              '💪 Treinos Personalizados',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             Card(
+              color: Colors.green.shade50,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Você está indo muito bem!',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade400,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.fitness_center,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Treinos com IA 🤖',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green.shade700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Gere treinos personalizados com inteligência artificial',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.green.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => context.push('/workout-generator'),
+                            icon: const Icon(Icons.add, size: 20),
+                            label: const Text('Gerar Treino'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green.shade400,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => context.push('/workout-plans'),
+                            icon: Icon(Icons.list, color: Colors.green.shade400, size: 20),
+                            label: Text(
+                              'Meus Treinos',
+                              style: TextStyle(color: Colors.green.shade400),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: Colors.green.shade400),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
             ),
+            const SizedBox(height: 20),
+
+            // === SEÇÃO PLANO ALIMENTAR ===
+            Text(
+              '🍽️ Plano Alimentar',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            Card(
+              color: Colors.green.shade50,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade400,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.restaurant_menu,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Alimentação Saudável 🥗',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green.shade700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Gere seu plano nutricional personalizado',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.green.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => context.push('/meal-plan'),
+                            icon: const Icon(Icons.add, size: 20),
+                            label: const Text('Novo Plano'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green.shade400,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => context.push('/meal-plan'),
+                            icon: Icon(Icons.history, color: Colors.green.shade400, size: 20),
+                            label: Text(
+                              'Meus Planos',
+                              style: TextStyle(color: Colors.green.shade400),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: Colors.green.shade400),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
           ],
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF4CAF50),
+        selectedItemColor: Colors.green.shade400,
         unselectedItemColor: Colors.grey,
         currentIndex: 0,
         items: const [
@@ -509,16 +673,16 @@ class _HomePageState extends State<HomePage> {
           width: 60,
           height: 70,
           decoration: BoxDecoration(
-            color: isFilled ? Colors.blue.shade600 : Colors.blue.shade100,
+            color: isFilled ? Colors.green.shade400 : Colors.green.shade100,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.blue.shade300, width: 2),
+            border: Border.all(color: Colors.green.shade300, width: 2),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.water_drop,
-                color: isFilled ? Colors.white : Colors.blue.shade300,
+                color: isFilled ? Colors.white : Colors.green.shade300,
                 size: 28,
               ),
               const SizedBox(height: 4),
@@ -526,7 +690,7 @@ class _HomePageState extends State<HomePage> {
                 '500ml',
                 style: TextStyle(
                   fontSize: 10,
-                  color: isFilled ? Colors.white : Colors.blue.shade700,
+                  color: isFilled ? Colors.white : Colors.green.shade600,
                   fontWeight: FontWeight.bold,
                 ),
               ),
