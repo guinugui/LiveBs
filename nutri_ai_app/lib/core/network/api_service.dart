@@ -241,6 +241,23 @@ class ApiService {
     return response.data;
   }
 
+  // ==================== WORKOUT GENERATION ====================
+  
+  /// Gera treino com IA sem salvar no histórico do chat personal
+  Future<Map<String, dynamic>> generateWorkoutWithAI(String prompt) async {
+    print('[API] 🏋️ Gerando treino com IA (sem salvar no chat)...');
+    final response = await _dio.post(
+      '/workout-plan/generate', // Endpoint separado para geração de treinos
+      data: {'prompt': prompt},
+      options: Options(
+        receiveTimeout: const Duration(seconds: 90), // Extra timeout for AI generation
+        sendTimeout: const Duration(seconds: 30),
+      ),
+    );
+    print('[API] ✅ Treino gerado: ${response.statusCode}');
+    return response.data;
+  }
+
   Future<List<dynamic>> getPersonalHistory({int limit = 50}) async {
     final response = await _dio.get(
       kPersonalHistoryEndpoint,

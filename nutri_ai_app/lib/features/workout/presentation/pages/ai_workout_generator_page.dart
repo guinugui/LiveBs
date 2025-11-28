@@ -578,10 +578,10 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
     
     try {
       final prompt = _buildWorkoutPrompt();
-      print('[WORKOUT] 🚀 Enviando prompt para IA...');
+      print('[WORKOUT] 🚀 Gerando treino com IA (separado do chat personal)...');
       
-      // Use ApiService timeout (90s) instead of local timeout
-      final response = await _apiService.sendPersonalMessage(prompt);
+      // Usar função específica para treinos que não salva no chat personal
+      final response = await _apiService.generateWorkoutWithAI(prompt);
       
       print('[WORKOUT] ✅ Resposta recebida: ${response.toString().substring(0, 100)}...');
       

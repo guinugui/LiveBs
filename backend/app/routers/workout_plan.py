@@ -308,3 +308,38 @@ def delete_workout_plan(plan_id: str, current_user = Depends(get_current_user)):
         )
     
     return {"message": "Plano de treino deletado com sucesso"}
+
+@router.post("/generate", status_code=status.HTTP_200_OK)
+def generate_workout_with_ai(data: dict, current_user = Depends(get_current_user)):
+    """Gera treino com IA sem salvar no histórico do chat personal"""
+    try:
+        prompt = data.get('prompt', '')
+        if not prompt:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Prompt é obrigatório"
+            )
+        
+        print(f"[WORKOUT_GENERATOR] 🏋️ Gerando treino com IA (isolado do chat personal)")
+        print(f"[WORKOUT_GENERATOR] 📝 Prompt: {prompt[:100]}...")
+        
+        # Usar o mesmo serviço de IA mas sem salvar no chat
+        from app.ai_service import generate_ai_response
+        
+        # Gerar resposta usando OpenAI diretamente
+        ai_response = generate_ai_response(prompt)
+        
+        print(f"[WORKOUT_GENERATOR] ✅ Resposta gerada: {len(ai_response)} caracteres")
+        
+        return {
+            "message": ai_response,
+            "role": "assistant", 
+            "type": "workout_generation"
+        }
+        
+    except Exception as e:
+        print(f"[WORKOUT_GENERATOR] ❌ Erro: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao gerar treino: {str(e)}"
+        )

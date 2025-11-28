@@ -456,6 +456,20 @@ Informações do usuário:
         return "Desculpe, estou com dificuldades técnicas no momento. Tente novamente em instantes! 😊"
 
 
+def generate_ai_response(prompt: str) -> str:
+    """Gera resposta de IA para qualquer prompt (uso geral)"""
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=1500
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        print(f"[AI_SERVICE] ❌ Erro ao gerar resposta: {e}")
+        raise
+
 def get_personal_ai_response(messages: list[dict], user_profile: dict = None) -> str:
     """Gera resposta do Personal Trainer Virtual (Coach Leo) usando OpenAI"""
     
