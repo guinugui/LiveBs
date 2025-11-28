@@ -227,10 +227,12 @@ class ApiService {
   // ==================== PERSONAL TRAINER ====================
 
   Future<Map<String, dynamic>> sendPersonalMessage(String message) async {
+    print('[API] 📡 Enviando POST para $kPersonalEndpoint com: {"message": "$message"}');
     final response = await _dio.post(
       kPersonalEndpoint,
       data: {'message': message},
     );
+    print('[API] ✅ Resposta do servidor: ${response.statusCode} - ${response.data}');
     return response.data;
   }
 

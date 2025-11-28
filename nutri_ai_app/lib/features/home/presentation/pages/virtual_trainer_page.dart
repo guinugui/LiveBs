@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/network/api_service.dart';
-import '../../../workout/presentation/pages/workout_questionnaire_page.dart';
-import '../../../workout/presentation/pages/workout_plan_list_page.dart';
+
 
 class VirtualTrainerPage extends StatefulWidget {
   const VirtualTrainerPage({super.key});
@@ -14,14 +13,9 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
     with TickerProviderStateMixin {
   final ApiService _apiService = ApiService();
   late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
 
-  bool _isLoading = true;
-  String _userName = 'Usuário';
-  Map<String, dynamic>? _profile;
-  Map<String, dynamic>? _todayWorkout;
-  bool _needsProfileUpdate = false;
+
+
 
   // Conversação com Personal Virtual
   final List<Map<String, dynamic>> _conversation = [];
@@ -32,6 +26,7 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
   @override
   void initState() {
     super.initState();
+    print('[PERSONAL] 🚀 Personal Virtual initState chamado!');
     _setupAnimations();
     _loadData();
     _startIntroduction();
@@ -43,40 +38,25 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.elasticOut,
-    ));
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-
-    _animationController.forward();
   }
 
   Future<void> _loadData() async {
     try {
       // Carregar perfil do usuário
       try {
-        final profileResponse = await _apiService.getProfile();
-        _profile = profileResponse;
-        _userName = profileResponse['name'] ?? 'Usuário';
+        await _apiService.getProfile();
       } catch (e) {
         print('Erro ao carregar perfil: $e');
       }
 
       // Carregar histórico do Personal Virtual
       try {
+        print('[PERSONAL] 🔍 Tentando carregar histórico do Personal Virtual...');
         final history = await _apiService.getPersonalHistory(limit: 20);
+        print('[PERSONAL] ✅ Histórico carregado: ${history.length} mensagens');
         for (var message in history) {
+          print('[PERSONAL] 💬 Mensagem: ${message['message'].substring(0, 50)}...');
           _conversation.add({
             'content': message['message'],
             'isBot': message['role'] == 'assistant',
@@ -84,22 +64,21 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
           });
         }
       } catch (e) {
-        print('Erro ao carregar histórico do Personal: $e');
+        print('[PERSONAL] ❌ Erro ao carregar histórico do Personal: $e');
       }
 
       // Verificar se precisa atualizar perfil (simulado)
-      _needsProfileUpdate = false;
 
       // Buscar treino de hoje (implementar depois)
       // _todayWorkout será carregado quando o endpoint estiver pronto
 
       setState(() {
-        _isLoading = false;
+        // Dados carregados
       });
     } catch (e) {
       print('Erro ao carregar dados: $e');
       setState(() {
-        _isLoading = false;
+        // Erro ao carregar dados
       });
     }
   }
@@ -145,31 +124,53 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
   }
 
   Future<void> _sendMessage() async {
-    final message = _messageController.text.trim();
-    if (message.isEmpty) return;
+    print('[FRONTEND] 🎯 _sendMessage chamada!');
+    if (_messageController.text.trim().isEmpty || _isTyping) {
+      print('[FRONTEND] ⚠️ Mensagem vazia ou já enviando, cancelando...');
+      return;
+    }
 
+    final userMessage = _messageController.text;
+    print('[FRONTEND] 📝 Mensagem: "$userMessage"');
     _messageController.clear();
-    _addMessage(message);
 
     setState(() {
+      _conversation.add({
+        'content': userMessage,
+        'isBot': false,
+        'timestamp': DateTime.now(),
+      });
       _isTyping = true;
     });
 
     try {
-      // Enviar mensagem para o Personal Virtual (Coach Atlas) via API
-      final response = await _apiService.sendPersonalMessage(message);
-      _addMessage(response['message'], isBot: true);
+      print('[FRONTEND] 🚀 Enviando mensagem para Personal: $userMessage');
+      final response = await _apiService.sendPersonalMessage(userMessage);
+      print('[FRONTEND] ✅ Resposta recebida: $response');
+      
+      if (mounted) {
+        setState(() {
+          _conversation.add({
+            'content': response['message'],
+            'isBot': true,
+            'timestamp': DateTime.parse(response['created_at']),
+          });
+          _isTyping = false;
+        });
+      }
       
     } catch (e) {
-      print('Erro ao enviar mensagem para Personal: $e');
-      _addMessage(
-        'Desculpe, tive um problema técnico! 😅 Mas não desista do seu treino! 💪 Tente novamente em alguns segundos!',
-        isBot: true,
-      );
-    } finally {
-      setState(() {
-        _isTyping = false;
-      });
+      print('[FRONTEND] ❌ Erro ao enviar mensagem para Personal: $e');
+      if (mounted) {
+        setState(() {
+          _conversation.add({
+            'content': 'Desculpe, tive um problema técnico! 😅 Mas não desista do seu treino! 💪 Tente novamente em alguns segundos!',
+            'isBot': true,
+            'timestamp': DateTime.now(),
+          });
+          _isTyping = false;
+        });
+      }
     }
   }
 
@@ -188,290 +189,52 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // Header com avatar e status
-                _buildHeader(),
-                
-                // Área de conversa
-                Expanded(child: _buildConversation()),
-                
-                // Ações rápidas
-                _buildQuickActions(),
-                
-                // Campo de mensagem
-                _buildMessageInput(),
-              ],
-            ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return AnimatedBuilder(
-      animation: _fadeAnimation,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _fadeAnimation.value,
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.orange.shade600, Colors.orange.shade400],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Row(
-              children: [
-                AnimatedBuilder(
-                  animation: _scaleAnimation,
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _scaleAnimation.value,
-                      child: Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.smart_toy,
-                          color: Colors.orange,
-                          size: 30,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Sua Personal Virtual',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: Colors.green,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Online e pronta para ajudar!',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _conversation.length,
+              itemBuilder: (context, index) {
+                final message = _conversation[index];
+                return _buildMessageBubble(message);
+              },
             ),
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildConversation() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ListView.builder(
-        controller: _scrollController,
-        itemCount: _conversation.length + (_isTyping ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == _conversation.length && _isTyping) {
-            return _buildTypingIndicator();
-          }
-          
-          final message = _conversation[index];
-          return _buildMessageBubble(message);
-        },
+          _buildMessageInput(),
+        ],
       ),
     );
   }
+
+
 
   Widget _buildMessageBubble(Map<String, dynamic> message) {
     final isBot = message['isBot'] as bool;
     
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: isBot ? MainAxisAlignment.start : MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (isBot) ...[
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.orange.shade600,
-              child: const Icon(Icons.smart_toy, color: Colors.white, size: 16),
-            ),
-            const SizedBox(width: 8),
-          ],
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: isBot ? Colors.grey.shade100 : Colors.orange.shade600,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                message['content'],
-                style: TextStyle(
-                  color: isBot ? Colors.black87 : Colors.white,
-                  fontSize: 16,
-                ),
-              ),
-            ),
+    return Align(
+      alignment: isBot ? Alignment.centerLeft : Alignment.centerRight,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isBot ? Colors.grey.shade200 : Colors.orange.shade600,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
+        child: Text(
+          message['content'],
+          style: TextStyle(
+            color: isBot ? Colors.black87 : Colors.white,
           ),
-          if (!isBot) ...[
-            const SizedBox(width: 8),
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.grey.shade300,
-              child: Icon(Icons.person, color: Colors.grey.shade600, size: 16),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTypingIndicator() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: Colors.orange.shade600,
-            child: const Icon(Icons.smart_toy, color: Colors.white, size: 16),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildTypingDot(0),
-                const SizedBox(width: 4),
-                _buildTypingDot(1),
-                const SizedBox(width: 4),
-                _buildTypingDot(2),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTypingDot(int index) {
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        final animation = Tween<double>(
-          begin: 0.5,
-          end: 1.0,
-        ).animate(CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(
-            index * 0.2,
-            (index * 0.2) + 0.4,
-            curve: Curves.easeInOut,
-          ),
-        ));
-        
-        return Transform.scale(
-          scale: animation.value,
-          child: Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade400,
-              shape: BoxShape.circle,
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildQuickActions() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _buildQuickActionChip(
-              '🏋️‍♀️ Gerar Treino',
-              () => _navigateToWorkoutGenerator(),
-            ),
-            const SizedBox(width: 8),
-            _buildQuickActionChip(
-              '📋 Meus Treinos',
-              () => _navigateToWorkoutList(),
-            ),
-            const SizedBox(width: 8),
-            if (_todayWorkout != null)
-              _buildQuickActionChip(
-                '💪 Treino de Hoje',
-                () => _showTodayWorkout(),
-              ),
-            const SizedBox(width: 8),
-            _buildQuickActionChip(
-              '🎯 Minhas Metas',
-              () => _showGoals(),
-            ),
-          ],
         ),
       ),
     );
   }
 
-  Widget _buildQuickActionChip(String label, VoidCallback onPressed) {
-    return ActionChip(
-      label: Text(label),
-      onPressed: onPressed,
-      backgroundColor: Colors.orange.shade50,
-      labelStyle: TextStyle(
-        color: Colors.orange.shade700,
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-      ),
-      side: BorderSide(color: Colors.orange.shade200),
-    );
-  }
+
 
   Widget _buildMessageInput() {
     return Container(
@@ -502,112 +265,31 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
               ),
               maxLines: null,
               textInputAction: TextInputAction.send,
-              onSubmitted: (_) => _sendMessage(),
+              onSubmitted: (_) {
+                print('[FRONTEND] 🎹 onSubmitted chamado!');
+                _sendMessage();
+              },
             ),
           ),
           const SizedBox(width: 8),
-          GestureDetector(
-            onTap: _sendMessage,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.orange.shade600,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.send,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _navigateToWorkoutGenerator() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const WorkoutQuestionnairePage(),
-      ),
-    );
-  }
-
-  void _navigateToWorkoutList() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const WorkoutPlanListPage(),
-      ),
-    );
-  }
-
-  void _showTodayWorkout() {
-    if (_todayWorkout == null) return;
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Treino de ${_todayWorkout!['day_name']}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Plano: ${_todayWorkout!['plan_name']}'),
-            const SizedBox(height: 12),
-            const Text(
-              'Pronto para treinar hoje? 💪',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
-          ),
-          ElevatedButton(
+          IconButton(
             onPressed: () {
-              Navigator.pop(context);
-              // Navegar para detalhes do treino
+              print('BOTAO CLICADO!!!');
+              print('[FRONTEND] 👆 Botão de enviar clicado!');
+              _sendMessage();
             },
-            child: const Text('Ver Detalhes'),
+            icon: const Icon(Icons.send),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.orange.shade600,
+              foregroundColor: Colors.white,
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _showGoals() {
-    if (_profile == null) return;
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Suas Metas 🎯'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Peso atual: ${_profile!['weight']} kg'),
-            Text('Meta: ${_profile!['target_weight']} kg'),
-            const SizedBox(height: 8),
-            if (_needsProfileUpdate)
-              const Text(
-                '⚠️ Considere atualizar seu perfil!',
-                style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
-              ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   @override
   void dispose() {
