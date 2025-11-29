@@ -6,7 +6,7 @@
 echo "🚀 INICIANDO CLUSTER LIVEBS API"
 
 # Definir portas para as instâncias
-PORTS=(8000 8001 8002 8003)
+PORTS=(8001 8002 8003 8004)
 AI_SERVICE_PORT=9000
 
 # Função para parar processos existentes
@@ -120,7 +120,7 @@ main() {
     echo "🎉 CLUSTER INICIADO COM SUCESSO!"
     echo ""
     echo "📡 Endpoints disponíveis:"
-    echo "   - API Principal: http://127.0.0.1:8000-8003"
+    echo "   - API Principal: http://127.0.0.1:8001-8004"
     echo "   - AI Service: http://127.0.0.1:9000"
     echo "   - Health Check: http://127.0.0.1:8000/health"
     echo "   - Metrics: http://127.0.0.1:8000/metrics"

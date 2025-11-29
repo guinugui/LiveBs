@@ -4,7 +4,7 @@ REM Script para Windows - iniciar cluster LiveBs API
 echo 🚀 INICIANDO CLUSTER LIVEBS API
 
 REM Definir portas
-set PORTS=8000 8001 8002 8003
+set PORTS=8001 8002 8003 8004
 set AI_PORT=9000
 
 echo 🔍 Verificando Redis...
@@ -59,7 +59,7 @@ echo.
 echo 🎉 CLUSTER INICIADO!
 echo.
 echo 📡 Endpoints disponíveis:
-echo    - API Principal: http://127.0.0.1:8000-8003
+echo    - API Principal: http://127.0.0.1:8001-8004
 echo    - AI Service: http://127.0.0.1:9000
 echo    - Health Check: http://127.0.0.1:8000/health
 echo.

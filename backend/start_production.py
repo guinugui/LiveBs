@@ -18,7 +18,7 @@ def main():
     # Configurações via environment variables
     workers = int(os.getenv('WORKERS', 4))
     host = os.getenv('API_HOST', '0.0.0.0')
-    port = int(os.getenv('API_PORT', 8000))
+    port = int(os.getenv('API_PORT', 8001))
     worker_class = os.getenv('WORKER_CLASS', 'uvicorn.workers.UvicornWorker')
     worker_connections = int(os.getenv('WORKER_CONNECTIONS', 1000))
     
