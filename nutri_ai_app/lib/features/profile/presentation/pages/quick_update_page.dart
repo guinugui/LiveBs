@@ -62,13 +62,19 @@ class _QuickUpdatePageState extends State<QuickUpdatePage> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: const Text('Dados atualizados com sucesso!'), backgroundColor: Theme.of(context).primaryColor),
+          SnackBar(
+            content: const Text('Dados atualizados com sucesso!'),
+            backgroundColor: Theme.of(context).primaryColor,
+          ),
         );
         context.pop();
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao atualizar: $e'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('Erro ao atualizar: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       setState(() => _isLoading = false);

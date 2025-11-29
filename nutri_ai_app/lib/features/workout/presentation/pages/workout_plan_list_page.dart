@@ -16,7 +16,7 @@ class WorkoutPlanListPage extends StatefulWidget {
 class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
   List<WorkoutPlan> _workoutPlans = [];
   bool _isLoading = true;
-  
+
   String? _userEmail;
   String? _userPassword;
 
@@ -31,7 +31,7 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
       final prefs = await SharedPreferences.getInstance();
       _userEmail = prefs.getString('email');
       _userPassword = '123123'; // Temporário
-      
+
       if (_userEmail != null) {
         await _loadWorkoutPlans();
       } else {
@@ -44,11 +44,11 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
 
   Future<void> _loadWorkoutPlans() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final apiService = ApiService();
       final plansData = await apiService.getWorkoutPlans();
-      
+
       final plans = <WorkoutPlan>[];
       for (final planData in plansData) {
         try {
@@ -58,7 +58,7 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
           print('Erro ao converter plano: $e');
         }
       }
-      
+
       setState(() {
         _workoutPlans = plans;
         _isLoading = false;
@@ -70,20 +70,19 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
   }
 
   Future<void> _createNewWorkoutPlan() async {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const AIWorkoutGeneratorPage(),
-      ),
-    ).then((_) => _loadWorkoutPlans());
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (context) => const AIWorkoutGeneratorPage(),
+          ),
+        )
+        .then((_) => _loadWorkoutPlans());
   }
 
   void _showError(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
       );
     }
   }
@@ -118,16 +117,13 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
               ),
             )
           : _workoutPlans.isEmpty
-              ? _buildEmptyState()
-              : _buildPlansList(),
+          ? _buildEmptyState()
+          : _buildPlansList(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _isLoading ? null : _createNewWorkoutPlan,
         backgroundColor: Theme.of(context).primaryColor,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          'Novo Treino',
-          style: TextStyle(color: Colors.white),
-        ),
+        label: const Text('Novo Treino', style: TextStyle(color: Colors.white)),
       ),
     );
   }
@@ -139,11 +135,7 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.fitness_center,
-              size: 80,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.fitness_center, size: 80, color: Colors.grey[400]),
             const SizedBox(height: 24),
             Text(
               'Nenhum treino encontrado',
@@ -157,10 +149,7 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
             Text(
               'Crie seu primeiro plano de treino personalizado com nossa Personal Virtual',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
             const SizedBox(height: 32),
             ElevatedButton.icon(
@@ -170,7 +159,10 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
               ),
             ),
           ],
@@ -197,96 +189,100 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
     return Card(
       elevation: 4,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => _openWorkoutDetails(plan),
         child: Padding(
           padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark 
-                        ? Colors.grey.withOpacity(0.1)
-                        : Theme.of(context).primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey.withOpacity(0.1)
+                          : Theme.of(context).primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      plan.workoutType == 'home'
+                          ? Icons.home
+                          : Icons.fitness_center,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey
+                          : Theme.of(context).primaryColor,
+                      size: 24,
+                    ),
                   ),
-                  child: Icon(
-                    plan.workoutType == 'home' ? Icons.home : Icons.fitness_center,
-                    color: Theme.of(context).brightness == Brightness.dark 
-                        ? Colors.grey 
-                        : Theme.of(context).primaryColor,
-                    size: 24,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          plan.workoutType == 'home' ? 'Casa' : 'Academia',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        plan.workoutType == 'home' ? 'Casa' : 'Academia',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                  PopupMenuButton(
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'view',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.visibility,
+                              size: 20,
+                              color: Colors.blue,
+                            ),
+                            SizedBox(width: 8),
+                            Text('Ver Detalhes'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, size: 20, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text(
+                              'Deletar',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ],
                         ),
                       ),
                     ],
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'view':
+                          _openWorkoutDetails(plan);
+                          break;
+                        case 'delete':
+                          _confirmDelete(plan);
+                          break;
+                      }
+                    },
                   ),
-                ),
-                PopupMenuButton(
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'view',
-                      child: Row(
-                        children: [
-                          Icon(Icons.visibility, size: 20, color: Colors.blue),
-                          SizedBox(width: 8),
-                          Text('Ver Detalhes'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete, size: 20, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Deletar', style: TextStyle(color: Colors.red)),
-                        ],
-                      ),
-                    ),
-                  ],
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'view':
-                        _openWorkoutDetails(plan);
-                        break;
-                      case 'delete':
-                        _confirmDelete(plan);
-                        break;
-                    }
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Criado em ${_formatDate(plan.createdAt)}',
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 12,
+                ],
               ),
-            ),
-          ],
-        ),
+              const SizedBox(height: 12),
+              Text(
+                'Criado em ${_formatDate(plan.createdAt)}',
+                style: TextStyle(color: Colors.grey[500], fontSize: 12),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -294,8 +290,10 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
 
   void _openWorkoutDetails(WorkoutPlan plan) {
     print('[WORKOUT_LIST] 🔄 Abrindo detalhes do plano: ${plan.planName}');
-    print('[WORKOUT_LIST] 📊 Dados do plano: ${plan.workoutData.length} caracteres');
-    
+    print(
+      '[WORKOUT_LIST] 📊 Dados do plano: ${plan.workoutData.length} caracteres',
+    );
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => WorkoutPlanDetailsPage(plan: plan),
@@ -330,9 +328,9 @@ class _WorkoutPlanListPageState extends State<WorkoutPlanListPage> {
           _userPassword!,
           plan.id,
         );
-        
+
         _loadWorkoutPlans();
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

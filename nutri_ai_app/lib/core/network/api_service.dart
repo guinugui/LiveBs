@@ -11,48 +11,52 @@ class ApiService {
   String? _token;
 
   Future<void> initialize() async {
-    _dio = Dio(BaseOptions(
-      baseUrl: kApiBaseUrl,
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 60), // Increased for AI requests
-      sendTimeout: const Duration(seconds: 30),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    ));
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: kApiBaseUrl,
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(
+          seconds: 60,
+        ), // Increased for AI requests
+        sendTimeout: const Duration(seconds: 30),
+        headers: {'Content-Type': 'application/json'},
+      ),
+    );
 
     // Interceptor para adicionar token
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        // Carrega o token sempre antes da requisição se não estiver carregado
-        if (_token == null) {
-          await _loadToken();
-        }
-        if (_token != null) {
-          options.headers['Authorization'] = 'Bearer $_token';
-        }
-        return handler.next(options);
-      },
-      onError: (error, handler) {
-        // Extrai mensagem de erro do backend
-        if (error.response?.data != null) {
-          final data = error.response!.data;
-          if (data is Map && data.containsKey('detail')) {
-            // Lança exceção com a mensagem do backend
-            return handler.reject(
-              DioException(
-                requestOptions: error.requestOptions,
-                response: error.response,
-                type: error.type,
-                error: data['detail'],
-                message: data['detail'],
-              ),
-            );
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          // Carrega o token sempre antes da requisição se não estiver carregado
+          if (_token == null) {
+            await _loadToken();
           }
-        }
-        return handler.next(error);
-      },
-    ));
+          if (_token != null) {
+            options.headers['Authorization'] = 'Bearer $_token';
+          }
+          return handler.next(options);
+        },
+        onError: (error, handler) {
+          // Extrai mensagem de erro do backend
+          if (error.response?.data != null) {
+            final data = error.response!.data;
+            if (data is Map && data.containsKey('detail')) {
+              // Lança exceção com a mensagem do backend
+              return handler.reject(
+                DioException(
+                  requestOptions: error.requestOptions,
+                  response: error.response,
+                  type: error.type,
+                  error: data['detail'],
+                  message: data['detail'],
+                ),
+              );
+            }
+          }
+          return handler.next(error);
+        },
+      ),
+    );
 
     await _loadToken();
   }
@@ -75,7 +79,7 @@ class ApiService {
   }
 
   // ==================== AUTH ====================
-  
+
   Future<Map<String, dynamic>> register({
     required String email,
     required String password,
@@ -83,11 +87,7 @@ class ApiService {
   }) async {
     final response = await _dio.post(
       kAuthRegisterEndpoint,
-      data: {
-        'email': email,
-        'password': password,
-        'name': name,
-      },
+      data: {'email': email, 'password': password, 'name': name},
     );
     return response.data;
   }
@@ -98,10 +98,7 @@ class ApiService {
   }) async {
     final response = await _dio.post(
       kAuthLoginEndpoint,
-      data: {
-        'email': email,
-        'password': password,
-      },
+      data: {'email': email, 'password': password},
     );
     final token = response.data['access_token'];
     await setToken(token);
@@ -127,10 +124,7 @@ class ApiService {
   }) async {
     final response = await _dio.post(
       '/auth/verify-reset-code',
-      queryParameters: {
-        'email': email,
-        'code': code,
-      },
+      queryParameters: {'email': email, 'code': code},
     );
     return response.data;
   }
@@ -210,10 +204,7 @@ class ApiService {
   // ==================== CHAT ====================
 
   Future<Map<String, dynamic>> sendChatMessage(String message) async {
-    final response = await _dio.post(
-      kChatEndpoint,
-      data: {'message': message},
-    );
+    final response = await _dio.post(kChatEndpoint, data: {'message': message});
     return response.data;
   }
 
@@ -228,21 +219,27 @@ class ApiService {
   // ==================== PERSONAL TRAINER ====================
 
   Future<Map<String, dynamic>> sendPersonalMessage(String message) async {
-    print('[API] 📡 Enviando POST para $kPersonalEndpoint com: {"message": "$message"}');
+    print(
+      '[API] 📡 Enviando POST para $kPersonalEndpoint com: {"message": "$message"}',
+    );
     final response = await _dio.post(
       kPersonalEndpoint,
       data: {'message': message},
       options: Options(
-        receiveTimeout: const Duration(seconds: 90), // Extra timeout for AI generation
+        receiveTimeout: const Duration(
+          seconds: 90,
+        ), // Extra timeout for AI generation
         sendTimeout: const Duration(seconds: 30),
       ),
     );
-    print('[API] ✅ Resposta do servidor: ${response.statusCode} - ${response.data}');
+    print(
+      '[API] ✅ Resposta do servidor: ${response.statusCode} - ${response.data}',
+    );
     return response.data;
   }
 
   // ==================== WORKOUT GENERATION ====================
-  
+
   /// Gera treino com IA sem salvar no histórico do chat personal
   Future<Map<String, dynamic>> generateWorkoutWithAI(String prompt) async {
     print('[API] 🏋️ Gerando treino com IA (sem salvar no chat)...');
@@ -250,7 +247,9 @@ class ApiService {
       '/workout-plan/generate', // Endpoint separado para geração de treinos
       data: {'prompt': prompt},
       options: Options(
-        receiveTimeout: const Duration(seconds: 90), // Extra timeout for AI generation
+        receiveTimeout: const Duration(
+          seconds: 90,
+        ), // Extra timeout for AI generation
         sendTimeout: const Duration(seconds: 30),
       ),
     );
@@ -296,10 +295,7 @@ class ApiService {
   Future<Map<String, dynamic>> logWeight(double weight, {String? notes}) async {
     final response = await _dio.post(
       kWeightLogsEndpoint,
-      data: {
-        'weight': weight,
-        if (notes != null) 'notes': notes,
-      },
+      data: {'weight': weight, if (notes != null) 'notes': notes},
     );
     return response.data;
   }
@@ -350,11 +346,10 @@ class ApiService {
 
   // ==================== WORKOUT PLANS ====================
 
-  Future<Map<String, dynamic>> saveWorkoutPlan(Map<String, dynamic> workoutData) async {
-    final response = await _dio.post(
-      '/workout-plan/',
-      data: workoutData,
-    );
+  Future<Map<String, dynamic>> saveWorkoutPlan(
+    Map<String, dynamic> workoutData,
+  ) async {
+    final response = await _dio.post('/workout-plan/', data: workoutData);
     return response.data;
   }
 

@@ -3,11 +3,27 @@ import sqlite3
 from contextlib import contextmanager
 import uuid
 import sys
+import os
+from dotenv import load_dotenv
+
+# Carregar variáveis de ambiente
+load_dotenv()
 
 class Database:
     def __init__(self):
         self.use_postgres = False
         self.db_path = "nutri_ai.db"
+        
+        # Configurações do banco via variáveis de ambiente
+        self.db_host = os.getenv('DB_HOST', '127.0.0.1')
+        self.db_port = int(os.getenv('DB_PORT', 5432))
+        self.db_name = os.getenv('DB_NAME', 'livebs_db')
+        self.db_user = os.getenv('DB_USER', 'postgres')
+        self.db_password = os.getenv('DB_PASSWORD')
+        
+        if not self.db_password:
+            print("[DATABASE] ❌ ERRO: DB_PASSWORD não definida no arquivo .env")
+            sys.exit(1)
         
         # FORÇAR PostgreSQL usando pg8000 (puro Python)
         print("[DATABASE] 🔧 Conectando PostgreSQL com pg8000...")
@@ -15,11 +31,11 @@ class Database:
         try:
             # Testar conexão com pg8000
             test_conn = pg8000.native.Connection(
-                host="127.0.0.1",
-                port=5432,
-                database="livebs_db",
-                user="postgres",
-                password="MCguinu02"
+                host=self.db_host,
+                port=self.db_port,
+                database=self.db_name,
+                user=self.db_user,
+                password=self.db_password
             )
             
             # Testar query simples
@@ -38,15 +54,15 @@ class Database:
     
     def init_postgres_tables(self):
         """Inicializar tabelas PostgreSQL com pg8000"""
-        print("[DATABASE] 📋 Conectando em livebs_db com pg8000...")
+        print(f"[DATABASE] 📋 Conectando em {self.db_name} com pg8000...")
         
         # Conectar no banco
         conn = pg8000.native.Connection(
-            host="127.0.0.1",
-            port=5432,
-            database="livebs_db",
-            user="postgres",
-            password="MCguinu02"
+            host=self.db_host,
+            port=self.db_port,
+            database=self.db_name,
+            user=self.db_user,
+            password=self.db_password
         )
         
         # Verificar versão
@@ -100,11 +116,11 @@ class Database:
             conn = None
             try:
                 conn = pg8000.native.Connection(
-                    host="127.0.0.1",
-                    port=5432,
-                    database="livebs_db",
-                    user="postgres",
-                    password="MCguinu02"
+                    host=self.db_host,
+                    port=self.db_port,
+                    database=self.db_name,
+                    user=self.db_user,
+                    password=self.db_password
                 )
                 yield conn
                 # pg8000 não tem commit/rollback manual no modo native

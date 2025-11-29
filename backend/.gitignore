@@ -6,6 +6,30 @@ __pycache__/
 env/
 venv/
 .venv/
+
+# Arquivos de configuração sensíveis
 .env
+.env.local
+.env.production
+.env.development
+
+# Credenciais e chaves
+*.key
+*.pem
+config/secrets.json
+secrets/
+
+# Logs e temporários
 *.log
+*.tmp
 .DS_Store
+
+# Bancos de dados locais
+nutri_ai.db
+*.sqlite
+*.db
+
+# Diretórios de build
+build/
+dist/
+.coverage

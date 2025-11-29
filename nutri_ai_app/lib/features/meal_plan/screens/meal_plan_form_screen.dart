@@ -76,7 +76,7 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
     try {
       // Gerar plano usando o serviço atualizado
       await _service.generateMealPlan();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -84,15 +84,15 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
             backgroundColor: Theme.of(context).primaryColor,
           ),
         );
-        
+
         // Voltar para a tela anterior ou navegar para a lista de planos
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao gerar plano: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao gerar plano: $e')));
       }
     } finally {
       if (mounted) {
@@ -106,9 +106,7 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Criar Plano Alimentar'),
-      ),
+      appBar: AppBar(title: const Text('Criar Plano Alimentar')),
       body: _isLoading
           ? const Center(
               child: Column(
@@ -131,7 +129,10 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
                   children: [
                     const Text(
                       'Dados Pessoais',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -144,7 +145,8 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
                               border: OutlineInputBorder(),
                             ),
                             keyboardType: TextInputType.number,
-                            validator: (v) => v!.isEmpty ? 'Campo obrigatório' : null,
+                            validator: (v) =>
+                                v!.isEmpty ? 'Campo obrigatório' : null,
                             onChanged: (_) => _calculateCalories(),
                           ),
                         ),
@@ -157,7 +159,8 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
                               border: OutlineInputBorder(),
                             ),
                             keyboardType: TextInputType.number,
-                            validator: (v) => v!.isEmpty ? 'Campo obrigatório' : null,
+                            validator: (v) =>
+                                v!.isEmpty ? 'Campo obrigatório' : null,
                           ),
                         ),
                       ],
@@ -173,7 +176,8 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
                               border: OutlineInputBorder(),
                             ),
                             keyboardType: TextInputType.number,
-                            validator: (v) => v!.isEmpty ? 'Campo obrigatório' : null,
+                            validator: (v) =>
+                                v!.isEmpty ? 'Campo obrigatório' : null,
                             onChanged: (_) => _calculateCalories(),
                           ),
                         ),
@@ -186,7 +190,8 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
                               border: OutlineInputBorder(),
                             ),
                             keyboardType: TextInputType.number,
-                            validator: (v) => v!.isEmpty ? 'Campo obrigatório' : null,
+                            validator: (v) =>
+                                v!.isEmpty ? 'Campo obrigatório' : null,
                             onChanged: (_) => _calculateCalories(),
                           ),
                         ),
@@ -200,8 +205,14 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
                         border: OutlineInputBorder(),
                       ),
                       items: const [
-                        DropdownMenuItem(value: 'male', child: Text('Masculino')),
-                        DropdownMenuItem(value: 'female', child: Text('Feminino')),
+                        DropdownMenuItem(
+                          value: 'male',
+                          child: Text('Masculino'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'female',
+                          child: Text('Feminino'),
+                        ),
                       ],
                       onChanged: (v) {
                         setState(() => _gender = v!);
@@ -211,7 +222,10 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
                     const SizedBox(height: 24),
                     const Text(
                       'Atividade Física',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
@@ -221,11 +235,26 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
                         border: OutlineInputBorder(),
                       ),
                       items: const [
-                        DropdownMenuItem(value: 'sedentary', child: Text('Sedentário')),
-                        DropdownMenuItem(value: 'light', child: Text('Leve (1-2x/semana)')),
-                        DropdownMenuItem(value: 'moderate', child: Text('Moderado (3-5x/semana)')),
-                        DropdownMenuItem(value: 'active', child: Text('Ativo (6-7x/semana)')),
-                        DropdownMenuItem(value: 'very_active', child: Text('Muito Ativo (2x/dia)')),
+                        DropdownMenuItem(
+                          value: 'sedentary',
+                          child: Text('Sedentário'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'light',
+                          child: Text('Leve (1-2x/semana)'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'moderate',
+                          child: Text('Moderado (3-5x/semana)'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'active',
+                          child: Text('Ativo (6-7x/semana)'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'very_active',
+                          child: Text('Muito Ativo (2x/dia)'),
+                        ),
                       ],
                       onChanged: (v) {
                         setState(() => _activityLevel = v!);
@@ -235,7 +264,10 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
                     const SizedBox(height: 24),
                     const Text(
                       'Objetivo',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
@@ -245,9 +277,18 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
                         border: OutlineInputBorder(),
                       ),
                       items: const [
-                        DropdownMenuItem(value: 'lose_weight', child: Text('Perder Peso')),
-                        DropdownMenuItem(value: 'maintain', child: Text('Manter Peso')),
-                        DropdownMenuItem(value: 'gain_weight', child: Text('Ganhar Peso')),
+                        DropdownMenuItem(
+                          value: 'lose_weight',
+                          child: Text('Perder Peso'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'maintain',
+                          child: Text('Manter Peso'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'gain_weight',
+                          child: Text('Ganhar Peso'),
+                        ),
                       ],
                       onChanged: (v) {
                         setState(() => _goal = v!);
@@ -264,11 +305,18 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
                           children: [
                             const Text(
                               'Calorias Diárias:',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
                               '$_calculatedCalories kcal',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                              ),
                             ),
                           ],
                         ),
@@ -277,13 +325,18 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
                     const SizedBox(height: 24),
                     const Text(
                       'Restrições Alimentares',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Wrap(
                       spacing: 8,
                       children: _restrictions.map((r) {
-                        final isSelected = _selectedRestrictions.contains(r['value']);
+                        final isSelected = _selectedRestrictions.contains(
+                          r['value'],
+                        );
                         return FilterChip(
                           label: Text(r['label']!),
                           selected: isSelected,
@@ -302,13 +355,18 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
                     const SizedBox(height: 24),
                     const Text(
                       'Preferências Alimentares',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Wrap(
                       spacing: 8,
                       children: _preferences.map((p) {
-                        final isSelected = _selectedPreferences.contains(p['value']);
+                        final isSelected = _selectedPreferences.contains(
+                          p['value'],
+                        );
                         return FilterChip(
                           label: Text(p['label']!),
                           selected: isSelected,
@@ -354,4 +412,3 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
     super.dispose();
   }
 }
-

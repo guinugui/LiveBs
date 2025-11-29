@@ -11,22 +11,23 @@ class MealPlanPage extends StatefulWidget {
   State<MealPlanPage> createState() => _MealPlanPageState();
 }
 
-class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMixin {
+class _MealPlanPageState extends State<MealPlanPage>
+    with TickerProviderStateMixin {
   List<Map<String, dynamic>> _savedPlans = [];
   bool _isLoading = true;
   bool _isCreating = false;
-  
+
   // Credenciais do usuário atual (obtidas dinamicamente)
   String? _userEmail;
   String? _userPassword;
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    
+
     // Configurar animações
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -35,38 +36,37 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-    
+
     // Inicializar usuário e buscar planos
     _initializeUser();
   }
-  
+
   /// 👤 INICIALIZA AS CREDENCIAIS DO USUÁRIO ATUAL
   Future<void> _initializeUser() async {
     try {
       print('🔐 [USER] Obtendo credenciais do usuário logado...');
-      
+
       // Obter email do SharedPreferences (salvo no login)
       final prefs = await SharedPreferences.getInstance();
       _userEmail = prefs.getString('email');
-      
+
       if (_userEmail == null) {
         throw Exception('Usuário não está logado');
       }
-      
+
       // Verificar se o usuário tem token válido
       try {
         await ApiService().getMe();
         print('✅ [USER] Usuário autenticado: $_userEmail');
-        
+
         // Para compatibilidade com DirectMealPlanService, usar uma senha padrão
         // TODO: Migrar para autenticação baseada em token
         _userPassword = '123123'; // Temporário até migração completa
-        
+
         await _loadMealPlans();
       } catch (e) {
         throw Exception('Token inválido ou expirado');
       }
-      
     } catch (e) {
       print('❌ [USER ERROR] Erro de autenticação: $e');
       if (mounted) {
@@ -88,41 +88,45 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
       print('⚠️ [MEAL_PLANS] Credenciais não disponíveis');
       return;
     }
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       print('🔍 [MEAL_PLANS] Buscando planos para: $_userEmail');
-      
-      final plans = await DirectMealPlanService.fetchPlansDirectly(_userEmail!, _userPassword!);
-      
+
+      final plans = await DirectMealPlanService.fetchPlansDirectly(
+        _userEmail!,
+        _userPassword!,
+      );
+
       print('📊 [MEAL_PLANS] ${plans.length} planos encontrados');
-      
+
       // Ordenar por data de criação (mais recente primeiro)
       plans.sort((a, b) {
-        final aDate = DateTime.tryParse(a['created_at'] ?? '') ?? DateTime.now();
-        final bDate = DateTime.tryParse(b['created_at'] ?? '') ?? DateTime.now();
+        final aDate =
+            DateTime.tryParse(a['created_at'] ?? '') ?? DateTime.now();
+        final bDate =
+            DateTime.tryParse(b['created_at'] ?? '') ?? DateTime.now();
         return bDate.compareTo(aDate);
       });
-      
+
       setState(() {
         _savedPlans = plans;
         _isLoading = false;
       });
-      
+
       // Iniciar animação quando os dados carregarem
       _animationController.forward();
-      
+
       // Log dos planos encontrados
       for (int i = 0; i < plans.length; i++) {
         final plan = plans[i];
         print('📋 [PLAN_${i + 1}] ${plan['plan_name']} (${plan['id']})');
       }
-      
     } catch (e) {
       print('❌ [ERROR] Erro ao buscar planos: $e');
       setState(() => _isLoading = false);
-      
+
       if (mounted) {
         _showErrorSnackBar('Erro ao carregar planos: $e');
       }
@@ -135,24 +139,26 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
       _showErrorSnackBar('Erro de autenticação. Faça login novamente.');
       return;
     }
-    
+
     setState(() => _isCreating = true);
-    
+
     try {
       print('🚀 [CREATE] Criando novo plano alimentar...');
-      
-      final result = await DirectMealPlanService.createPlanDirectly(_userEmail!, _userPassword!);
-      
+
+      final result = await DirectMealPlanService.createPlanDirectly(
+        _userEmail!,
+        _userPassword!,
+      );
+
       print('✅ [CREATE] Plano criado: ${result['plan_name']}');
-      
+
       // Mostrar sucesso
       if (mounted) {
         _showSuccessSnackBar('${result['plan_name']} criado com sucesso!');
       }
-      
+
       // Recarregar lista
       await _loadMealPlans();
-      
     } catch (e) {
       print('❌ [CREATE_ERROR] Erro ao criar plano: $e');
       if (mounted) {
@@ -167,30 +173,33 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
   Future<void> _deleteMealPlan(Map<String, dynamic> plan) async {
     final planId = plan['id']?.toString() ?? '';
     final planName = plan['plan_name']?.toString() ?? 'Plano';
-    
+
     // Confirmar deleção
     final confirmed = await _showDeleteConfirmation(planName);
     if (!confirmed) return;
-    
+
     if (_userEmail == null || _userPassword == null) {
       _showErrorSnackBar('Erro de autenticação. Faça login novamente.');
       return;
     }
-    
+
     try {
       print('🗑️ [DELETE] Deletando: $planName ($planId)');
-      
-      await DirectMealPlanService.deletePlanDirectly(_userEmail!, _userPassword!, planId);
-      
+
+      await DirectMealPlanService.deletePlanDirectly(
+        _userEmail!,
+        _userPassword!,
+        planId,
+      );
+
       print('✅ [DELETE] Plano deletado com sucesso');
-      
+
       if (mounted) {
         _showSuccessSnackBar('$planName deletado!');
       }
-      
+
       // Recarregar lista
       await _loadMealPlans();
-      
     } catch (e) {
       print('❌ [DELETE_ERROR] Erro ao deletar: $e');
       if (mounted) {
@@ -205,10 +214,10 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
       _showErrorSnackBar('Erro de autenticação. Faça login novamente.');
       return;
     }
-    
+
     final planId = plan['id']?.toString() ?? '';
     final planName = plan['plan_name']?.toString() ?? 'Plano';
-    
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => MealPlanDetailsPage(
@@ -224,8 +233,8 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).brightness == Brightness.dark 
-          ? Colors.black 
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.black
           : Colors.grey[50],
       appBar: _buildAppBar(),
       body: _buildBody(),
@@ -238,10 +247,7 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
     return AppBar(
       title: const Text(
         'Meus Planos Alimentares',
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
+        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
       ),
       backgroundColor: Theme.of(context).primaryColor,
       elevation: 0,
@@ -260,11 +266,11 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
     if (_isLoading) {
       return _buildLoadingState();
     }
-    
+
     if (_savedPlans.isEmpty) {
       return _buildEmptyState();
     }
-    
+
     return _buildPlansList();
   }
 
@@ -275,7 +281,9 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).primaryColor,
+            ),
             strokeWidth: 3,
           ),
           const SizedBox(height: 24),
@@ -290,10 +298,7 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
           const SizedBox(height: 8),
           Text(
             'Conectando ao banco de dados',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
         ],
       ),
@@ -313,13 +318,17 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.green[50],
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey.shade800
+                      : Colors.green[50],
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
                   Icons.restaurant_menu,
                   size: 64,
-                  color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.green[400],
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey.shade400
+                      : Colors.green[400],
                 ),
               ),
               const SizedBox(height: 32),
@@ -345,21 +354,28 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
               const SizedBox(height: 40),
               ElevatedButton.icon(
                 onPressed: _isCreating ? null : _createNewMealPlan,
-                icon: _isCreating 
+                icon: _isCreating
                     ? const SizedBox(
                         width: 16,
                         height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : const Icon(Icons.add),
-                label: Text(_isCreating ? 'Criando...' : 'Criar Primeiro Plano'),
+                label: Text(
+                  _isCreating ? 'Criando...' : 'Criar Primeiro Plano',
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green[600],
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -386,7 +402,7 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
             if (index == 0) {
               return _buildListHeader();
             }
-            
+
             final plan = _savedPlans[index - 1];
             return _buildPlanCard(plan, index - 1);
           },
@@ -402,7 +418,7 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: Theme.of(context).brightness == Brightness.dark 
+          colors: Theme.of(context).brightness == Brightness.dark
               ? [Colors.grey.shade700, Colors.grey.shade800]
               : [Colors.green[400]!, Colors.green[600]!],
           begin: Alignment.topLeft,
@@ -411,9 +427,11 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: (Theme.of(context).brightness == Brightness.dark 
-                ? Colors.grey 
-                : Colors.green).withOpacity(0.3),
+            color:
+                (Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey
+                        : Colors.green)
+                    .withOpacity(0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -427,11 +445,7 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.analytics,
-              color: Colors.white,
-              size: 24,
-            ),
+            child: const Icon(Icons.analytics, color: Colors.white, size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -467,14 +481,12 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
     final planName = plan['plan_name']?.toString() ?? 'Plano sem nome';
     final planNumber = plan['plan_number']?.toString() ?? '0';
     final createdAt = plan['created_at']?.toString() ?? '';
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Card(
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: InkWell(
           onTap: () => _viewPlanDetails(plan),
           borderRadius: BorderRadius.circular(16),
@@ -488,7 +500,7 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
                   height: 60,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: Theme.of(context).brightness == Brightness.dark 
+                      colors: Theme.of(context).brightness == Brightness.dark
                           ? [Colors.grey.shade600, Colors.grey.shade700]
                           : [Colors.green[400]!, Colors.green[600]!],
                       begin: Alignment.topLeft,
@@ -497,9 +509,11 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: (Theme.of(context).brightness == Brightness.dark 
-                            ? Colors.grey 
-                            : Colors.green).withOpacity(0.3),
+                        color:
+                            (Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey
+                                    : Colors.green)
+                                .withOpacity(0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -517,7 +531,7 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
                   ),
                 ),
                 const SizedBox(width: 16),
-                
+
                 // Informações do plano
                 Expanded(
                   child: Column(
@@ -540,11 +554,10 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
                             fontSize: 13,
                           ),
                         ),
-
                     ],
                   ),
                 ),
-                
+
                 // Menu de ações
                 PopupMenuButton<String>(
                   icon: Icon(Icons.more_vert, color: Colors.grey[600]),
@@ -597,7 +610,7 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
     return FloatingActionButton.extended(
       onPressed: _isCreating || _isLoading ? null : _createNewMealPlan,
       backgroundColor: Theme.of(context).primaryColor,
-      icon: _isCreating 
+      icon: _isCreating
           ? const SizedBox(
               width: 20,
               height: 20,
@@ -620,38 +633,41 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
   /// 🗑️ CONFIRMAÇÃO DE DELEÇÃO
   Future<bool> _showDeleteConfirmation(String planName) async {
     return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: const Text(
-          'Deletar Plano',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: Text('Tem certeza que deseja deletar "$planName"?\n\nEsta ação não pode ser desfeita.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(
-              'Cancelar',
-              style: TextStyle(color: Colors.grey[600]),
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+            title: const Text(
+              'Deletar Plano',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            content: Text(
+              'Tem certeza que deseja deletar "$planName"?\n\nEsta ação não pode ser desfeita.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(
+                  'Cancelar',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
               ),
-            ),
-            child: const Text('Deletar'),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Deletar'),
+              ),
+            ],
           ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 
   /// ✅ SNACKBAR DE SUCESSO
@@ -667,9 +683,7 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
         ),
         backgroundColor: Theme.of(context).primaryColor,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -687,9 +701,7 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
         ),
         backgroundColor: Colors.red[600],
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         duration: const Duration(seconds: 5),
       ),
     );
@@ -701,7 +713,7 @@ class _MealPlanPageState extends State<MealPlanPage> with TickerProviderStateMix
       final date = DateTime.parse(dateString);
       final now = DateTime.now();
       final difference = now.difference(date);
-      
+
       if (difference.inDays == 0) {
         return 'hoje às ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
       } else if (difference.inDays == 1) {

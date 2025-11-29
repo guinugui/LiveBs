@@ -11,10 +11,10 @@ class AIWorkoutGeneratorPage extends StatefulWidget {
 class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
   final ApiService _apiService = ApiService();
   final PageController _pageController = PageController();
-  
+
   int _currentPage = 0;
   bool _isLoading = false;
-  
+
   // Dados do questionário
   int _age = 25;
   String _gender = 'masculino';
@@ -26,23 +26,23 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
   int _daysPerWeek = 3;
   int _minutesPerDay = 45;
   String _injuries = '';
-  
+
   // Resultado da IA
   Map<String, dynamic>? _workoutPlan;
-  
+
   final List<String> _objectives = [
     'Emagrecimento',
     'Ganho de massa muscular',
     'Condicionamento físico',
     'Fortalecimento',
-    'Tonificação'
+    'Tonificação',
   ];
-  
+
   final List<String> _equipmentOptions = [
     'Completa (halteres, barras, máquinas)',
     'Básica (halteres e barras)',
     'Limitada (poucos equipamentos)',
-    'Nenhum equipamento'
+    'Nenhum equipamento',
   ];
 
   @override
@@ -58,7 +58,9 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: _workoutPlan != null ? _buildWorkoutResult() : _buildQuestionnaire(),
+      body: _workoutPlan != null
+          ? _buildWorkoutResult()
+          : _buildQuestionnaire(),
     );
   }
 
@@ -71,10 +73,12 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
           child: LinearProgressIndicator(
             value: (_currentPage + 1) / 3,
             backgroundColor: Colors.grey.shade300,
-            valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).primaryColor,
+            ),
           ),
         ),
-        
+
         Expanded(
           child: PageView(
             controller: _pageController,
@@ -86,7 +90,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
             ],
           ),
         ),
-        
+
         // Navigation buttons
         Container(
           padding: const EdgeInsets.all(16),
@@ -111,9 +115,9 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                     backgroundColor: Theme.of(context).primaryColor,
                     foregroundColor: Colors.white,
                   ),
-                  child: _isLoading 
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text(_currentPage == 2 ? 'Gerar Treino' : 'Próximo'),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(_currentPage == 2 ? 'Gerar Treino' : 'Próximo'),
                 ),
               ),
             ],
@@ -134,7 +138,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 24),
-          
+
           Row(
             children: [
               Expanded(
@@ -168,7 +172,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           Row(
             children: [
               Expanded(
@@ -179,7 +183,8 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                     labelText: 'Peso (kg)',
                     border: OutlineInputBorder(),
                   ),
-                  onChanged: (value) => _weight = double.tryParse(value) ?? _weight,
+                  onChanged: (value) =>
+                      _weight = double.tryParse(value) ?? _weight,
                 ),
               ),
               const SizedBox(width: 16),
@@ -191,13 +196,14 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                     labelText: 'Altura (cm)',
                     border: OutlineInputBorder(),
                   ),
-                  onChanged: (value) => _height = double.tryParse(value) ?? _height,
+                  onChanged: (value) =>
+                      _height = double.tryParse(value) ?? _height,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          
+
           TextFormField(
             maxLines: 3,
             decoration: const InputDecoration(
@@ -223,8 +229,11 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 24),
-          
-          const Text('Local de treino:', style: TextStyle(fontWeight: FontWeight.w500)),
+
+          const Text(
+            'Local de treino:',
+            style: TextStyle(fontWeight: FontWeight.w500),
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -246,19 +255,24 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
               ),
             ],
           ),
-          
+
           if (_location == 'GYM') ...[
             const SizedBox(height: 16),
-            const Text('Equipamentos disponíveis:', style: TextStyle(fontWeight: FontWeight.w500)),
+            const Text(
+              'Equipamentos disponíveis:',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
             const SizedBox(height: 8),
-            ..._equipmentOptions.map((equipment) => RadioListTile<String>(
-              title: Text(equipment),
-              value: equipment,
-              groupValue: _equipment,
-              onChanged: (value) => setState(() => _equipment = value!),
-            )),
+            ..._equipmentOptions.map(
+              (equipment) => RadioListTile<String>(
+                title: Text(equipment),
+                value: equipment,
+                groupValue: _equipment,
+                onChanged: (value) => setState(() => _equipment = value!),
+              ),
+            ),
           ],
-          
+
           const SizedBox(height: 24),
           Row(
             children: [
@@ -266,15 +280,22 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Dias por semana:', style: TextStyle(fontWeight: FontWeight.w500)),
+                    const Text(
+                      'Dias por semana:',
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
                     Slider(
                       value: _daysPerWeek.toDouble(),
                       min: 2,
                       max: 6,
                       divisions: 4,
                       label: '$_daysPerWeek dias',
-                      activeColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey : Theme.of(context).primaryColor,
-                      onChanged: (value) => setState(() => _daysPerWeek = value.round()),
+                      activeColor:
+                          Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey
+                          : Theme.of(context).primaryColor,
+                      onChanged: (value) =>
+                          setState(() => _daysPerWeek = value.round()),
                     ),
                   ],
                 ),
@@ -284,15 +305,22 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Minutos por dia:', style: TextStyle(fontWeight: FontWeight.w500)),
+                    const Text(
+                      'Minutos por dia:',
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
                     Slider(
                       value: _minutesPerDay.toDouble(),
                       min: 30,
                       max: 120,
                       divisions: 9,
                       label: '$_minutesPerDay min',
-                      activeColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey : Theme.of(context).primaryColor,
-                      onChanged: (value) => setState(() => _minutesPerDay = value.round()),
+                      activeColor:
+                          Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey
+                          : Theme.of(context).primaryColor,
+                      onChanged: (value) =>
+                          setState(() => _minutesPerDay = value.round()),
                     ),
                   ],
                 ),
@@ -315,17 +343,19 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 24),
-          
-          ..._objectives.map((objective) => Card(
-            child: RadioListTile<String>(
-              title: Text(objective),
-              value: objective,
-              groupValue: _objective,
-              onChanged: (value) => setState(() => _objective = value!),
-              activeColor: Colors.orange.shade600,
+
+          ..._objectives.map(
+            (objective) => Card(
+              child: RadioListTile<String>(
+                title: Text(objective),
+                value: objective,
+                groupValue: _objective,
+                onChanged: (value) => setState(() => _objective = value!),
+                activeColor: Colors.orange.shade600,
+              ),
             ),
-          )),
-          
+          ),
+
           if (_objective.isNotEmpty) ...[
             const SizedBox(height: 24),
             Container(
@@ -333,7 +363,9 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
               decoration: BoxDecoration(
                 color: Theme.of(context).primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
+                border: Border.all(
+                  color: Theme.of(context).primaryColor.withOpacity(0.3),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,9 +383,10 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                   Text('• Local: $_location'),
                   if (_location == 'GYM' && _equipment.isNotEmpty)
                     Text('• Equipamentos: $_equipment'),
-                  Text('• $_daysPerWeek dias por semana, $_minutesPerDay min/dia'),
-                  if (_injuries.isNotEmpty)
-                    Text('• Limitações: $_injuries'),
+                  Text(
+                    '• $_daysPerWeek dias por semana, $_minutesPerDay min/dia',
+                  ),
+                  if (_injuries.isNotEmpty) Text('• Limitações: $_injuries'),
                 ],
               ),
             ),
@@ -366,7 +399,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
   Widget _buildWorkoutResult() {
     final plan = _workoutPlan!;
     final weeklyPlan = plan['weekly_plan'] as Map<String, dynamic>? ?? {};
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -396,16 +429,17 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    plan['orientation'] ?? 'Treino personalizado criado com base nas suas preferências de $_location ($_objective). Siga as orientações específicas para cada dia de treino.',
+                    plan['orientation'] ??
+                        'Treino personalizado criado com base nas suas preferências de $_location ($_objective). Siga as orientações específicas para cada dia de treino.',
                     style: const TextStyle(fontSize: 14),
                   ),
                 ],
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Exercícios do Dia section
           Card(
             color: Theme.of(context).primaryColor.withOpacity(0.1),
@@ -416,7 +450,10 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.fitness_center, color: Theme.of(context).primaryColor),
+                      Icon(
+                        Icons.fitness_center,
+                        color: Theme.of(context).primaryColor,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Exercícios da Semana ($_daysPerWeek)',
@@ -429,18 +466,22 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
+
                   ...weeklyPlan.entries.map((entry) {
                     final day = entry.key;
                     final exercises = entry.value as String;
-                    
+
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.3),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -475,10 +516,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                             ],
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            exercises,
-                            style: const TextStyle(fontSize: 14),
-                          ),
+                          Text(exercises, style: const TextStyle(fontSize: 14)),
                         ],
                       ),
                     );
@@ -487,7 +525,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
               ),
             ),
           ),
-          
+
           if (plan['duration'] != null) ...[
             const SizedBox(height: 16),
             Card(
@@ -498,7 +536,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
               ),
             ),
           ],
-          
+
           if (plan['progression'] != null) ...[
             const SizedBox(height: 16),
             Card(
@@ -509,7 +547,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
               ),
             ),
           ],
-          
+
           if (plan['precautions'] != null) ...[
             const SizedBox(height: 16),
             Card(
@@ -521,7 +559,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
               ),
             ),
           ],
-          
+
           const SizedBox(height: 24),
           Row(
             children: [
@@ -575,20 +613,24 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
 
   Future<void> _generateWorkout() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final prompt = _buildWorkoutPrompt();
-      print('[WORKOUT] 🚀 Gerando treino com IA (separado do chat personal)...');
-      
+      print(
+        '[WORKOUT] 🚀 Gerando treino com IA (separado do chat personal)...',
+      );
+
       // Usar função específica para treinos que não salva no chat personal
       final response = await _apiService.generateWorkoutWithAI(prompt);
-      
-      print('[WORKOUT] ✅ Resposta recebida: ${response.toString().substring(0, 100)}...');
-      
+
+      print(
+        '[WORKOUT] ✅ Resposta recebida: ${response.toString().substring(0, 100)}...',
+      );
+
       // Parse the AI response to extract structured data
       final aiResponse = response['message'] as String;
       Map<String, dynamic> parsedPlan;
-      
+
       if (aiResponse.contains('Timeout') || aiResponse.length < 50) {
         print('[WORKOUT] ⚠️ Resposta inválida, gerando plano offline');
         parsedPlan = _createOfflinePlan();
@@ -597,21 +639,22 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
         // SALVAR A RESPOSTA ORIGINAL COMO MARKDOWN
         parsedPlan['original_markdown'] = aiResponse;
       }
-      
+
       print('[WORKOUT] 📋 Plano parseado: ${parsedPlan.keys}');
-      
+
       setState(() {
         _workoutPlan = parsedPlan;
         _isLoading = false;
       });
-      
     } catch (e) {
       print('[WORKOUT] ❌ Erro: $e');
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao gerar treino: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text(
+              'Erro ao gerar treino: ${e.toString().replaceAll('Exception: ', '')}',
+            ),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
@@ -666,25 +709,25 @@ Sempre responder organizado no formato:
 
   Map<String, dynamic> _parseAIResponse(String response) {
     print('[WORKOUT] 🔍 Iniciando parsing da resposta...');
-    
+
     final lines = response.split('\n');
     Map<String, dynamic> result = {};
     Map<String, String> weeklyPlan = {};
-    
+
     String currentSection = '';
     List<String> currentContent = [];
-    
+
     // Se não conseguir fazer parse estruturado, criar um plano básico
     bool hasStructuredData = response.contains('📅') && response.contains('💪');
-    
+
     if (!hasStructuredData) {
       print('[WORKOUT] ⚠️ Resposta não estruturada, criando plano básico...');
       return _createBasicPlan(response);
     }
-    
+
     for (String line in lines) {
       final trimmedLine = line.trim();
-      
+
       if (trimmedLine.startsWith('📅')) {
         _saveSection(result, currentSection, currentContent, weeklyPlan);
         currentSection = 'weekly_plan';
@@ -723,54 +766,76 @@ Sempre responder organizado no formato:
         }
       }
     }
-    
+
     // Save the last section
     _saveSection(result, currentSection, currentContent, weeklyPlan);
-    
+
     if (weeklyPlan.isNotEmpty) {
       result['weekly_plan'] = weeklyPlan;
     } else {
       // Se não encontrou divisão semanal, criar uma básica
       result['weekly_plan'] = _createDefaultWeeklyPlan();
     }
-    
+
     print('[WORKOUT] ✅ Parsing concluído: ${result.keys}');
     return result;
   }
 
-  void _saveSection(Map<String, dynamic> result, String section, List<String> content, Map<String, String> weeklyPlan) {
+  void _saveSection(
+    Map<String, dynamic> result,
+    String section,
+    List<String> content,
+    Map<String, String> weeklyPlan,
+  ) {
     if (section == 'weekly_plan' && weeklyPlan.isNotEmpty) {
       result['weekly_plan'] = Map<String, String>.from(weeklyPlan);
     } else if (section.isNotEmpty && content.isNotEmpty) {
       result[section] = content.join(' ').trim();
     }
   }
-  
+
   bool _isDayLine(String line) {
-    final dayKeywords = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo', 'dia 1', 'dia 2', 'dia 3', 'dia 4', 'dia 5', 'dia 6'];
+    final dayKeywords = [
+      'segunda',
+      'terça',
+      'quarta',
+      'quinta',
+      'sexta',
+      'sábado',
+      'domingo',
+      'dia 1',
+      'dia 2',
+      'dia 3',
+      'dia 4',
+      'dia 5',
+      'dia 6',
+    ];
     final lowerLine = line.toLowerCase();
-    return dayKeywords.any((day) => lowerLine.contains(day)) && line.contains(':');
+    return dayKeywords.any((day) => lowerLine.contains(day)) &&
+        line.contains(':');
   }
-  
+
   Map<String, String>? _extractDayInfo(String line) {
     final colonIndex = line.indexOf(':');
     if (colonIndex == -1) return null;
-    
+
     final day = line.substring(0, colonIndex).trim();
     final exercises = line.substring(colonIndex + 1).trim();
-    
+
     return {'day': day, 'exercises': exercises};
   }
-  
+
   Map<String, String> _createDefaultWeeklyPlan() {
     if (_location == 'HOME') {
       final Map<String, String> plan = {
         'Segunda-feira': 'Full Body Circuit - 5 exercícios, 30s cada, 3 voltas',
-        'Quarta-feira': 'Inferior + Core - 4 exercícios pernas + 2 abdome, 40s cada',
+        'Quarta-feira':
+            'Inferior + Core - 4 exercícios pernas + 2 abdome, 40s cada',
       };
-      
+
       if (_daysPerWeek >= 3) {
-        plan['Sexta-feira'] = 'Superior + Cardio - 4 exercícios braços + 2 cardio';
+        plan['Sexta-feira'] =
+            'Superior + Cardio - 4 exercícios braços + 2 cardio';
       }
       if (_daysPerWeek >= 4) {
         plan['Terça-feira'] = 'HIIT Training - 6 exercícios alta intensidade';
@@ -781,16 +846,19 @@ Sempre responder organizado no formato:
       if (_daysPerWeek >= 6) {
         plan['Sábado'] = 'Alongamento + Core - Exercícios de flexibilidade';
       }
-      
+
       return plan;
     } else {
       final Map<String, String> plan = {
-        'Segunda-feira': 'Peito + Tríceps - 4 exercícios peito + 2 tríceps (3-4 séries)',
-        'Quarta-feira': 'Costas + Bíceps - 4 exercícios costas + 2 bíceps (3-4 séries)',
+        'Segunda-feira':
+            'Peito + Tríceps - 4 exercícios peito + 2 tríceps (3-4 séries)',
+        'Quarta-feira':
+            'Costas + Bíceps - 4 exercícios costas + 2 bíceps (3-4 séries)',
       };
-      
+
       if (_daysPerWeek >= 3) {
-        plan['Sexta-feira'] = 'Pernas + Ombros - 4 exercícios pernas + 2 ombros';
+        plan['Sexta-feira'] =
+            'Pernas + Ombros - 4 exercícios pernas + 2 ombros';
       }
       if (_daysPerWeek >= 4) {
         plan['Terça-feira'] = 'Ombros + Core - 4 exercícios ombros + 2 abdome';
@@ -801,35 +869,40 @@ Sempre responder organizado no formato:
       if (_daysPerWeek >= 6) {
         plan['Sábado'] = 'Posterior + Glúteos - 4 exercícios específicos';
       }
-      
+
       return plan;
     }
   }
-  
+
   Map<String, dynamic> _createBasicPlan(String response) {
     return {
-      'orientation': 'Treino personalizado gerado com base nas suas informações. Siga as orientações abaixo.',
+      'orientation':
+          'Treino personalizado gerado com base nas suas informações. Siga as orientações abaixo.',
       'weekly_plan': _createDefaultWeeklyPlan(),
-      'duration': '$_minutesPerDay minutos por sessão, $_daysPerWeek dias por semana',
+      'duration':
+          '$_minutesPerDay minutos por sessão, $_daysPerWeek dias por semana',
       'progression': 'Aumente gradualmente a intensidade a cada 2 semanas',
-      'precautions': _injuries.isNotEmpty ? 'Atenção às limitações: $_injuries' : 'Mantenha boa forma em todos os exercícios',
+      'precautions': _injuries.isNotEmpty
+          ? 'Atenção às limitações: $_injuries'
+          : 'Mantenha boa forma em todos os exercícios',
       'raw_response': response,
     };
   }
-  
+
   Map<String, dynamic> _createOfflinePlan() {
-    final orientationText = _location == 'HOME' 
+    final orientationText = _location == 'HOME'
         ? 'Treino em casa personalizado para $_objective. Não são necessários equipamentos.'
         : 'Treino na academia personalizado para $_objective. Use os equipamentos disponíveis.';
-        
+
     return {
       'orientation': orientationText,
       'weekly_plan': _createDefaultWeeklyPlan(),
-      'duration': '$_minutesPerDay minutos por sessão, $_daysPerWeek dias por semana',
-      'progression': _location == 'HOME' 
+      'duration':
+          '$_minutesPerDay minutos por sessão, $_daysPerWeek dias por semana',
+      'progression': _location == 'HOME'
           ? 'A cada 2 semanas: +5 segundos nos exercícios, +1 volta nos circuitos'
           : 'A cada 2 semanas: +1 série ou +10% de carga nos exercícios',
-      'precautions': _injuries.isNotEmpty 
+      'precautions': _injuries.isNotEmpty
           ? 'IMPORTANTE: Respeite suas limitações: $_injuries. Consulte um profissional se necessário.'
           : 'Mantenha sempre a forma correta. Aqueça antes e alongue depois dos treinos.',
       'examples': _location == 'HOME'
@@ -837,16 +910,16 @@ Sempre responder organizado no formato:
           : 'Exemplos: supino, agachamento livre, remada, desenvolvimento, rosca direta',
     };
   }
-  
+
   Future<void> _saveWorkout() async {
     if (_workoutPlan == null) return;
-    
+
     try {
       final plan = _workoutPlan!;
-      
+
       // SALVAR COMO MARKDOWN PURO (igual ao Personal Virtual)
       String workoutContent;
-      
+
       if (plan.containsKey('original_markdown')) {
         // Usar resposta original da IA (markdown formatado)
         workoutContent = plan['original_markdown'] as String;
@@ -856,7 +929,7 @@ Sempre responder organizado no formato:
         workoutContent = _convertToMarkdown(plan);
         print('💾 Salvando treino como MARKDOWN convertido');
       }
-      
+
       // Estrutura simplificada - só enviar o markdown
       final workoutData = {
         'workout_type': _location == 'GYM' ? 'gym' : 'home',
@@ -866,26 +939,29 @@ Sempre responder organizado no formato:
         'objective': _objective,
         'markdown_content': workoutContent, // CONTEÚDO PRINCIPAL EM MARKDOWN
       };
-      
-      print('💾 Salvando treino via API: ${workoutData['workout_type']} (${workoutContent.length} chars)');
-      
+
+      print(
+        '💾 Salvando treino via API: ${workoutData['workout_type']} (${workoutContent.length} chars)',
+      );
+
       // Salvar via API
       final apiService = ApiService();
       await apiService.saveWorkoutPlan(workoutData);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('✅ Treino salvo com sucesso! Confira em "Meus Treinos".'),
+            content: const Text(
+              '✅ Treino salvo com sucesso! Confira em "Meus Treinos".',
+            ),
             backgroundColor: Theme.of(context).primaryColor,
             duration: const Duration(seconds: 3),
           ),
         );
-        
+
         // Não navegar automaticamente - deixar o usuário decidir
         // O usuário pode usar o botão "Gerar Novo" ou voltar manualmente
       }
-      
     } catch (e) {
       print('❌ Erro ao salvar treino: $e');
       if (mounted) {
@@ -901,11 +977,13 @@ Sempre responder organizado no formato:
 
   String _convertToMarkdown(Map<String, dynamic> plan) {
     final buffer = StringBuffer();
-    
+
     // Título principal
-    buffer.writeln('# 🏆 Treino ${_location == 'GYM' ? 'na Academia' : 'em Casa'}');
+    buffer.writeln(
+      '# 🏆 Treino ${_location == 'GYM' ? 'na Academia' : 'em Casa'}',
+    );
     buffer.writeln('');
-    
+
     // Resumo
     buffer.writeln('## 📊 Resumo do Plano');
     buffer.writeln('- **Local:** ${_location == 'GYM' ? 'Academia' : 'Casa'}');
@@ -913,7 +991,7 @@ Sempre responder organizado no formato:
     buffer.writeln('- **Frequência:** $_daysPerWeek dias por semana');
     buffer.writeln('- **Duração:** $_minutesPerDay minutos por sessão');
     buffer.writeln('');
-    
+
     // Plano semanal
     if (plan['weekly_plan'] != null) {
       buffer.writeln('## 📅 **DIVISÃO SEMANAL**');
@@ -923,41 +1001,41 @@ Sempre responder organizado no formato:
       });
       buffer.writeln('');
     }
-    
+
     // Orientações
     if (plan['orientation'] != null) {
       buffer.writeln('## 💪 **ORIENTAÇÃO DO TREINO**');
       buffer.writeln(plan['orientation']);
       buffer.writeln('');
     }
-    
+
     // Exemplos
     if (plan['examples'] != null) {
       buffer.writeln('## 📌 **EXEMPLOS DE EXERCÍCIOS (REFERÊNCIA)**');
       buffer.writeln(plan['examples']);
       buffer.writeln('');
     }
-    
+
     // Duração
     if (plan['duration'] != null) {
       buffer.writeln('## ⏱️ **DURAÇÃO/INTENSIDADE**');
       buffer.writeln(plan['duration']);
       buffer.writeln('');
     }
-    
+
     // Progressão
     if (plan['progression'] != null) {
       buffer.writeln('## 💪 **PROGRESSÃO SUGERIDA**');
       buffer.writeln(plan['progression']);
       buffer.writeln('');
     }
-    
+
     // Cuidados
     if (plan['precautions'] != null) {
       buffer.writeln('## ⚠️ **CUIDADOS**');
       buffer.writeln(plan['precautions']);
     }
-    
+
     return buffer.toString();
   }
 }

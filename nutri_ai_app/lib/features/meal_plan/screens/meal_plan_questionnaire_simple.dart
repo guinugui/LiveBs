@@ -5,15 +5,19 @@ class MealPlanQuestionnaireScreen extends StatefulWidget {
   const MealPlanQuestionnaireScreen({super.key});
 
   @override
-  State<MealPlanQuestionnaireScreen> createState() => _MealPlanQuestionnaireScreenState();
+  State<MealPlanQuestionnaireScreen> createState() =>
+      _MealPlanQuestionnaireScreenState();
 }
 
-class _MealPlanQuestionnaireScreenState extends State<MealPlanQuestionnaireScreen> {
+class _MealPlanQuestionnaireScreenState
+    extends State<MealPlanQuestionnaireScreen> {
   String _selectedCookingTime = 'medium';
   int _selectedMealFrequency = 5;
   String _selectedBudgetLevel = 'medium';
-  final TextEditingController _dislikedFoodsController = TextEditingController();
-  final TextEditingController _foodPreferencesController = TextEditingController();
+  final TextEditingController _dislikedFoodsController =
+      TextEditingController();
+  final TextEditingController _foodPreferencesController =
+      TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +42,7 @@ class _MealPlanQuestionnaireScreenState extends State<MealPlanQuestionnaireScree
               style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 32),
-            
+
             // Alimentos preferidos
             const Text(
               'Alimentos que você mais gosta:',
@@ -53,7 +57,7 @@ class _MealPlanQuestionnaireScreenState extends State<MealPlanQuestionnaireScree
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Alimentos que não gosta
             const Text(
               'Alimentos que você não gosta:',
@@ -68,7 +72,7 @@ class _MealPlanQuestionnaireScreenState extends State<MealPlanQuestionnaireScree
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Tempo de preparo
             const Text(
               'Quanto tempo você tem para cozinhar?',
@@ -93,7 +97,7 @@ class _MealPlanQuestionnaireScreenState extends State<MealPlanQuestionnaireScree
               );
             }).toList(),
             const SizedBox(height: 24),
-            
+
             // Número de refeições
             const Text(
               'Quantas refeições por dia?',
@@ -116,11 +120,14 @@ class _MealPlanQuestionnaireScreenState extends State<MealPlanQuestionnaireScree
             Center(
               child: Text(
                 '$_selectedMealFrequency refeições por dia',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Orçamento
             const Text(
               'Seu orçamento para alimentação:',
@@ -145,7 +152,7 @@ class _MealPlanQuestionnaireScreenState extends State<MealPlanQuestionnaireScree
               );
             }).toList(),
             const SizedBox(height: 32),
-            
+
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -174,7 +181,7 @@ class _MealPlanQuestionnaireScreenState extends State<MealPlanQuestionnaireScree
         .map((e) => e.trim())
         .where((e) => e.isNotEmpty)
         .toList();
-    
+
     List<String> dislikedFoods = _dislikedFoodsController.text
         .split(',')
         .map((e) => e.trim())

@@ -120,12 +120,12 @@ class _HomePageState extends State<HomePage> {
             builder: (context, themeProvider, child) {
               return IconButton(
                 icon: Icon(
-                  themeProvider.isDarkMode 
-                    ? Icons.light_mode 
-                    : Icons.dark_mode,
+                  themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
                 ),
                 onPressed: () => themeProvider.toggleTheme(),
-                tooltip: themeProvider.isDarkMode ? 'Modo Claro' : 'Modo Escuro',
+                tooltip: themeProvider.isDarkMode
+                    ? 'Modo Claro'
+                    : 'Modo Escuro',
               );
             },
           ),
@@ -234,7 +234,8 @@ class _HomePageState extends State<HomePage> {
 
             // === SEÇÃO CHATS ===
             Text(
-              AppLocalizations.of(context)?.virtualAssistants ?? '💬 Assistentes Virtuais',
+              AppLocalizations.of(context)?.virtualAssistants ??
+                  '💬 Assistentes Virtuais',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Colors.grey.shade700,
@@ -250,7 +251,9 @@ class _HomePageState extends State<HomePage> {
                   child: GestureDetector(
                     onTap: () => context.push('/chat'),
                     child: Card(
-                      color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.green.shade50,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey.shade800
+                          : Colors.green.shade50,
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -258,7 +261,11 @@ class _HomePageState extends State<HomePage> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade600 : Theme.of(context).primaryColor,
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey.shade600
+                                    : Theme.of(context).primaryColor,
                                 borderRadius: BorderRadius.circular(50),
                               ),
                               child: const Icon(
@@ -273,7 +280,11 @@ class _HomePageState extends State<HomePage> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade300 : Colors.green.shade700,
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey.shade300
+                                    : Colors.green.shade700,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -282,7 +293,11 @@ class _HomePageState extends State<HomePage> {
                               'Dúvidas sobre\nalimentos',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.green.shade600,
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey.shade400
+                                    : Colors.green.shade600,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -298,7 +313,9 @@ class _HomePageState extends State<HomePage> {
                   child: GestureDetector(
                     onTap: () => context.push('/progress'),
                     child: Card(
-                      color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.green.shade50,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey.shade800
+                          : Colors.green.shade50,
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -306,7 +323,11 @@ class _HomePageState extends State<HomePage> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade600 : Theme.of(context).primaryColor,
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey.shade600
+                                    : Theme.of(context).primaryColor,
                                 borderRadius: BorderRadius.circular(50),
                               ),
                               child: const Icon(
@@ -317,11 +338,16 @@ class _HomePageState extends State<HomePage> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              AppLocalizations.of(context)?.chatPersonal ?? 'Chat Personal',
+                              AppLocalizations.of(context)?.chatPersonal ??
+                                  'Chat Personal',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade300 : Colors.green.shade700,
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey.shade300
+                                    : Colors.green.shade700,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -330,7 +356,11 @@ class _HomePageState extends State<HomePage> {
                               'Treinos e\nexercícios',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.green.shade600,
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey.shade400
+                                    : Colors.green.shade600,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -346,7 +376,8 @@ class _HomePageState extends State<HomePage> {
 
             // === SEÇÃO HIDRATAÇÃO ===
             Text(
-              AppLocalizations.of(context)?.dailyHydration ?? '💧 Hidratação Diária',
+              AppLocalizations.of(context)?.dailyHydration ??
+                  '💧 Hidratação Diária',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Colors.grey.shade700,
@@ -356,7 +387,9 @@ class _HomePageState extends State<HomePage> {
 
             // Seção de Hidratação
             Card(
-              color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.green.shade50,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey.shade800
+                  : Colors.green.shade50,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -369,7 +402,11 @@ class _HomePageState extends State<HomePage> {
                           children: [
                             Icon(
                               Icons.water_drop,
-                              color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.green.shade600,
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.grey.shade400
+                                  : Colors.green.shade600,
                               size: 28,
                             ),
                             const SizedBox(width: 8),
@@ -378,7 +415,11 @@ class _HomePageState extends State<HomePage> {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade300 : Colors.green.shade700,
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey.shade300
+                                    : Colors.green.shade700,
                               ),
                             ),
                           ],
@@ -388,7 +429,10 @@ class _HomePageState extends State<HomePage> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.green.shade600,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey.shade400
+                                : Colors.green.shade600,
                           ),
                         ),
                       ],
@@ -401,7 +445,9 @@ class _HomePageState extends State<HomePage> {
                       child: LinearProgressIndicator(
                         value: _waterConsumed / _waterGoal,
                         minHeight: 12,
-                        backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                        backgroundColor: Theme.of(
+                          context,
+                        ).primaryColor.withOpacity(0.2),
                         valueColor: AlwaysStoppedAnimation<Color>(
                           Theme.of(context).primaryColor,
                         ),
@@ -425,7 +471,10 @@ class _HomePageState extends State<HomePage> {
                         icon: const Icon(Icons.add),
                         label: const Text('Adicionar 500ml'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade600 : Theme.of(context).primaryColor,
+                          backgroundColor:
+                              Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey.shade600
+                              : Theme.of(context).primaryColor,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           disabledBackgroundColor: Colors.grey.shade300,
@@ -440,7 +489,8 @@ class _HomePageState extends State<HomePage> {
 
             // === SEÇÃO TREINOS ===
             Text(
-              AppLocalizations.of(context)?.personalizedWorkouts ?? '💪 Treinos Personalizados',
+              AppLocalizations.of(context)?.personalizedWorkouts ??
+                  '💪 Treinos Personalizados',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Colors.grey.shade700,
@@ -449,7 +499,9 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 12),
 
             Card(
-              color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.green.shade50,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey.shade800
+                  : Colors.green.shade50,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -460,7 +512,10 @@ class _HomePageState extends State<HomePage> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade600 : Colors.green.shade400,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey.shade600
+                                : Colors.green.shade400,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
@@ -479,7 +534,11 @@ class _HomePageState extends State<HomePage> {
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade300 : Colors.green.shade700,
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.grey.shade300
+                                      : Colors.green.shade700,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -487,7 +546,11 @@ class _HomePageState extends State<HomePage> {
                                 'Gere treinos personalizados com inteligência artificial',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.green.shade600,
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.grey.shade400
+                                      : Colors.green.shade600,
                                 ),
                               ),
                             ],
@@ -496,7 +559,7 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
+
                     Row(
                       children: [
                         Expanded(
@@ -505,7 +568,11 @@ class _HomePageState extends State<HomePage> {
                             icon: const Icon(Icons.add, size: 20),
                             label: const Text('Gerar Treino'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade600 : Colors.green.shade400,
+                              backgroundColor:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.grey.shade600
+                                  : Colors.green.shade400,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
@@ -516,19 +583,31 @@ class _HomePageState extends State<HomePage> {
                           child: OutlinedButton.icon(
                             onPressed: () => context.push('/workout-plans'),
                             icon: Icon(
-                              Icons.list, 
-                              color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.green.shade400, 
-                              size: 20
+                              Icons.list,
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.grey.shade400
+                                  : Colors.green.shade400,
+                              size: 20,
                             ),
                             label: Text(
                               'Meus Treinos',
                               style: TextStyle(
-                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.green.shade400
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey.shade400
+                                    : Colors.green.shade400,
                               ),
                             ),
                             style: OutlinedButton.styleFrom(
                               side: BorderSide(
-                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.green.shade400
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey.shade400
+                                    : Colors.green.shade400,
                               ),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
@@ -544,7 +623,8 @@ class _HomePageState extends State<HomePage> {
 
             // === SEÇÃO PLANO ALIMENTAR ===
             Text(
-              AppLocalizations.of(context)?.mealPlanSection ?? '🍽️ Plano Alimentar',
+              AppLocalizations.of(context)?.mealPlanSection ??
+                  '🍽️ Plano Alimentar',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Colors.grey.shade700,
@@ -553,7 +633,9 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 12),
 
             Card(
-              color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.green.shade50,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey.shade800
+                  : Colors.green.shade50,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -564,7 +646,10 @@ class _HomePageState extends State<HomePage> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade600 : Colors.green.shade400,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey.shade600
+                                : Colors.green.shade400,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
@@ -583,7 +668,11 @@ class _HomePageState extends State<HomePage> {
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade300 : Colors.green.shade700,
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.grey.shade300
+                                      : Colors.green.shade700,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -591,7 +680,11 @@ class _HomePageState extends State<HomePage> {
                                 'Gere seu plano nutricional personalizado',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Theme.of(context).primaryColor,
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.grey.shade400
+                                      : Theme.of(context).primaryColor,
                                 ),
                               ),
                             ],
@@ -600,7 +693,7 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
+
                     Row(
                       children: [
                         Expanded(
@@ -609,7 +702,11 @@ class _HomePageState extends State<HomePage> {
                             icon: const Icon(Icons.add, size: 20),
                             label: const Text('Novo Plano'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade600 : Theme.of(context).primaryColor,
+                              backgroundColor:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.grey.shade600
+                                  : Theme.of(context).primaryColor,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
@@ -620,19 +717,31 @@ class _HomePageState extends State<HomePage> {
                           child: OutlinedButton.icon(
                             onPressed: () => context.push('/meal-plan'),
                             icon: Icon(
-                              Icons.history, 
-                              color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Theme.of(context).primaryColor, 
-                              size: 20
+                              Icons.history,
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.grey.shade400
+                                  : Theme.of(context).primaryColor,
+                              size: 20,
                             ),
                             label: Text(
                               'Meus Planos',
                               style: TextStyle(
-                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Theme.of(context).primaryColor
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey.shade400
+                                    : Theme.of(context).primaryColor,
                               ),
                             ),
                             style: OutlinedButton.styleFrom(
                               side: BorderSide(
-                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Theme.of(context).primaryColor
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey.shade400
+                                    : Theme.of(context).primaryColor,
                               ),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
@@ -710,15 +819,19 @@ class _HomePageState extends State<HomePage> {
           width: 60,
           height: 70,
           decoration: BoxDecoration(
-            color: isFilled 
-                ? (Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade600 : Theme.of(context).primaryColor)
-                : (Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Theme.of(context).primaryColor.withOpacity(0.2)),
+            color: isFilled
+                ? (Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey.shade600
+                      : Theme.of(context).primaryColor)
+                : (Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey.shade800
+                      : Theme.of(context).primaryColor.withOpacity(0.2)),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: Theme.of(context).brightness == Brightness.dark 
-                  ? Colors.grey.shade500 
-                  : Theme.of(context).primaryColor.withOpacity(0.5), 
-              width: 2
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey.shade500
+                  : Theme.of(context).primaryColor.withOpacity(0.5),
+              width: 2,
             ),
           ),
           child: Column(
@@ -726,7 +839,11 @@ class _HomePageState extends State<HomePage> {
             children: [
               Icon(
                 Icons.water_drop,
-                color: isFilled ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Theme.of(context).primaryColor.withOpacity(0.7)),
+                color: isFilled
+                    ? Colors.white
+                    : (Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey.shade400
+                          : Theme.of(context).primaryColor.withOpacity(0.7)),
                 size: 28,
               ),
               const SizedBox(height: 4),
@@ -734,7 +851,11 @@ class _HomePageState extends State<HomePage> {
                 '500ml',
                 style: TextStyle(
                   fontSize: 10,
-                  color: isFilled ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Theme.of(context).primaryColor),
+                  color: isFilled
+                      ? Colors.white
+                      : (Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey.shade400
+                            : Theme.of(context).primaryColor),
                   fontWeight: FontWeight.bold,
                 ),
               ),

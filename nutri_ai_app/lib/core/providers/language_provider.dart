@@ -3,28 +3,28 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class LanguageProvider extends ChangeNotifier {
   Locale _locale = const Locale('pt', 'BR'); // Português como padrão
-  
+
   Locale get locale => _locale;
-  
+
   String get languageCode => _locale.languageCode;
-  
+
   // Idiomas suportados
   static const List<Locale> supportedLocales = [
     Locale('pt', 'BR'), // Português Brasil
     Locale('en', 'US'), // Inglês
     Locale('es', 'ES'), // Espanhol
   ];
-  
+
   static const Map<String, String> languageNames = {
     'pt': '🇧🇷 Português',
-    'en': '🇺🇸 English',  
+    'en': '🇺🇸 English',
     'es': '🇪🇸 Español',
   };
-  
+
   LanguageProvider() {
     _loadLanguageFromPrefs();
   }
-  
+
   void changeLanguage(String languageCode) {
     switch (languageCode) {
       case 'pt':
@@ -42,7 +42,7 @@ class LanguageProvider extends ChangeNotifier {
     _saveLanguageToPrefs();
     notifyListeners();
   }
-  
+
   Future<void> _loadLanguageFromPrefs() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -52,7 +52,7 @@ class LanguageProvider extends ChangeNotifier {
       print('Erro ao carregar idioma: $e');
     }
   }
-  
+
   Future<void> _saveLanguageToPrefs() async {
     try {
       final prefs = await SharedPreferences.getInstance();

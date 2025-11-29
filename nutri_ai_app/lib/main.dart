@@ -50,12 +50,12 @@ class MyApp extends ConsumerWidget {
         return MaterialApp.router(
           title: 'LiveBs',
           debugShowCheckedModeBanner: false,
-          
+
           // Temas
           theme: AppTheme.lightTheme(),
           darkTheme: AppTheme.darkTheme(),
           themeMode: themeProvider.themeMode,
-          
+
           // Localização
           locale: languageProvider.locale,
           supportedLocales: LanguageProvider.supportedLocales,
@@ -65,7 +65,7 @@ class MyApp extends ConsumerWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          
+
           routerConfig: router,
         );
       },

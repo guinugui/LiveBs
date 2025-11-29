@@ -25,28 +25,34 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
   void _parseWorkoutData() {
     try {
       print('[WORKOUT_DETAILS] 📋 Dados do plano: ${widget.plan.planName}');
-      print('[WORKOUT_DETAILS] 📊 workoutData length: ${widget.plan.workoutData.length}');
-      print('[WORKOUT_DETAILS] 📊 workoutData tipo: ${widget.plan.workoutData.runtimeType}');
-      
-      String dataPreview = widget.plan.workoutData.length > 300 
-        ? widget.plan.workoutData.substring(0, 300) 
-        : widget.plan.workoutData;
+      print(
+        '[WORKOUT_DETAILS] 📊 workoutData length: ${widget.plan.workoutData.length}',
+      );
+      print(
+        '[WORKOUT_DETAILS] 📊 workoutData tipo: ${widget.plan.workoutData.runtimeType}',
+      );
+
+      String dataPreview = widget.plan.workoutData.length > 300
+          ? widget.plan.workoutData.substring(0, 300)
+          : widget.plan.workoutData;
       print('[WORKOUT_DETAILS] 📄 workoutData preview: $dataPreview');
 
-      if (widget.plan.workoutData.isNotEmpty && widget.plan.workoutData != '{}') {
+      if (widget.plan.workoutData.isNotEmpty &&
+          widget.plan.workoutData != '{}') {
         String rawData = widget.plan.workoutData;
-        
+
         // Verificar se é markdown (começa com #, *, ou tem formatação típica)
-        bool isMarkdown = rawData.contains('##') || 
-                         rawData.contains('**') || 
-                         rawData.contains('📅') ||
-                         rawData.contains('###') ||
-                         rawData.startsWith('# ') ||
-                         rawData.contains('💪') ||
-                         rawData.contains('🎯') ||
-                         rawData.contains('- **') ||
-                         (rawData.contains('**DIVISÃO') || rawData.contains('**ORIENTAÇÃO'));
-        
+        bool isMarkdown =
+            rawData.contains('##') ||
+            rawData.contains('**') ||
+            rawData.contains('📅') ||
+            rawData.contains('###') ||
+            rawData.startsWith('# ') ||
+            rawData.contains('💪') ||
+            rawData.contains('🎯') ||
+            rawData.contains('- **') ||
+            (rawData.contains('**DIVISÃO') || rawData.contains('**ORIENTAÇÃO'));
+
         if (isMarkdown) {
           print('[WORKOUT_DETAILS] 📝 Detectado formato markdown');
           _workoutData = {'markdown_content': rawData};
@@ -65,10 +71,15 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
 
           if (_workoutData != null && _workoutData!['days'] != null) {
             schedule = _workoutData!['days'] as List<dynamic>;
-            print('[WORKOUT_DETAILS] 🎉 SUCESSO: ${schedule.length} dias encontrados em days!');
-          } else if (_workoutData != null && _workoutData!['workout_schedule'] != null) {
+            print(
+              '[WORKOUT_DETAILS] 🎉 SUCESSO: ${schedule.length} dias encontrados em days!',
+            );
+          } else if (_workoutData != null &&
+              _workoutData!['workout_schedule'] != null) {
             schedule = _workoutData!['workout_schedule'] as List<dynamic>;
-            print('[WORKOUT_DETAILS] 🎉 SUCESSO: ${schedule.length} dias encontrados no workout_schedule!');
+            print(
+              '[WORKOUT_DETAILS] 🎉 SUCESSO: ${schedule.length} dias encontrados no workout_schedule!',
+            );
             _workoutData!['days'] = schedule;
             _workoutData!.remove('workout_schedule');
           }
@@ -78,7 +89,9 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
               var day = schedule[i];
               if (day is Map && day['exercises'] is List) {
                 var exercises = day['exercises'] as List;
-                print('[WORKOUT_DETAILS] 📅 Dia ${i + 1} (${day['day']}): ${exercises.length} exercícios');
+                print(
+                  '[WORKOUT_DETAILS] 📅 Dia ${i + 1} (${day['day']}): ${exercises.length} exercícios',
+                );
               }
             }
             setState(() => _isLoading = false);
@@ -207,7 +220,7 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
             // Cabeçalho do Plano
             _buildPlanHeader(),
             const SizedBox(height: 24),
-            
+
             // Conteúdo Markdown
             _buildCard(
               child: Markdown(
@@ -231,10 +244,7 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
                     fontWeight: FontWeight.bold,
                     color: Colors.grey,
                   ),
-                  p: const TextStyle(
-                    fontSize: 16,
-                    height: 1.5,
-                  ),
+                  p: const TextStyle(fontSize: 16, height: 1.5),
                   strong: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.orange,
@@ -246,7 +256,7 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
         ),
       );
     }
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -270,7 +280,8 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
           ],
 
           // Cronograma de Treinos
-          if (_workoutData!['days'] != null || _workoutData!['workout_schedule'] != null) ...[
+          if (_workoutData!['days'] != null ||
+              _workoutData!['workout_schedule'] != null) ...[
             _buildSectionTitle('Cronograma de Treinos'),
             const SizedBox(height: 12),
             ..._buildWorkoutSchedule(),
@@ -428,10 +439,12 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
     return filteredSchedule.asMap().entries.map((entry) {
       int index = entry.key;
       var dayData = entry.value;
-      
+
       // Cores alternadas: par = cinza claro, ímpar = branco
-      Color cardBackgroundColor = index % 2 == 0 ? Colors.grey[100]! : Colors.white;
-      
+      Color cardBackgroundColor = index % 2 == 0
+          ? Colors.grey[100]!
+          : Colors.white;
+
       return Padding(
         padding: const EdgeInsets.only(bottom: 16),
         child: Container(
@@ -476,15 +489,20 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
                           ),
                           // Label simplificado
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: widget.plan.workoutType == 'home' 
-                                  ? Colors.blue[100] 
+                              color: widget.plan.workoutType == 'home'
+                                  ? Colors.blue[100]
                                   : Colors.orange[100],
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              widget.plan.workoutType == 'home' ? 'Casa' : 'Academia',
+                              widget.plan.workoutType == 'home'
+                                  ? 'Casa'
+                                  : 'Academia',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -500,7 +518,10 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
                         const SizedBox(height: 4),
                         Text(
                           dayData['focus']?.toString() ?? '',
-                          style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                          ),
                         ),
                       ],
                     ],
@@ -511,7 +532,7 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
 
                 // Guia do Treino
                 _buildWorkoutGuide(dayData),
-                
+
                 const SizedBox(height: 16),
 
                 // Lista de Exercícios do Dia
@@ -527,10 +548,10 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
   Widget _buildWorkoutGuide(Map<String, dynamic> dayData) {
     String dayName = dayData['day']?.toString() ?? 'Dia';
     String focus = dayData['focus']?.toString() ?? '';
-    
+
     // Verificar se é treino de casa ou academia baseado no tipo do plano
     bool isHomeWorkout = widget.plan.workoutType == 'home';
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -556,7 +577,7 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Nome do dia
           Text(
             dayName,
@@ -567,7 +588,7 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
             ),
           ),
           const SizedBox(height: 8),
-          
+
           if (isHomeWorkout) ...[
             // Para treino em casa: mostrar exercícios específicos
             _buildHomeWorkoutGuide(dayData),
@@ -584,14 +605,14 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
     List<String> homeExercises = [
       'Flexão de braços',
       'Abdominal',
-      'Polichinelo', 
+      'Polichinelo',
       'Agachamento',
       'Prancha',
       'Burpee',
       'Mountain Climber',
-      'Caminhada'
+      'Caminhada',
     ];
-    
+
     // Tentar pegar exercícios dos dados reais se existirem
     if (dayData['exercises'] != null) {
       List<dynamic> exercises = dayData['exercises'] as List<dynamic>;
@@ -600,67 +621,92 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
           .where((name) => name.isNotEmpty)
           .take(6) // Máximo 6 exercícios
           .toList();
-      
+
       if (exerciseNames.isNotEmpty) {
         homeExercises = exerciseNames;
       }
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: homeExercises.take(6).map((exercise) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Row(
-          children: [
-            Container(
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(
-                color: Colors.green[600],
-                shape: BoxShape.circle,
+      children: homeExercises
+          .take(6)
+          .map(
+            (exercise) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: Colors.green[600],
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    exercise,
+                    style: const TextStyle(fontSize: 14, height: 1.4),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 8),
-            Text(
-              exercise,
-              style: const TextStyle(fontSize: 14, height: 1.4),
-            ),
-          ],
-        ),
-      )).toList(),
+          )
+          .toList(),
     );
   }
 
   Widget _buildGymWorkoutGuide(String focus) {
     print('[DEBUG] Focus recebido: "$focus"'); // Debug
     String focusLower = focus.toLowerCase();
-    
+
     // Mapeamento mais abrangente para detectar grupos musculares
     Map<String, String> gymGuides = {
-      'peito': 'Peito e Tríceps\n• 3 exercícios para peito\n• 2 exercícios para tríceps',
-      'tricep': 'Peito e Tríceps\n• 3 exercícios para peito\n• 2 exercícios para tríceps',
-      'costas': 'Costas e Bíceps\n• 4 exercícios para costas\n• 2 exercícios para bíceps',
-      'costa': 'Costas e Bíceps\n• 4 exercícios para costas\n• 2 exercícios para bíceps',
-      'bicep': 'Costas e Bíceps\n• 4 exercícios para costas\n• 2 exercícios para bíceps',
-      'pernas': 'Pernas e Glúteos\n• 4 exercícios para pernas\n• 2 exercícios para glúteos',
-      'perna': 'Pernas e Glúteos\n• 4 exercícios para pernas\n• 2 exercícios para glúteos',
-      'quadricep': 'Pernas e Glúteos\n• 4 exercícios para pernas\n• 2 exercícios para glúteos',
-      'gluteo': 'Pernas e Glúteos\n• 4 exercícios para pernas\n• 2 exercícios para glúteos',
-      'ombros': 'Ombros e Core\n• 3 exercícios para ombros\n• 2 exercícios para core',
-      'ombro': 'Ombros e Core\n• 3 exercícios para ombros\n• 2 exercícios para core',
-      'deltoid': 'Ombros e Core\n• 3 exercícios para ombros\n• 2 exercícios para core',
-      'corpo': 'Corpo Inteiro\n• 2 exercícios superiores\n• 2 exercícios inferiores\n• 1 exercício cardio',
-      'full': 'Corpo Inteiro\n• 2 exercícios superiores\n• 2 exercícios inferiores\n• 1 exercício cardio',
-      'cardio': 'Cardio e Core\n• 3 exercícios de cardio\n• 2 exercícios de core',
-      'abdom': 'Core e Abdômen\n• 4 exercícios para core\n• 2 exercícios funcionais',
+      'peito':
+          'Peito e Tríceps\n• 3 exercícios para peito\n• 2 exercícios para tríceps',
+      'tricep':
+          'Peito e Tríceps\n• 3 exercícios para peito\n• 2 exercícios para tríceps',
+      'costas':
+          'Costas e Bíceps\n• 4 exercícios para costas\n• 2 exercícios para bíceps',
+      'costa':
+          'Costas e Bíceps\n• 4 exercícios para costas\n• 2 exercícios para bíceps',
+      'bicep':
+          'Costas e Bíceps\n• 4 exercícios para costas\n• 2 exercícios para bíceps',
+      'pernas':
+          'Pernas e Glúteos\n• 4 exercícios para pernas\n• 2 exercícios para glúteos',
+      'perna':
+          'Pernas e Glúteos\n• 4 exercícios para pernas\n• 2 exercícios para glúteos',
+      'quadricep':
+          'Pernas e Glúteos\n• 4 exercícios para pernas\n• 2 exercícios para glúteos',
+      'gluteo':
+          'Pernas e Glúteos\n• 4 exercícios para pernas\n• 2 exercícios para glúteos',
+      'ombros':
+          'Ombros e Core\n• 3 exercícios para ombros\n• 2 exercícios para core',
+      'ombro':
+          'Ombros e Core\n• 3 exercícios para ombros\n• 2 exercícios para core',
+      'deltoid':
+          'Ombros e Core\n• 3 exercícios para ombros\n• 2 exercícios para core',
+      'corpo':
+          'Corpo Inteiro\n• 2 exercícios superiores\n• 2 exercícios inferiores\n• 1 exercício cardio',
+      'full':
+          'Corpo Inteiro\n• 2 exercícios superiores\n• 2 exercícios inferiores\n• 1 exercício cardio',
+      'cardio':
+          'Cardio e Core\n• 3 exercícios de cardio\n• 2 exercícios de core',
+      'abdom':
+          'Core e Abdômen\n• 4 exercícios para core\n• 2 exercícios funcionais',
       // Adicionar mais opções baseadas nos dados que você mostrou
-      'treino a': 'Peito e Tríceps\n• 3 exercícios para peito\n• 2 exercícios para tríceps',
-      'treino b': 'Costas e Bíceps\n• 4 exercícios para costas\n• 2 exercícios para bíceps',
-      'treino c': 'Pernas e Glúteos\n• 4 exercícios para pernas\n• 2 exercícios para glúteos',
+      'treino a':
+          'Peito e Tríceps\n• 3 exercícios para peito\n• 2 exercícios para tríceps',
+      'treino b':
+          'Costas e Bíceps\n• 4 exercícios para costas\n• 2 exercícios para bíceps',
+      'treino c':
+          'Pernas e Glúteos\n• 4 exercícios para pernas\n• 2 exercícios para glúteos',
     };
-    
-    String guideText = 'Peito e Tríceps\n• 3 exercícios para peito\n• 2 exercícios para tríceps'; // Default para academia
-    
+
+    String guideText =
+        'Peito e Tríceps\n• 3 exercícios para peito\n• 2 exercícios para tríceps'; // Default para academia
+
     // Tentar encontrar o guia específico
     for (String key in gymGuides.keys) {
       if (focusLower.contains(key)) {
@@ -669,25 +715,32 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
         break;
       }
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: guideText.split('\n').map((line) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Text(
-          line,
-          style: TextStyle(
-            fontSize: 14,
-            height: 1.4,
-            fontWeight: line.startsWith('•') ? FontWeight.normal : FontWeight.w600,
-            color: line.startsWith('•') ? Colors.grey[700] : Colors.green[700],
-          ),
-        ),
-      )).toList(),
+      children: guideText
+          .split('\n')
+          .map(
+            (line) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text(
+                line,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.4,
+                  fontWeight: line.startsWith('•')
+                      ? FontWeight.normal
+                      : FontWeight.w600,
+                  color: line.startsWith('•')
+                      ? Colors.grey[700]
+                      : Colors.green[700],
+                ),
+              ),
+            ),
+          )
+          .toList(),
     );
   }
-
-
 
   Widget _buildSectionTitle(String title) {
     return Text(
@@ -1024,7 +1077,7 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
     }
 
     List<dynamic> exercises = dayData['exercises'] as List<dynamic>;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1050,12 +1103,12 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Lista de exercícios
           ...exercises.asMap().entries.map((entry) {
             int index = entry.key;
             Map<String, dynamic> exercise = entry.value as Map<String, dynamic>;
-            
+
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(12),
@@ -1071,7 +1124,10 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.green[600],
                           borderRadius: BorderRadius.circular(12),
@@ -1088,7 +1144,8 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          exercise['name']?.toString() ?? 'Exercício ${index + 1}',
+                          exercise['name']?.toString() ??
+                              'Exercício ${index + 1}',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -1097,9 +1154,9 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   // Detalhes do exercício
                   if (exercise['sets'] != null || exercise['reps'] != null) ...[
                     Row(
@@ -1109,24 +1166,35 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
                           const SizedBox(width: 4),
                           Text(
                             '${exercise['sets']} séries',
-                            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[700],
+                            ),
                           ),
                         ],
-                        if (exercise['sets'] != null && exercise['reps'] != null)
+                        if (exercise['sets'] != null &&
+                            exercise['reps'] != null)
                           const SizedBox(width: 16),
                         if (exercise['reps'] != null) ...[
-                          Icon(Icons.fitness_center, size: 16, color: Colors.grey[600]),
+                          Icon(
+                            Icons.fitness_center,
+                            size: 16,
+                            color: Colors.grey[600],
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '${exercise['reps']} rep.',
-                            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[700],
+                            ),
                           ),
                         ],
                       ],
                     ),
                     const SizedBox(height: 8),
                   ],
-                  
+
                   // Equipamento
                   if (exercise['equipment'] != null) ...[
                     Row(
@@ -1136,14 +1204,17 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
                         Expanded(
                           child: Text(
                             'Equipamento: ${exercise['equipment']}',
-                            style: TextStyle(fontSize: 12, color: Colors.orange[700]),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange[700],
+                            ),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                   ],
-                  
+
                   // Instruções
                   if (exercise['instructions'] != null) ...[
                     Text(
@@ -1157,10 +1228,14 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
                     const SizedBox(height: 4),
                     Text(
                       exercise['instructions']?.toString() ?? '',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[700], height: 1.4),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[700],
+                        height: 1.4,
+                      ),
                     ),
                   ],
-                  
+
                   // Descanso
                   if (exercise['rest'] != null) ...[
                     const SizedBox(height: 4),
@@ -1170,7 +1245,10 @@ class _WorkoutPlanDetailsPageState extends State<WorkoutPlanDetailsPage> {
                         const SizedBox(width: 4),
                         Text(
                           'Descanso: ${exercise['rest']}',
-                          style: TextStyle(fontSize: 11, color: Colors.purple[600]),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.purple[600],
+                          ),
                         ),
                       ],
                     ),

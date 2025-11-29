@@ -163,7 +163,10 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade400, width: 2), // Cinza no foco
+          borderSide: BorderSide(
+            color: Colors.grey.shade400,
+            width: 2,
+          ), // Cinza no foco
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(

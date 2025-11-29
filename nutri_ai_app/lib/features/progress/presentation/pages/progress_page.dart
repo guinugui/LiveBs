@@ -42,21 +42,13 @@ class _ProgressPageState extends State<ProgressPage>
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.elasticOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
 
     _animationController.forward();
   }
@@ -89,7 +81,7 @@ class _ProgressPageState extends State<ProgressPage>
         'Olá! 👋 Sou sua Personal Virtual! Como posso te ajudar hoje?',
         isBot: true,
       );
-      
+
       Future.delayed(const Duration(milliseconds: 2000), () {
         _addMessage(
           'Estou aqui para te ajudar com treinos, alimentação e metas. Posso criar planos personalizados e dar dicas motivacionais! 💪',
@@ -134,10 +126,9 @@ class _ProgressPageState extends State<ProgressPage>
     try {
       // Simular resposta da IA
       await Future.delayed(const Duration(milliseconds: 1500));
-      
+
       String response = _generateSmartResponse(message);
       _addMessage(response, isBot: true);
-      
     } catch (e) {
       _addMessage(
         'Desculpe, tive um problema técnico. Tente novamente! 😅',
@@ -152,12 +143,14 @@ class _ProgressPageState extends State<ProgressPage>
 
   String _generateSmartResponse(String userMessage) {
     final msg = userMessage.toLowerCase();
-    
+
     if (msg.contains('treino') || msg.contains('exercício')) {
       return 'Perfeito! Vamos criar um treino personalizado para você. Clique em "Gerar Treino" para começarmos! 🏋️‍♀️';
     }
-    
-    if (msg.contains('peso') || msg.contains('emagrecer') || msg.contains('gordura')) {
+
+    if (msg.contains('peso') ||
+        msg.contains('emagrecer') ||
+        msg.contains('gordura')) {
       if (_profile != null) {
         final currentWeight = _profile!['weight'];
         final targetWeight = _profile!['target_weight'];
@@ -165,19 +158,23 @@ class _ProgressPageState extends State<ProgressPage>
       }
       return 'Vamos trabalhar juntos no seu objetivo! Primeiro, preciso conhecer melhor seu perfil.';
     }
-    
-    if (msg.contains('dieta') || msg.contains('alimentação') || msg.contains('comida')) {
+
+    if (msg.contains('dieta') ||
+        msg.contains('alimentação') ||
+        msg.contains('comida')) {
       return 'Ótima pergunta! A alimentação é fundamental! Vou te ajudar com dicas alimentares personalizadas. 🥗';
     }
-    
-    if (msg.contains('motivação') || msg.contains('desânimo') || msg.contains('difícil')) {
+
+    if (msg.contains('motivação') ||
+        msg.contains('desânimo') ||
+        msg.contains('difícil')) {
       return 'Eu entendo que às vezes é desafiador, mas você não está sozinho(a)! Cada pequeno passo conta. Vamos começar hoje mesmo! 💚';
     }
-    
+
     if (msg.contains('obrigad') || msg.contains('valeu')) {
       return 'Por nada! Estou aqui sempre que precisar. Juntos vamos alcançar seus objetivos! 🌟';
     }
-    
+
     // Resposta padrão
     return 'Interessante! Como posso te ajudar especificamente? Posso criar treinos, dar dicas de alimentação ou te motivar! ✨';
   }
@@ -201,13 +198,13 @@ class _ProgressPageState extends State<ProgressPage>
               children: [
                 // Header com avatar e status
                 _buildHeader(),
-                
+
                 // Área de conversa
                 Expanded(child: _buildConversation()),
-                
+
                 // Ações rápidas
                 _buildQuickActions(),
-                
+
                 // Campo de mensagem
                 _buildMessageInput(),
               ],
@@ -315,7 +312,7 @@ class _ProgressPageState extends State<ProgressPage>
           if (index == _conversation.length && _isTyping) {
             return _buildTypingIndicator();
           }
-          
+
           final message = _conversation[index];
           return _buildMessageBubble(message);
         },
@@ -325,11 +322,13 @@ class _ProgressPageState extends State<ProgressPage>
 
   Widget _buildMessageBubble(Map<String, dynamic> message) {
     final isBot = message['isBot'] as bool;
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        mainAxisAlignment: isBot ? MainAxisAlignment.start : MainAxisAlignment.end,
+        mainAxisAlignment: isBot
+            ? MainAxisAlignment.start
+            : MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (isBot) ...[
@@ -406,18 +405,17 @@ class _ProgressPageState extends State<ProgressPage>
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
-        final animation = Tween<double>(
-          begin: 0.5,
-          end: 1.0,
-        ).animate(CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(
-            index * 0.2,
-            (index * 0.2) + 0.4,
-            curve: Curves.easeInOut,
+        final animation = Tween<double>(begin: 0.5, end: 1.0).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Interval(
+              index * 0.2,
+              (index * 0.2) + 0.4,
+              curve: Curves.easeInOut,
+            ),
           ),
-        ));
-        
+        );
+
         return Transform.scale(
           scale: animation.value,
           child: Container(
@@ -450,10 +448,7 @@ class _ProgressPageState extends State<ProgressPage>
               () => _navigateToWorkoutList(),
             ),
             const SizedBox(width: 8),
-            _buildQuickActionChip(
-              '🎯 Minhas Metas',
-              () => _showGoals(),
-            ),
+            _buildQuickActionChip('🎯 Minhas Metas', () => _showGoals()),
           ],
         ),
       ),
@@ -479,9 +474,7 @@ class _ProgressPageState extends State<ProgressPage>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Colors.grey.shade200),
-        ),
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
       ),
       child: Row(
         children: [
@@ -515,11 +508,7 @@ class _ProgressPageState extends State<ProgressPage>
                 color: Colors.orange.shade600,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.send,
-                color: Colors.white,
-                size: 20,
-              ),
+              child: const Icon(Icons.send, color: Colors.white, size: 20),
             ),
           ),
         ],
@@ -529,17 +518,13 @@ class _ProgressPageState extends State<ProgressPage>
 
   void _navigateToWorkoutGenerator() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const WorkoutQuestionnairePage(),
-      ),
+      MaterialPageRoute(builder: (context) => const WorkoutQuestionnairePage()),
     );
   }
 
   void _navigateToWorkoutList() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const WorkoutPlanListPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const WorkoutPlanListPage()),
     );
   }
 
@@ -554,7 +539,7 @@ class _ProgressPageState extends State<ProgressPage>
       );
       return;
     }
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -569,7 +554,10 @@ class _ProgressPageState extends State<ProgressPage>
             if (_needsProfileUpdate)
               const Text(
                 '⚠️ Considere atualizar seu perfil!',
-                style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.orange,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
           ],
         ),

@@ -10,11 +10,9 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(localizations?.settings ?? 'Configurações'),
-      ),
+      appBar: AppBar(title: Text(localizations?.settings ?? 'Configurações')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -29,8 +27,8 @@ class SettingsPage extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.palette,
-                        color: Theme.of(context).brightness == Brightness.dark 
-                            ? Colors.grey.shade400 
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey.shade400
                             : Theme.of(context).primaryColor,
                       ),
                       const SizedBox(width: 12),
@@ -43,28 +41,30 @@ class SettingsPage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Dark Mode Toggle
                   Consumer<ThemeProvider>(
                     builder: (context, themeProvider, child) {
                       return SwitchListTile(
                         title: Text(localizations?.darkMode ?? 'Modo Escuro'),
                         subtitle: Text(
-                          themeProvider.isDarkMode 
-                            ? 'Tema escuro ativado' 
-                            : 'Tema claro ativado',
+                          themeProvider.isDarkMode
+                              ? 'Tema escuro ativado'
+                              : 'Tema claro ativado',
                           style: TextStyle(
-                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                            color: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.color,
                           ),
                         ),
                         value: themeProvider.isDarkMode,
                         onChanged: (_) => themeProvider.toggleTheme(),
                         secondary: Icon(
-                          themeProvider.isDarkMode 
-                            ? Icons.dark_mode 
-                            : Icons.light_mode,
-                          color: Theme.of(context).brightness == Brightness.dark 
-                              ? Colors.grey.shade400 
+                          themeProvider.isDarkMode
+                              ? Icons.dark_mode
+                              : Icons.light_mode,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey.shade400
                               : Theme.of(context).primaryColor,
                         ),
                       );
@@ -74,9 +74,9 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Seção Idioma
           Card(
             child: Padding(
@@ -88,8 +88,8 @@ class SettingsPage extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.language,
-                        color: Theme.of(context).brightness == Brightness.dark 
-                            ? Colors.grey.shade400 
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey.shade400
                             : Theme.of(context).primaryColor,
                       ),
                       const SizedBox(width: 12),
@@ -102,7 +102,7 @@ class SettingsPage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Language Selection
                   Consumer<LanguageProvider>(
                     builder: (context, languageProvider, child) {
@@ -139,9 +139,9 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Informações do App
           Card(
             child: Padding(
@@ -153,8 +153,8 @@ class SettingsPage extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.info,
-                        color: Theme.of(context).brightness == Brightness.dark 
-                            ? Colors.grey.shade400 
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey.shade400
                             : Theme.of(context).primaryColor,
                       ),
                       const SizedBox(width: 12),
@@ -167,7 +167,7 @@ class SettingsPage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
+
                   ListTile(
                     title: Text(
                       'Versão do App',
@@ -183,12 +183,12 @@ class SettingsPage extends StatelessWidget {
                     ),
                     leading: Icon(
                       Icons.apps,
-                      color: Theme.of(context).brightness == Brightness.dark 
-                          ? Colors.grey.shade400 
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey.shade400
                           : Colors.grey.shade600,
                     ),
                   ),
-                  
+
                   ListTile(
                     title: Text(
                       'Desenvolvido por',
@@ -204,8 +204,8 @@ class SettingsPage extends StatelessWidget {
                     ),
                     leading: Icon(
                       Icons.code,
-                      color: Theme.of(context).brightness == Brightness.dark 
-                          ? Colors.grey.shade400 
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey.shade400
                           : Colors.grey.shade600,
                     ),
                   ),
@@ -227,49 +227,45 @@ class SettingsPage extends StatelessWidget {
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: isSelected 
-          ? (Theme.of(context).brightness == Brightness.dark 
-              ? Colors.grey.shade800 
-              : Theme.of(context).primaryColor.withOpacity(0.1))
-          : Colors.transparent,
+        color: isSelected
+            ? (Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey.shade800
+                  : Theme.of(context).primaryColor.withOpacity(0.1))
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
-        border: isSelected 
-          ? Border.all(
-              color: Theme.of(context).brightness == Brightness.dark 
-                  ? Colors.grey.shade500 
-                  : Theme.of(context).primaryColor, 
-              width: 2
-            )
-          : null,
+        border: isSelected
+            ? Border.all(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade500
+                    : Theme.of(context).primaryColor,
+                width: 2,
+              )
+            : null,
       ),
       child: ListTile(
         title: Text(
           title,
           style: TextStyle(
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected 
-              ? (Theme.of(context).brightness == Brightness.dark 
-                  ? Colors.grey.shade300 
-                  : Theme.of(context).primaryColor)
-              : Theme.of(context).textTheme.bodyLarge?.color,
+            color: isSelected
+                ? (Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey.shade300
+                      : Theme.of(context).primaryColor)
+                : Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
-        trailing: isSelected 
-          ? Icon(
-              Icons.check_circle, 
-              color: Theme.of(context).brightness == Brightness.dark 
-                  ? Colors.grey.shade400 
-                  : Theme.of(context).primaryColor,
-              size: 24,
-            )
-          : Icon(
-              Icons.circle_outlined,
-              color: Colors.grey,
-              size: 24,
-            ),
-        onTap: isSelected 
-          ? null 
-          : () => languageProvider.changeLanguage(languageCode),
+        trailing: isSelected
+            ? Icon(
+                Icons.check_circle,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade400
+                    : Theme.of(context).primaryColor,
+                size: 24,
+              )
+            : Icon(Icons.circle_outlined, color: Colors.grey, size: 24),
+        onTap: isSelected
+            ? null
+            : () => languageProvider.changeLanguage(languageCode),
       ),
     );
   }

@@ -35,7 +35,7 @@ class _ChatPageState extends State<ChatPage> {
       if (mounted) {
         setState(() {
           _messages.clear();
-          
+
           // Só adicionar mensagem de boas-vindas se não há histórico
           if (history.isEmpty) {
             _messages.add(
@@ -57,11 +57,13 @@ class _ChatPageState extends State<ChatPage> {
               ),
             );
           }
-          
+
           // Garantir que não exceda 20 mensagens mesmo no carregamento
           if (_messages.length > 20) {
             _messages.removeRange(0, _messages.length - 20);
-            print('[NUTRI] 🔄 Histórico truncado para 20 mensagens no carregamento');
+            print(
+              '[NUTRI] 🔄 Histórico truncado para 20 mensagens no carregamento',
+            );
           }
 
           _isLoading = false;
@@ -94,14 +96,16 @@ class _ChatPageState extends State<ChatPage> {
       _messages.add(
         ChatBubble(message: userMessage, isUser: true, time: DateTime.now()),
       );
-      
+
       // Lógica de limitação: máximo 20 mensagens
       // Quando chegar a 21, remove a primeira (mais antiga)
       if (_messages.length > 20) {
         _messages.removeAt(0);
-        print('[NUTRI] 🗂️ Mensagem mais antiga removida. Total: ${_messages.length}');
+        print(
+          '[NUTRI] 🗂️ Mensagem mais antiga removida. Total: ${_messages.length}',
+        );
       }
-      
+
       _isSending = true;
     });
 
@@ -112,18 +116,23 @@ class _ChatPageState extends State<ChatPage> {
         setState(() {
           _messages.add(
             ChatBubble(
-              message: response['message'] ?? response['response'] ?? 'Erro na resposta',
+              message:
+                  response['message'] ??
+                  response['response'] ??
+                  'Erro na resposta',
               isUser: false,
               time: DateTime.parse(response['created_at']),
             ),
           );
-          
+
           // Aplicar limitação novamente após resposta do bot
           if (_messages.length > 20) {
             _messages.removeAt(0);
-            print('[NUTRI] 🗂️ Mensagem mais antiga removida após resposta. Total: ${_messages.length}');
+            print(
+              '[NUTRI] 🗂️ Mensagem mais antiga removida após resposta. Total: ${_messages.length}',
+            );
           }
-          
+
           _isSending = false;
         });
       }
@@ -138,13 +147,15 @@ class _ChatPageState extends State<ChatPage> {
               time: DateTime.now(),
             ),
           );
-          
+
           // Aplicar limitação mesmo em caso de erro
           if (_messages.length > 20) {
             _messages.removeAt(0);
-            print('[NUTRI] 🗂️ Mensagem mais antiga removida após erro. Total: ${_messages.length}');
+            print(
+              '[NUTRI] 🗂️ Mensagem mais antiga removida após erro. Total: ${_messages.length}',
+            );
           }
-          
+
           _isSending = false;
         });
         ScaffoldMessenger.of(
@@ -177,8 +188,8 @@ class _ChatPageState extends State<ChatPage> {
         children: [
           Expanded(
             child: Container(
-              color: Theme.of(context).brightness == Brightness.dark 
-                  ? Colors.black 
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.black
                   : Colors.grey.shade50,
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
@@ -204,81 +215,79 @@ class _ChatPageState extends State<ChatPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: message.isUser
-              ? (Theme.of(context).brightness == Brightness.dark 
-                  ? Colors.grey.shade600 
-                  : const Color(0xFF6C63FF))
-              : (Theme.of(context).brightness == Brightness.dark 
-                  ? Colors.grey.shade700 
-                  : Colors.grey.shade200),
+              ? (Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade600
+                    : const Color(0xFF6C63FF))
+              : (Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade700
+                    : Colors.grey.shade200),
           borderRadius: BorderRadius.circular(16),
         ),
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
-        child: message.isUser 
-          ? Text(
-              message.message,
-              style: const TextStyle(color: Colors.white),
-            )
-          : MarkdownBody(
-              data: message.message,
-              styleSheet: MarkdownStyleSheet(
-                p: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade100 
-                      : Colors.black87, 
-                  fontSize: 14
-                ),
-                h1: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade100 
-                      : Colors.black87, 
-                  fontSize: 18, 
-                  fontWeight: FontWeight.bold
-                ),
-                h2: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade100 
-                      : Colors.black87, 
-                  fontSize: 16, 
-                  fontWeight: FontWeight.bold
-                ),
-                h3: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade100 
-                      : Colors.black87, 
-                  fontSize: 14, 
-                  fontWeight: FontWeight.bold
-                ),
-                listBullet: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade100 
-                      : Colors.black87, 
-                  fontSize: 14
-                ),
-                strong: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade100 
-                      : Colors.black87, 
-                  fontWeight: FontWeight.bold
-                ),
-                em: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade100 
-                      : Colors.black87, 
-                  fontStyle: FontStyle.italic
-                ),
-                code: TextStyle(
-                  backgroundColor: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade600 
-                      : Colors.grey.shade300,
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade100 
-                      : Colors.black87,
-                  fontFamily: 'monospace',
+        child: message.isUser
+            ? Text(message.message, style: const TextStyle(color: Colors.white))
+            : MarkdownBody(
+                data: message.message,
+                styleSheet: MarkdownStyleSheet(
+                  p: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade100
+                        : Colors.black87,
+                    fontSize: 14,
+                  ),
+                  h1: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade100
+                        : Colors.black87,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  h2: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade100
+                        : Colors.black87,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  h3: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade100
+                        : Colors.black87,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  listBullet: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade100
+                        : Colors.black87,
+                    fontSize: 14,
+                  ),
+                  strong: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade100
+                        : Colors.black87,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  em: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade100
+                        : Colors.black87,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  code: TextStyle(
+                    backgroundColor:
+                        Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade600
+                        : Colors.grey.shade300,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade100
+                        : Colors.black87,
+                    fontFamily: 'monospace',
+                  ),
                 ),
               ),
-            ),
       ),
     );
   }
@@ -287,8 +296,8 @@ class _ChatPageState extends State<ChatPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark 
-            ? Colors.grey.shade900 
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey.shade900
             : Colors.white,
         boxShadow: [
           BoxShadow(
@@ -309,8 +318,8 @@ class _ChatPageState extends State<ChatPage> {
                   borderRadius: BorderRadius.circular(24),
                 ),
                 filled: true,
-                fillColor: Theme.of(context).brightness == Brightness.dark 
-                    ? Colors.grey.shade800 
+                fillColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade800
                     : Colors.grey.shade100,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -325,17 +334,15 @@ class _ChatPageState extends State<ChatPage> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark 
-                  ? Colors.grey.shade600 
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey.shade600
                   : Theme.of(context).primaryColor,
               shape: BoxShape.circle,
             ),
             child: IconButton(
               onPressed: _sendMessage,
               icon: const Icon(Icons.arrow_forward),
-              style: IconButton.styleFrom(
-                foregroundColor: Colors.white,
-              ),
+              style: IconButton.styleFrom(foregroundColor: Colors.white),
             ),
           ),
         ],

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/network/api_service.dart';
 
-
-
 class VirtualTrainerPage extends StatefulWidget {
   const VirtualTrainerPage({super.key});
 
@@ -15,9 +13,6 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
     with TickerProviderStateMixin {
   final ApiService _apiService = ApiService();
   late AnimationController _animationController;
-
-
-
 
   // Conversação com Personal Virtual
   final List<Map<String, dynamic>> _conversation = [];
@@ -39,8 +34,6 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-
-
   }
 
   Future<void> _loadData() async {
@@ -54,24 +47,29 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
 
       // Carregar histórico do Personal Virtual
       try {
-        print('[PERSONAL] 🔍 Tentando carregar histórico do Personal Virtual...');
+        print(
+          '[PERSONAL] 🔍 Tentando carregar histórico do Personal Virtual...',
+        );
         final history = await _apiService.getPersonalHistory(limit: 20);
         print('[PERSONAL] ✅ Histórico carregado: ${history.length} mensagens');
         for (var message in history) {
-          print('[PERSONAL] 💬 Mensagem: ${message['message'].substring(0, 50)}...');
+          print(
+            '[PERSONAL] 💬 Mensagem: ${message['message'].substring(0, 50)}...',
+          );
           _conversation.add({
             'content': message['message'],
             'isBot': message['role'] == 'assistant',
             'timestamp': DateTime.now(),
           });
         }
-        
+
         // Garantir que não exceda 20 mensagens mesmo no carregamento
         if (_conversation.length > 20) {
           _conversation.removeRange(0, _conversation.length - 20);
-          print('[PERSONAL] 🔄 Histórico truncado para 20 mensagens no carregamento');
+          print(
+            '[PERSONAL] 🔄 Histórico truncado para 20 mensagens no carregamento',
+          );
         }
-        
       } catch (e) {
         print('[PERSONAL] ❌ Erro ao carregar histórico do Personal: $e');
       }
@@ -100,7 +98,7 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
           'Olá! 👋 Sou o Coach Leo, seu Personal Trainer brasileiro! Como posso te ajudar hoje?',
           isBot: true,
         );
-        
+
         Future.delayed(const Duration(milliseconds: 2000), () {
           _addMessage(
             'Estou aqui para te orientar com treinos, exercícios e rotinas. Posso te ajudar com emagrecimento, ganho de massa, cardio e muito mais! 💪',
@@ -118,12 +116,14 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
         'isBot': isBot,
         'timestamp': DateTime.now(),
       });
-      
+
       // Lógica de limitação: máximo 20 mensagens
       // Quando chegar a 21, remove a primeira (mais antiga)
       if (_conversation.length > 20) {
         _conversation.removeAt(0);
-        print('[PERSONAL] 🗺️ Mensagem mais antiga removida. Total: ${_conversation.length}');
+        print(
+          '[PERSONAL] 🗺️ Mensagem mais antiga removida. Total: ${_conversation.length}',
+        );
       }
     });
 
@@ -156,13 +156,15 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
         'isBot': false,
         'timestamp': DateTime.now(),
       });
-      
+
       // Aplicar limitação após adicionar mensagem do usuário
       if (_conversation.length > 20) {
         _conversation.removeAt(0);
-        print('[PERSONAL] 🗂️ Mensagem mais antiga removida após mensagem do usuário. Total: ${_conversation.length}');
+        print(
+          '[PERSONAL] 🗂️ Mensagem mais antiga removida após mensagem do usuário. Total: ${_conversation.length}',
+        );
       }
-      
+
       _isTyping = true;
     });
 
@@ -170,7 +172,7 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
       print('[FRONTEND] 🚀 Enviando mensagem para Personal: $userMessage');
       final response = await _apiService.sendPersonalMessage(userMessage);
       print('[FRONTEND] ✅ Resposta recebida: $response');
-      
+
       if (mounted) {
         setState(() {
           _conversation.add({
@@ -178,40 +180,42 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
             'isBot': true,
             'timestamp': DateTime.parse(response['created_at']),
           });
-          
+
           // Aplicar limitação após resposta do bot
           if (_conversation.length > 20) {
             _conversation.removeAt(0);
-            print('[PERSONAL] 🗂️ Mensagem mais antiga removida após resposta. Total: ${_conversation.length}');
+            print(
+              '[PERSONAL] 🗂️ Mensagem mais antiga removida após resposta. Total: ${_conversation.length}',
+            );
           }
-          
+
           _isTyping = false;
         });
       }
-      
     } catch (e) {
       print('[FRONTEND] ❌ Erro ao enviar mensagem para Personal: $e');
       if (mounted) {
         setState(() {
           _conversation.add({
-            'content': 'Desculpe, tive um problema técnico! 😅 Mas não desista do seu treino! 💪 Tente novamente em alguns segundos!',
+            'content':
+                'Desculpe, tive um problema técnico! 😅 Mas não desista do seu treino! 💪 Tente novamente em alguns segundos!',
             'isBot': true,
             'timestamp': DateTime.now(),
           });
-          
+
           // Aplicar limitação mesmo em caso de erro
           if (_conversation.length > 20) {
             _conversation.removeAt(0);
-            print('[PERSONAL] 🗂️ Mensagem mais antiga removida após erro. Total: ${_conversation.length}');
+            print(
+              '[PERSONAL] 🗂️ Mensagem mais antiga removida após erro. Total: ${_conversation.length}',
+            );
           }
-          
+
           _isTyping = false;
         });
       }
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -230,8 +234,8 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
         children: [
           Expanded(
             child: Container(
-              color: Theme.of(context).brightness == Brightness.dark 
-                  ? Colors.black 
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.black
                   : Colors.grey.shade50,
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
@@ -249,111 +253,108 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
     );
   }
 
-
-
   Widget _buildMessageBubble(Map<String, dynamic> message) {
     final isBot = message['isBot'] as bool;
-    
+
     return Align(
       alignment: isBot ? Alignment.centerLeft : Alignment.centerRight,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isBot 
-              ? (Theme.of(context).brightness == Brightness.dark 
-                  ? Colors.grey.shade700 
-                  : Colors.grey.shade200)
-              : (Theme.of(context).brightness == Brightness.dark 
-                  ? Colors.grey.shade600 
-                  : Theme.of(context).primaryColor),
+          color: isBot
+              ? (Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade700
+                    : Colors.grey.shade200)
+              : (Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade600
+                    : Theme.of(context).primaryColor),
           borderRadius: BorderRadius.circular(16),
         ),
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
         child: isBot && message['content'].contains('*')
-          ? MarkdownBody(
-              data: message['content'],
-              styleSheet: MarkdownStyleSheet(
-                p: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade100 
-                      : Colors.black87,
-                  fontSize: 14,
+            ? MarkdownBody(
+                data: message['content'],
+                styleSheet: MarkdownStyleSheet(
+                  p: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade100
+                        : Colors.black87,
+                    fontSize: 14,
+                  ),
+                  h1: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade100
+                        : Colors.black87,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  h2: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade100
+                        : Colors.black87,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  h3: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade100
+                        : Colors.black87,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  listBullet: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade100
+                        : Colors.black87,
+                    fontSize: 14,
+                  ),
+                  strong: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade100
+                        : Colors.black87,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  em: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade100
+                        : Colors.black87,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  code: TextStyle(
+                    backgroundColor:
+                        Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade600
+                        : Colors.grey.shade300,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade100
+                        : Colors.black87,
+                    fontFamily: 'monospace',
+                  ),
                 ),
-                h1: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade100 
-                      : Colors.black87,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-                h2: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade100 
-                      : Colors.black87,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                h3: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade100 
-                      : Colors.black87,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-                listBullet: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade100 
-                      : Colors.black87,
-                  fontSize: 14,
-                ),
-                strong: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade100 
-                      : Colors.black87,
-                  fontWeight: FontWeight.bold,
-                ),
-                em: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade100 
-                      : Colors.black87,
-                  fontStyle: FontStyle.italic,
-                ),
-                code: TextStyle(
-                  backgroundColor: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade600 
-                      : Colors.grey.shade300,
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade100 
-                      : Colors.black87,
-                  fontFamily: 'monospace',
+              )
+            : Text(
+                message['content'],
+                style: TextStyle(
+                  color: isBot
+                      ? (Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey.shade100
+                            : Colors.black87)
+                      : Colors.white,
                 ),
               ),
-            )
-          : Text(
-              message['content'],
-              style: TextStyle(
-                color: isBot 
-                    ? (Theme.of(context).brightness == Brightness.dark 
-                        ? Colors.grey.shade100 
-                        : Colors.black87)
-                    : Colors.white,
-              ),
-            ),
       ),
     );
   }
-
-
 
   Widget _buildMessageInput() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark 
-            ? Colors.grey.shade900 
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey.shade900
             : Colors.white,
         boxShadow: [
           BoxShadow(
@@ -374,8 +375,8 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
                   borderRadius: BorderRadius.circular(24),
                 ),
                 filled: true,
-                fillColor: Theme.of(context).brightness == Brightness.dark 
-                    ? Colors.grey.shade800 
+                fillColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade800
                     : Colors.grey.shade100,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -395,8 +396,8 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark 
-                  ? Colors.grey.shade600 
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey.shade600
                   : Theme.of(context).primaryColor,
               shape: BoxShape.circle,
             ),
@@ -407,17 +408,13 @@ class _VirtualTrainerPageState extends State<VirtualTrainerPage>
                 _sendMessage();
               },
               icon: const Icon(Icons.arrow_forward),
-              style: IconButton.styleFrom(
-                foregroundColor: Colors.white,
-              ),
+              style: IconButton.styleFrom(foregroundColor: Colors.white),
             ),
           ),
         ],
       ),
     );
   }
-
-
 
   @override
   void dispose() {

@@ -3,29 +3,29 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.light;
-  
+
   ThemeMode get themeMode => _themeMode;
-  
+
   bool get isDarkMode => _themeMode == ThemeMode.dark;
-  
+
   ThemeProvider() {
     _loadThemeFromPrefs();
   }
-  
+
   void toggleTheme() {
-    _themeMode = _themeMode == ThemeMode.light 
-        ? ThemeMode.dark 
+    _themeMode = _themeMode == ThemeMode.light
+        ? ThemeMode.dark
         : ThemeMode.light;
     _saveThemeToPrefs();
     notifyListeners();
   }
-  
+
   void setTheme(ThemeMode mode) {
     _themeMode = mode;
     _saveThemeToPrefs();
     notifyListeners();
   }
-  
+
   Future<void> _loadThemeFromPrefs() async {
     try {
       // Sempre inicia no modo claro, independente da preferência salva
@@ -35,7 +35,7 @@ class ThemeProvider extends ChangeNotifier {
       print('Erro ao carregar tema: $e');
     }
   }
-  
+
   Future<void> _saveThemeToPrefs() async {
     try {
       final prefs = await SharedPreferences.getInstance();

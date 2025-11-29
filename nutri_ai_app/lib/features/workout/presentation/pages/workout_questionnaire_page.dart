@@ -8,7 +8,8 @@ class WorkoutQuestionnairePage extends StatefulWidget {
   const WorkoutQuestionnairePage({super.key});
 
   @override
-  State<WorkoutQuestionnairePage> createState() => _WorkoutQuestionnairePageState();
+  State<WorkoutQuestionnairePage> createState() =>
+      _WorkoutQuestionnairePageState();
 }
 
 class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
@@ -33,7 +34,8 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
   List<String> _availableDays = [];
 
   // Controllers
-  final TextEditingController _musculoskeletalController = TextEditingController();
+  final TextEditingController _musculoskeletalController =
+      TextEditingController();
   final TextEditingController _respiratoryController = TextEditingController();
   final TextEditingController _cardiacController = TextEditingController();
 
@@ -116,9 +118,7 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
 
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => WorkoutPlanListPage(),
-          ),
+          MaterialPageRoute(builder: (context) => WorkoutPlanListPage()),
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -138,10 +138,7 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
   void _showError(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
       );
     }
   }
@@ -166,7 +163,7 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
               valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
             ),
           ),
-          
+
           // Page Content
           Expanded(
             child: PageView(
@@ -182,7 +179,7 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
               ],
             ),
           ),
-          
+
           // Navigation Buttons
           Container(
             padding: const EdgeInsets.all(16),
@@ -192,18 +189,22 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
                 if (_currentPage > 0)
                   ElevatedButton(
                     onPressed: _previousPage,
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey,
+                    ),
                     child: const Text('Voltar'),
                   )
                 else
                   const SizedBox.shrink(),
-                
+
                 ElevatedButton(
                   onPressed: _isLoading ? null : _nextPage,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                  child: _isLoading 
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text(_currentPage == 5 ? 'Gerar Treino' : 'Próximo'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(_currentPage == 5 ? 'Gerar Treino' : 'Próximo'),
                 ),
               ],
             ),
@@ -229,7 +230,7 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
             style: TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 24),
-          
+
           // Problemas musculoesqueléticos
           CheckboxListTile(
             title: const Text('Problemas musculoesqueléticos'),
@@ -245,7 +246,7 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
               });
             },
           ),
-          
+
           if (_hasMusculoskeletalProblems)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -257,7 +258,7 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
                 onChanged: (value) => _musculoskeletalDetails = value,
               ),
             ),
-          
+
           // Problemas respiratórios
           CheckboxListTile(
             title: const Text('Problemas respiratórios'),
@@ -273,7 +274,7 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
               });
             },
           ),
-          
+
           if (_hasRespiratoryProblems)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -285,7 +286,7 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
                 onChanged: (value) => _respiratoryDetails = value,
               ),
             ),
-          
+
           // Problemas cardíacos
           CheckboxListTile(
             title: const Text('Problemas cardíacos'),
@@ -301,7 +302,7 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
               });
             },
           ),
-          
+
           if (_hasCardiacProblems)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -344,7 +345,7 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
             style: TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 24),
-          
+
           Expanded(
             child: ListView.builder(
               itemCount: injuries.length,
@@ -387,7 +388,7 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
             style: TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 24),
-          
+
           RadioListTile<String>(
             title: const Text('Iniciante'),
             subtitle: const Text('Pouca ou nenhuma experiência com exercícios'),
@@ -395,18 +396,22 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
             groupValue: _fitnessLevel,
             onChanged: (value) => setState(() => _fitnessLevel = value!),
           ),
-          
+
           RadioListTile<String>(
             title: const Text('Intermediário'),
-            subtitle: const Text('Pratica exercícios regularmente há alguns meses'),
+            subtitle: const Text(
+              'Pratica exercícios regularmente há alguns meses',
+            ),
             value: 'intermediario',
             groupValue: _fitnessLevel,
             onChanged: (value) => setState(() => _fitnessLevel = value!),
           ),
-          
+
           RadioListTile<String>(
             title: const Text('Avançado'),
-            subtitle: const Text('Pratica exercícios há mais de 1 ano consistentemente'),
+            subtitle: const Text(
+              'Pratica exercícios há mais de 1 ano consistentemente',
+            ),
             value: 'avancado',
             groupValue: _fitnessLevel,
             onChanged: (value) => setState(() => _fitnessLevel = value!),
@@ -443,7 +448,7 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
             style: TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 24),
-          
+
           Expanded(
             child: ListView.builder(
               itemCount: exercises.length,
@@ -486,7 +491,7 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
             style: TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 24),
-          
+
           Container(
             width: double.infinity,
             child: Card(
@@ -501,12 +506,17 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
                       Icon(
                         Icons.home,
                         size: 50,
-                        color: _workoutType == 'home' ? Colors.orange : Colors.grey,
+                        color: _workoutType == 'home'
+                            ? Colors.orange
+                            : Colors.grey,
                       ),
                       const SizedBox(height: 8),
                       const Text(
                         'Em Casa',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const Text(
                         'Treinos sem equipamentos ou com itens improvisados',
@@ -519,9 +529,9 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Container(
             width: double.infinity,
             child: Card(
@@ -536,12 +546,17 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
                       Icon(
                         Icons.fitness_center,
                         size: 50,
-                        color: _workoutType == 'gym' ? Colors.orange : Colors.grey,
+                        color: _workoutType == 'gym'
+                            ? Colors.orange
+                            : Colors.grey,
                       ),
                       const SizedBox(height: 8),
                       const Text(
                         'Na Academia',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const Text(
                         'Treinos com equipamentos disponíveis na maioria das academias',
@@ -580,7 +595,7 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          
+
           // Frequência semanal
           Card(
             child: Padding(
@@ -599,16 +614,17 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
                     max: 7,
                     divisions: 6,
                     label: '$_daysPerWeek dias',
-                    onChanged: (value) => setState(() => _daysPerWeek = value.round()),
+                    onChanged: (value) =>
+                        setState(() => _daysPerWeek = value.round()),
                   ),
                   Text('$_daysPerWeek dias por semana'),
                 ],
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Duração da sessão
           Card(
             child: Padding(
@@ -627,23 +643,24 @@ class _WorkoutQuestionnairePageState extends State<WorkoutQuestionnairePage> {
                     max: 120,
                     divisions: 21,
                     label: '$_sessionDuration min',
-                    onChanged: (value) => setState(() => _sessionDuration = value.round()),
+                    onChanged: (value) =>
+                        setState(() => _sessionDuration = value.round()),
                   ),
                   Text('$_sessionDuration minutos por treino'),
                 ],
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Dias disponíveis
           const Text(
             'Que dias você pode treinar?',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          
+
           Expanded(
             child: ListView.builder(
               itemCount: days.length,

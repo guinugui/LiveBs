@@ -31,7 +31,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         )
     
     with db.get_db_cursor() as cursor:
-        cursor.execute(f"SELECT id, email, name, created_at FROM users WHERE id = {db.get_param_placeholder()}", (user_id,))
+        cursor.execute("SELECT id, email, name, created_at FROM users WHERE id = %s", (user_id,))
         user = cursor.fetchone()
         
         if user is None:

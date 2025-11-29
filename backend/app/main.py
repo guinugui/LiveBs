@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, profile, chat, meal_plan, logs, workout_plan, personal
+from app.config import settings
 
 app = FastAPI(
     title="LiveBs API",
@@ -8,10 +9,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS - permite requisições do Flutter
+# CORS - configuração segura via .env
+allowed_origins = settings.get_allowed_origins()
+print(f"[CORS] 🔒 Origins permitidas: {allowed_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Em produção, especificar domínios
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
