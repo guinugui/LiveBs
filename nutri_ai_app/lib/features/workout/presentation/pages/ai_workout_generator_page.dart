@@ -48,7 +48,6 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text(
           'Gerador de Treino IA',
@@ -133,9 +132,13 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '👤 Informações Pessoais',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 24, 
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).textTheme.headlineMedium?.color,
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -145,9 +148,11 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                 child: TextFormField(
                   initialValue: _age.toString(),
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                  decoration: InputDecoration(
                     labelText: 'Idade',
-                    border: OutlineInputBorder(),
+                    labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                    border: const OutlineInputBorder(),
                   ),
                   onChanged: (value) => _age = int.tryParse(value) ?? _age,
                 ),
@@ -156,14 +161,19 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
               Expanded(
                 child: DropdownButtonFormField<String>(
                   value: _gender,
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                  decoration: InputDecoration(
                     labelText: 'Sexo',
-                    border: OutlineInputBorder(),
+                    labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                    border: const OutlineInputBorder(),
                   ),
                   items: ['masculino', 'feminino'].map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
-                      child: Text(value.capitalize()),
+                      child: Text(
+                        value.capitalize(),
+                        style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                      ),
                     );
                   }).toList(),
                   onChanged: (value) => setState(() => _gender = value!),
@@ -179,9 +189,11 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                 child: TextFormField(
                   initialValue: _weight.toString(),
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                  decoration: InputDecoration(
                     labelText: 'Peso (kg)',
-                    border: OutlineInputBorder(),
+                    labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                    border: const OutlineInputBorder(),
                   ),
                   onChanged: (value) =>
                       _weight = double.tryParse(value) ?? _weight,
@@ -192,9 +204,11 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                 child: TextFormField(
                   initialValue: _height.toString(),
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                  decoration: InputDecoration(
                     labelText: 'Altura (cm)',
-                    border: OutlineInputBorder(),
+                    labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                    border: const OutlineInputBorder(),
                   ),
                   onChanged: (value) =>
                       _height = double.tryParse(value) ?? _height,
@@ -206,10 +220,13 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
 
           TextFormField(
             maxLines: 3,
-            decoration: const InputDecoration(
+            style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+            decoration: InputDecoration(
               labelText: 'Lesões ou limitações (opcional)',
-              border: OutlineInputBorder(),
+              labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+              border: const OutlineInputBorder(),
               hintText: 'Descreva qualquer lesão ou limitação física...',
+              hintStyle: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7)),
             ),
             onChanged: (value) => _injuries = value,
           ),
@@ -224,9 +241,13 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '🏋️ Preferências de Treino',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 24, 
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).textTheme.headlineMedium?.color,
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -239,17 +260,25 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
             children: [
               Expanded(
                 child: RadioListTile<String>(
-                  title: const Text('Academia (GYM)'),
+                  title: Text(
+                    'Academia (GYM)',
+                    style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                  ),
                   value: 'GYM',
                   groupValue: _location,
+                  activeColor: Theme.of(context).primaryColor,
                   onChanged: (value) => setState(() => _location = value!),
                 ),
               ),
               Expanded(
                 child: RadioListTile<String>(
-                  title: const Text('Casa (HOME)'),
+                  title: Text(
+                    'Casa (HOME)',
+                    style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                  ),
                   value: 'HOME',
                   groupValue: _location,
+                  activeColor: Theme.of(context).primaryColor,
                   onChanged: (value) => setState(() => _location = value!),
                 ),
               ),
@@ -258,16 +287,23 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
 
           if (_location == 'GYM') ...[
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Equipamentos disponíveis:',
-              style: TextStyle(fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+              ),
             ),
             const SizedBox(height: 8),
             ..._equipmentOptions.map(
               (equipment) => RadioListTile<String>(
-                title: Text(equipment),
+                title: Text(
+                  equipment,
+                  style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                ),
                 value: equipment,
                 groupValue: _equipment,
+                activeColor: Theme.of(context).primaryColor,
                 onChanged: (value) => setState(() => _equipment = value!),
               ),
             ),
@@ -280,9 +316,12 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Dias por semana:',
-                      style: TextStyle(fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
                     ),
                     Slider(
                       value: _daysPerWeek.toDouble(),
@@ -290,10 +329,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                       max: 6,
                       divisions: 4,
                       label: '$_daysPerWeek dias',
-                      activeColor:
-                          Theme.of(context).brightness == Brightness.dark
-                          ? Colors.grey
-                          : Theme.of(context).primaryColor,
+                      activeColor: Theme.of(context).primaryColor,
                       onChanged: (value) =>
                           setState(() => _daysPerWeek = value.round()),
                     ),
@@ -305,9 +341,12 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Minutos por dia:',
-                      style: TextStyle(fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
                     ),
                     Slider(
                       value: _minutesPerDay.toDouble(),
@@ -315,10 +354,7 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                       max: 120,
                       divisions: 9,
                       label: '$_minutesPerDay min',
-                      activeColor:
-                          Theme.of(context).brightness == Brightness.dark
-                          ? Colors.grey
-                          : Theme.of(context).primaryColor,
+                      activeColor: Theme.of(context).primaryColor,
                       onChanged: (value) =>
                           setState(() => _minutesPerDay = value.round()),
                     ),
@@ -338,20 +374,27 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '🎯 Objetivo Principal',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 24, 
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).textTheme.headlineMedium?.color,
+            ),
           ),
           const SizedBox(height: 24),
 
           ..._objectives.map(
             (objective) => Card(
               child: RadioListTile<String>(
-                title: Text(objective),
+                title: Text(
+                  objective,
+                  style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                ),
                 value: objective,
                 groupValue: _objective,
                 onChanged: (value) => setState(() => _objective = value!),
-                activeColor: Colors.orange.shade600,
+                activeColor: Theme.of(context).primaryColor,
               ),
             ),
           ),
@@ -378,15 +421,32 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text('• $_age anos, $_gender, ${_weight}kg, ${_height}cm'),
-                  Text('• Objetivo: $_objective'),
-                  Text('• Local: $_location'),
+                  Text(
+                    '• $_age anos, $_gender, ${_weight}kg, ${_height}cm',
+                    style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                  ),
+                  Text(
+                    '• Objetivo: $_objective',
+                    style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                  ),
+                  Text(
+                    '• Local: $_location',
+                    style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                  ),
                   if (_location == 'GYM' && _equipment.isNotEmpty)
-                    Text('• Equipamentos: $_equipment'),
+                    Text(
+                      '• Equipamentos: $_equipment',
+                      style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                    ),
                   Text(
                     '• $_daysPerWeek dias por semana, $_minutesPerDay min/dia',
+                    style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
                   ),
-                  if (_injuries.isNotEmpty) Text('• Limitações: $_injuries'),
+                  if (_injuries.isNotEmpty) 
+                    Text(
+                      '• Limitações: $_injuries',
+                      style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                    ),
                 ],
               ),
             ),
@@ -407,7 +467,9 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
         children: [
           // Guia section
           Card(
-            color: Colors.blue.shade50,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Theme.of(context).cardColor
+                : Colors.blue.shade50,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -415,14 +477,21 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue.shade700),
+                      Icon(
+                        Icons.info_outline, 
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Theme.of(context).primaryColor
+                            : Colors.blue.shade700,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Guia',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade700,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).primaryColor
+                              : Colors.blue.shade700,
                         ),
                       ),
                     ],
@@ -431,7 +500,10 @@ class _AIWorkoutGeneratorPageState extends State<AIWorkoutGeneratorPage> {
                   Text(
                     plan['orientation'] ??
                         'Treino personalizado criado com base nas suas preferências de $_location ($_objective). Siga as orientações específicas para cada dia de treino.',
-                    style: const TextStyle(fontSize: 14),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
                   ),
                 ],
               ),
