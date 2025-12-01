@@ -6,10 +6,12 @@ from app.database import db
 from app.routers.auth import get_current_user
 from app.ai_service import generate_meal_plan
 from app.schemas import MealPlanResponse
+from app.token_limit_handler import token_required
 
 router = APIRouter(prefix="/meal-plan", tags=["Meal Plan"])
 
 @router.post("", status_code=status.HTTP_201_CREATED)
+@token_required(estimated_tokens_override=2000)  # Planos alimentares consomem mais tokens
 def create_meal_plan(current_user = Depends(get_current_user)):
     """Gera e salva novo plano alimentar usando IA"""
     print(f"[DEBUG] ===== FUNÇÃO CREATE_MEAL_PLAN INICIADA =====")

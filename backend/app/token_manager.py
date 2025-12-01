@@ -8,8 +8,8 @@ class TokenManager:
     """Gerenciador de tokens diários para controle de uso da IA"""
     
     def __init__(self):
-        self.daily_limit = int(os.getenv('DAILY_TOKEN_LIMIT', 50000))
-        self.warning_threshold = int(os.getenv('TOKEN_WARNING_THRESHOLD', 40000))
+        self.daily_limit = int(os.getenv('DAILY_TOKEN_LIMIT', 100000))
+        self.warning_threshold = int(os.getenv('TOKEN_WARNING_THRESHOLD', 80000))
     
     def _get_today_key(self, user_id: str) -> str:
         """Gera chave para tokens do dia atual"""
@@ -94,6 +94,30 @@ class TokenManager:
             }
         except Exception as e:
             return {'error': str(e)}
+    
+    # Métodos de compatibilidade para testes
+    async def get_available_tokens(self, user_id: str) -> int:
+        """Retorna tokens disponíveis para o usuário (compatibilidade)"""
+        status = await self.get_user_tokens_today(user_id)
+        return status['remaining_tokens']
+    
+    async def consume_tokens(self, user_id: str, tokens_used: int) -> bool:
+        """Consome tokens do usuário (compatibilidade)"""
+        can_use, _ = await self.can_use_tokens(user_id, tokens_used)
+        
+        if can_use:
+            await self.add_token_usage(user_id, tokens_used)
+            return True
+        
+        return False
 
-# Instância global
-token_manager = TokenManager()
+# Instância global - recriar para garantir novos valores
+def create_token_manager():
+    """Função para criar nova instância com valores atualizados"""
+    return TokenManager()
+
+token_manager = create_token_manager()
+
+# Debug: Mostrar configurações atuais
+print(f"[TOKEN_MANAGER] 🎯 Limite diário configurado: {token_manager.daily_limit:,} tokens")
+print(f"[TOKEN_MANAGER] ⚠️ Aviso em: {token_manager.warning_threshold:,} tokens")
