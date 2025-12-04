@@ -22,6 +22,9 @@ class UserResponse(BaseModel):
     email: str
     name: Optional[str]
     created_at: datetime
+    subscription_status: str = "pending"
+    subscription_payment_id: Optional[str] = None
+    subscription_date: Optional[datetime] = None
 
 # Profile schemas
 class ProfileCreate(BaseModel):
@@ -138,3 +141,31 @@ class MealLogResponse(BaseModel):
     photo_url: Optional[str]
     logged_at: datetime
     notes: Optional[str]
+
+# Subscription schemas
+class SubscriptionCreate(BaseModel):
+    plan_type: str = "monthly"
+    amount: float = 39.90
+
+class SubscriptionResponse(BaseModel):
+    payment_url: str
+    payment_id: str
+    status: str
+    qr_code: Optional[str] = None
+
+class WebhookMercadoPago(BaseModel):
+    action: Optional[str]
+    api_version: Optional[str]
+    data: Optional[dict]
+    date_created: Optional[str]
+    id: Optional[str]
+    live_mode: Optional[bool]
+    type: Optional[str]
+    user_id: Optional[int]
+
+class SubscriptionStatus(BaseModel):
+    user_id: UUID
+    subscription_status: str
+    subscription_payment_id: Optional[str]
+    subscription_date: Optional[datetime]
+    is_active: bool

@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, profile, chat, meal_plan, logs, workout_plan, personal, tokens
+from app.routers import auth, profile, chat, meal_plan, logs, workout_plan, personal, tokens, subscription
 from app.config import settings
+from app.subscription_middleware import SubscriptionMiddleware
 
 app = FastAPI(
     title="LiveBs API",
@@ -21,6 +22,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Adicionar middleware de verificação de assinatura
+# app.add_middleware(SubscriptionMiddleware)  # Descomente para ativar verificação
+
 # Routers
 app.include_router(auth.router)
 app.include_router(profile.router)
@@ -30,6 +34,7 @@ app.include_router(workout_plan.router)
 app.include_router(personal.router)
 app.include_router(logs.router)
 app.include_router(tokens.router)
+app.include_router(subscription.router)
 
 @app.get("/")
 def root():
@@ -42,3 +47,5 @@ def root():
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
+# Webhook do Mercado Pago agora está no router subscription

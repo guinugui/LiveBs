@@ -366,4 +366,14 @@ class ApiService {
   Future<void> deleteWorkoutPlan(String planId) async {
     await _dio.delete('/workout-plan/$planId');
   }
+
+  // ==================== GENERIC HTTP METHODS ====================
+
+  Future<Response> get(String path, {bool requireAuth = false}) async {
+    return await _dio.get(path);
+  }
+
+  Future<Response> post(String path, {Map<String, dynamic>? data, bool requireAuth = false}) async {
+    return await _dio.post(path, data: data);
+  }
 }

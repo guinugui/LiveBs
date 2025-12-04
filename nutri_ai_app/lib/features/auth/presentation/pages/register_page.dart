@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/network/api_service.dart';
+import '../../../../core/services/notification_service.dart';
+import '../../../subscription/subscription_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -57,7 +59,25 @@ class _RegisterPageState extends State<RegisterPage> {
             backgroundColor: Colors.green,
           ),
         );
-        context.go('/onboarding');
+        
+        // Agendar notificações para o novo usuário
+        try {
+          await NotificationService().scheduleAllNotifications();
+        } catch (e) {
+          print('Erro ao agendar notificações: $e');
+        }
+
+        // Navegar para a tela de assinatura antes do onboarding
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SubscriptionPage(
+              onSubscriptionComplete: () {
+                context.go('/onboarding');
+              },
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {

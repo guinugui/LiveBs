@@ -5,6 +5,7 @@ import uuid
 import sys
 import os
 from dotenv import load_dotenv
+import asyncpg
 
 # Carregar variáveis de ambiente
 load_dotenv()
@@ -226,3 +227,19 @@ class Database:
         return "%s" if self.use_postgres else "?"
 
 db = Database()
+
+# Função async para conexões asyncpg (usada no sistema de subscription)
+async def get_db_connection():
+    """Criar conexão asyncpg para uso com async/await"""
+    connection_params = {
+        'host': os.getenv('DB_HOST', '127.0.0.1'),
+        'port': int(os.getenv('DB_PORT', 5432)),
+        'database': os.getenv('DB_NAME', 'livebs_db'),
+        'user': os.getenv('DB_USER', 'postgres'),
+        'password': os.getenv('DB_PASSWORD')
+    }
+    
+    # Construir URL de conexão
+    database_url = f"postgresql://{connection_params['user']}:{connection_params['password']}@{connection_params['host']}:{connection_params['port']}/{connection_params['database']}"
+    
+    return await asyncpg.connect(database_url)

@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart' as provider;
 import 'core/network/supabase_service.dart';
 import 'core/network/api_service.dart';
+import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/providers/theme_provider.dart';
@@ -19,6 +20,9 @@ void main() async {
 
   // Inicializar API Service
   await ApiService().initialize();
+
+  // Inicializar Notifications
+  await NotificationService().initialize();
 
   // Inicializar Supabase
   try {

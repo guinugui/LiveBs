@@ -73,6 +73,14 @@ dependencies:
   image_picker: ^1.1.2
   cached_network_image: ^3.4.1
   
+  # QR Code
+  qr_flutter: ^4.1.0
+  
+  # Notifications
+  flutter_local_notifications: ^17.2.3
+  timezone: ^0.9.4
+  permission_handler: ^11.3.1
+  
   # JSON
   json_annotation: ^4.9.0
   

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/network/api_service.dart';
+import '../../../../core/services/notification_service.dart';
+import '../../../subscription/subscription_service.dart';
+import '../../../subscription/subscription_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -49,18 +52,52 @@ class _LoginPageState extends State<LoginPage> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('email', _emailController.text.trim());
 
-      // Verifica se o usuário tem perfil
+      // Agendar notificações para usuário logado
       try {
-        await ApiService().getProfile();
-        // Se chegou aqui, tem perfil - vai para home
-        if (mounted) {
-          context.go('/home');
+        await NotificationService().scheduleAllNotifications();
+      } catch (e) {
+        print('Erro ao agendar notificações: $e');
+      }
+
+      // Verificar status da assinatura
+      try {
+        final subscriptionService = SubscriptionService();
+        final status = await subscriptionService.getSubscriptionStatus();
+        
+        if (!status.isActive) {
+          // Usuário não tem assinatura ativa - redirecionar para tela de assinatura
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SubscriptionPage(
+                  onSubscriptionComplete: () {
+                    // Após pagamento, continuar o fluxo normal
+                    _continueLoginFlow();
+                  },
+                ),
+              ),
+            );
+          }
+          return; // Sair da função para não continuar o fluxo
         }
-      } catch (profileError) {
-        // Se deu erro ao buscar perfil, redireciona para onboarding
-        print('DEBUG - Perfil não encontrado, indo para onboarding');
+        
+        // Assinatura ativa - continuar fluxo normal
+        _continueLoginFlow();
+      } catch (e) {
+        print('Erro ao verificar assinatura: $e');
+        // Em caso de erro na verificação, assumir que precisa de assinatura
         if (mounted) {
-          context.go('/onboarding');
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SubscriptionPage(
+                onSubscriptionComplete: () {
+                  _continueLoginFlow();
+                },
+              ),
+            ),
+          );
         }
       }
     } catch (e) {
@@ -89,6 +126,23 @@ class _LoginPageState extends State<LoginPage> {
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _continueLoginFlow() async {
+    // Verifica se o usuário tem perfil
+    try {
+      await ApiService().getProfile();
+      // Se chegou aqui, tem perfil - vai para home
+      if (mounted) {
+        context.go('/home');
+      }
+    } catch (profileError) {
+      // Se deu erro ao buscar perfil, redireciona para onboarding
+      print('DEBUG - Perfil não encontrado, indo para onboarding');
+      if (mounted) {
+        context.go('/onboarding');
       }
     }
   }

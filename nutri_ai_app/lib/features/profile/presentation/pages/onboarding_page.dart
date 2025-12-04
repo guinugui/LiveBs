@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/network/api_service.dart';
+import '../../../../core/services/notification_service.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -141,6 +142,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
         dietaryRestrictions: _selectedRestrictions,
         dietaryPreferences: _selectedPreferences,
       );
+
+      // Reagendar notificações de atualização de perfil
+      try {
+        await NotificationService().scheduleProfileUpdateReminder();
+      } catch (e) {
+        print('Erro ao agendar notificações de perfil: $e');
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -31,14 +31,31 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         )
     
     with db.get_db_cursor() as cursor:
-        cursor.execute("SELECT id, email, name, created_at FROM users WHERE id = %s", (user_id,))
-        user = cursor.fetchone()
+        cursor.execute(
+            "SELECT id, email, name, created_at, subscription_status, subscription_payment_id, subscription_date FROM users WHERE id = %s", 
+            (user_id,)
+        )
+        result = cursor.fetchone()
         
-        if user is None:
+        if result is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Usuário não encontrado"
             )
+        
+        # Converter resultado para dicionário se for tupla
+        if isinstance(result, (list, tuple)):
+            user = {
+                "id": result[0],
+                "email": result[1],
+                "name": result[2], 
+                "created_at": result[3],
+                "subscription_status": result[4] or "pending",
+                "subscription_payment_id": result[5],
+                "subscription_date": result[6]
+            }
+        else:
+            user = result
     
     return user
 
@@ -71,11 +88,26 @@ def register(user: UserRegister):
         # Cria usuário
         password_hash = get_password_hash(user.password)
         cursor.execute(
-            f"""INSERT INTO users (email, password_hash, name) 
-               VALUES ({db.get_param_placeholder()}, {db.get_param_placeholder()}, {db.get_param_placeholder()}) RETURNING id, email, name, created_at""",
+            f"""INSERT INTO users (email, password_hash, name, subscription_status) 
+               VALUES ({db.get_param_placeholder()}, {db.get_param_placeholder()}, {db.get_param_placeholder()}, 'pending') 
+               RETURNING id, email, name, created_at, subscription_status, subscription_payment_id, subscription_date""",
             (user.email.lower().strip(), password_hash, user.name.strip())
         )
-        new_user = cursor.fetchone()
+        result = cursor.fetchone()
+        
+        # Converter resultado para dicionário se for tupla
+        if isinstance(result, (list, tuple)):
+            new_user = {
+                "id": result[0],
+                "email": result[1], 
+                "name": result[2],
+                "created_at": result[3],
+                "subscription_status": result[4] or "pending",
+                "subscription_payment_id": result[5],
+                "subscription_date": result[6]
+            }
+        else:
+            new_user = result
     
     return new_user
 
@@ -87,9 +119,21 @@ def login(credentials: UserLogin):
             f"SELECT id, email, password_hash FROM users WHERE email = {db.get_param_placeholder()}",
             (credentials.email,)
         )
-        user = cursor.fetchone()
+        result = cursor.fetchone()
         
-        if not user or not verify_password(credentials.password, user['password_hash']):
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Email ou senha incorretos"
+            )
+        
+        # Lidar com tupla ou dicionário
+        if isinstance(result, (list, tuple)):
+            user_id, email, password_hash = result[0], result[1], result[2]
+        else:
+            user_id, email, password_hash = result['id'], result['email'], result['password_hash']
+        
+        if not verify_password(credentials.password, password_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Email ou senha incorretos"
@@ -97,7 +141,7 @@ def login(credentials: UserLogin):
     
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
-        data={"sub": str(user['id'])}, expires_delta=access_token_expires
+        data={"sub": str(user_id)}, expires_delta=access_token_expires
     )
     
     return {"access_token": access_token, "token_type": "bearer"}
